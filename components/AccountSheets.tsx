@@ -139,8 +139,36 @@ const errorText = (t: Tokens, msg: string | null) =>
     <Text style={{ color: t.expense, fontSize: 13, marginTop: 10, fontWeight: '500' }}>{msg}</Text>
   ) : null;
 
-const extractError = (e: unknown): string => {
-  if (e instanceof ApiError) return e.message;
+const extractError = (e: unknown, lang: 'uz' | string = 'en'): string => {
+  const isUz = lang === 'uz';
+  if (e instanceof TypeError) {
+    return isUz ? "Serverga ulanib bo'lmadi. Internetni tekshiring." : 'Cannot reach the server.';
+  }
+  if (e instanceof ApiError) {
+    const map: Record<string, { en: string; uz: string }> = {
+      invalid_code: { en: 'Invalid code', uz: "Kod noto'g'ri" },
+      code_expired: {
+        en: 'Code expired. Request a new one.',
+        uz: 'Kod muddati tugagan. Yangi kod oling.',
+      },
+      too_many_attempts: {
+        en: 'Too many attempts. Try again later.',
+        uz: 'Urinishlar ko‘p. Keyinroq urinib ko‘ring.',
+      },
+      email_taken: {
+        en: 'This email is already registered',
+        uz: "Bu email allaqachon ro'yxatdan o'tgan",
+      },
+      same_email: { en: 'This is already your email', uz: 'Bu sizning emailingiz' },
+      mail_send_failed: {
+        en: 'Could not send email. Try again later.',
+        uz: 'Emailni yuborib bo‘lmadi. Keyinroq urinib ko‘ring.',
+      },
+    };
+    const m = map[e.message];
+    if (m) return isUz ? m.uz : m.en;
+    return e.message;
+  }
   if (e instanceof Error) return e.message;
   return 'unknown_error';
 };
@@ -168,7 +196,7 @@ export const EditNameSheet: React.FC<SheetProps> = ({ t, visible, onClose }) => 
       toast(tStr(lang, 'saved'));
       onClose();
     } catch (e) {
-      setErr(extractError(e));
+      setErr(extractError(e, lang));
     } finally {
       setBusy(false);
     }
@@ -223,7 +251,7 @@ export const EditEmailSheet: React.FC<SheetProps> = ({ t, visible, onClose }) =>
       toast(lang === 'uz' ? 'Kod yuborildi' : 'Code sent');
       setStep(2);
     } catch (e) {
-      setErr(extractError(e));
+      setErr(extractError(e, lang));
     } finally {
       setBusy(false);
     }
@@ -237,7 +265,7 @@ export const EditEmailSheet: React.FC<SheetProps> = ({ t, visible, onClose }) =>
       toast(lang === 'uz' ? 'Email yangilandi' : 'Email updated');
       onClose();
     } catch (e) {
-      setErr(extractError(e));
+      setErr(extractError(e, lang));
     } finally {
       setBusy(false);
     }
@@ -327,10 +355,11 @@ export const EditEmailSheet: React.FC<SheetProps> = ({ t, visible, onClose }) =>
 export const ForgotPasswordSheet: React.FC<SheetProps> = ({ t, visible, onClose }) => {
   const s = useStore();
   const lang = s.prefs.lang;
-  const [step, setStep] = useState<1 | 2>(1);
+  const [step, setStep] = useState<1 | 2 | 3>(1);
   const [email, setEmail] = useState('');
   const [code, setCode] = useState('');
   const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
@@ -340,20 +369,45 @@ export const ForgotPasswordSheet: React.FC<SheetProps> = ({ t, visible, onClose 
       setEmail('');
       setCode('');
       setNewPassword('');
+      setConfirmPassword('');
       setBusy(false);
       setErr(null);
     }
   }, [visible]);
 
+  useEffect(() => setErr(null), [step]);
+
   const sendCode = async () => {
     setErr(null);
+    const trimmed = email.trim();
+    if (!trimmed || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
+      setErr(lang === 'uz' ? "Email noto'g'ri" : 'Invalid email');
+      return;
+    }
     setBusy(true);
     try {
-      await actions.forgotPassword(email);
+      await actions.forgotPassword(trimmed);
       toast(lang === 'uz' ? 'Kod yuborildi' : 'Code sent');
       setStep(2);
     } catch (e) {
-      setErr(extractError(e));
+      setErr(extractError(e, lang));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const verifyCode = async () => {
+    setErr(null);
+    if (code.length !== 6) {
+      setErr(lang === 'uz' ? '6 xonali kodni kiriting' : 'Enter the 6-digit code');
+      return;
+    }
+    setBusy(true);
+    try {
+      await actions.verifyResetCode(email, code);
+      setStep(3);
+    } catch (e) {
+      setErr(extractError(e, lang));
     } finally {
       setBusy(false);
     }
@@ -365,25 +419,39 @@ export const ForgotPasswordSheet: React.FC<SheetProps> = ({ t, visible, onClose 
       setErr(lang === 'uz' ? 'Parol kamida 6 belgi' : 'Password must be at least 6 characters');
       return;
     }
+    if (newPassword !== confirmPassword) {
+      setErr(lang === 'uz' ? "Parollar mos kelmadi" : 'Passwords do not match');
+      return;
+    }
     setBusy(true);
     try {
       await actions.resetPassword(email, code, newPassword);
       toast(lang === 'uz' ? 'Parol yangilandi' : 'Password reset');
       onClose();
     } catch (e) {
-      setErr(extractError(e));
+      setErr(extractError(e, lang));
     } finally {
       setBusy(false);
     }
   };
 
+  const stepTitle =
+    step === 1
+      ? lang === 'uz'
+        ? 'Parolni tiklash'
+        : 'Reset password'
+      : step === 2
+        ? lang === 'uz'
+          ? 'Kodni tasdiqlash'
+          : 'Verify code'
+        : lang === 'uz'
+          ? 'Yangi parol'
+          : 'New password';
+
   return (
-    <SheetContainer
-      t={t}
-      visible={visible}
-      onClose={onClose}
-      title={lang === 'uz' ? 'Parolni tiklash' : 'Reset password'}
-    >
+    <SheetContainer t={t} visible={visible} onClose={onClose} title={stepTitle}>
+      <StepIndicator t={t} step={step} />
+
       {step === 1 ? (
         <>
           <Text
@@ -404,6 +472,7 @@ export const ForgotPasswordSheet: React.FC<SheetProps> = ({ t, visible, onClose 
             onChangeText={setEmail}
             autoFocus
             autoCapitalize="none"
+            autoCorrect={false}
             keyboardType="email-address"
             placeholder="you@example.com"
             placeholderTextColor={t.textTer}
@@ -412,7 +481,7 @@ export const ForgotPasswordSheet: React.FC<SheetProps> = ({ t, visible, onClose 
           {errorText(t, err)}
           {primaryBtn(t, lang === 'uz' ? 'Kod yuborish' : 'Send code', sendCode, busy)}
         </>
-      ) : (
+      ) : step === 2 ? (
         <>
           <Text
             style={{
@@ -423,8 +492,8 @@ export const ForgotPasswordSheet: React.FC<SheetProps> = ({ t, visible, onClose 
             }}
           >
             {lang === 'uz'
-              ? `${email} ga yuborilgan kod va yangi parolni kiriting.`
-              : `Enter the code sent to ${email} and your new password.`}
+              ? `${email} ga yuborilgan 6 xonali kodni kiriting.`
+              : `Enter the 6-digit code sent to ${email}.`}
           </Text>
           {fieldLabel(t, lang === 'uz' ? 'Tasdiqlash kodi' : 'Verification code')}
           <TextInput
@@ -440,26 +509,75 @@ export const ForgotPasswordSheet: React.FC<SheetProps> = ({ t, visible, onClose 
               { fontSize: 22, textAlign: 'center', letterSpacing: 8, fontWeight: '700' },
             ]}
           />
-          <View style={{ height: 14 }} />
-          {fieldLabel(t, lang === 'uz' ? 'Yangi parol' : 'New password')}
-          <TextInput
-            value={newPassword}
-            onChangeText={setNewPassword}
-            secureTextEntry
-            autoCapitalize="none"
-            placeholder="••••••••"
-            placeholderTextColor={t.textTer}
-            style={inputStyle(t)}
-          />
           {errorText(t, err)}
-          {primaryBtn(t, lang === 'uz' ? 'Parolni tiklash' : 'Reset password', reset, busy)}
-          <Pressable onPress={() => setStep(1)} style={{ alignItems: 'center', marginTop: 12 }}>
+          {primaryBtn(t, lang === 'uz' ? 'Tasdiqlash' : 'Verify', verifyCode, busy)}
+          <Pressable
+            onPress={() => !busy && setStep(1)}
+            style={{ alignItems: 'center', marginTop: 12 }}
+          >
             <Text style={{ color: t.accent, fontSize: 14, fontWeight: '600' }}>
               {lang === 'uz' ? 'Boshqa email' : 'Use different email'}
             </Text>
           </Pressable>
         </>
+      ) : (
+        <>
+          <Text
+            style={{
+              fontSize: 13,
+              color: t.textSec,
+              marginBottom: 14,
+              lineHeight: 19,
+            }}
+          >
+            {lang === 'uz'
+              ? 'Yangi parolni kiriting va takrorlang.'
+              : 'Enter and confirm your new password.'}
+          </Text>
+          {fieldLabel(t, lang === 'uz' ? 'Yangi parol' : 'New password')}
+          <TextInput
+            value={newPassword}
+            onChangeText={setNewPassword}
+            autoFocus
+            secureTextEntry
+            autoCapitalize="none"
+            autoCorrect={false}
+            placeholder="••••••••"
+            placeholderTextColor={t.textTer}
+            style={inputStyle(t)}
+          />
+          <View style={{ height: 14 }} />
+          {fieldLabel(t, lang === 'uz' ? 'Parolni takrorlang' : 'Confirm password')}
+          <TextInput
+            value={confirmPassword}
+            onChangeText={setConfirmPassword}
+            secureTextEntry
+            autoCapitalize="none"
+            autoCorrect={false}
+            placeholder="••••••••"
+            placeholderTextColor={t.textTer}
+            style={inputStyle(t)}
+          />
+          {errorText(t, err)}
+          {primaryBtn(t, lang === 'uz' ? 'Parolni saqlash' : 'Save password', reset, busy)}
+        </>
       )}
     </SheetContainer>
   );
 };
+
+const StepIndicator: React.FC<{ t: Tokens; step: 1 | 2 | 3 }> = ({ t, step }) => (
+  <View style={{ flexDirection: 'row', gap: 6, marginBottom: 18 }}>
+    {[1, 2, 3].map((n) => (
+      <View
+        key={n}
+        style={{
+          flex: 1,
+          height: 4,
+          borderRadius: 2,
+          backgroundColor: n <= step ? t.accent : t.surfaceAlt,
+        }}
+      />
+    ))}
+  </View>
+);

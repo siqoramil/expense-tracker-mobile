@@ -319,19 +319,16 @@ export const actions = {
     await authApi.forgotPassword({ email: email.trim().toLowerCase() });
   },
 
+  verifyResetCode: async (email: string, code: string) => {
+    await authApi.verifyResetCode({ email: email.trim().toLowerCase(), code });
+  },
+
   resetPassword: async (email: string, code: string, newPassword: string) => {
-    const { token, user } = await authApi.resetPassword({
+    await authApi.resetPassword({
       email: email.trim().toLowerCase(),
       code,
       newPassword,
     });
-    setApiToken(token);
-    store.set((s) => ({
-      ...applyUserDTO(s, user),
-      token,
-      loggedIn: true,
-      onboarded: true,
-    }));
   },
 
   addTx: (tx: Omit<Transaction, 'id'>) =>

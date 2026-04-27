@@ -1,8 +1,23 @@
 import Constants from 'expo-constants';
 
-const BASE_URL =
-  (Constants.expoConfig?.extra as { apiUrl?: string } | undefined)?.apiUrl ??
-  'http://localhost:3000';
+const API_PORT = 3000;
+
+const resolveBaseUrl = (): string => {
+  const configured = (Constants.expoConfig?.extra as { apiUrl?: string } | undefined)?.apiUrl;
+  // In dev, derive the LAN IP from Expo's host so physical devices and
+  // Android emulators can reach the backend without manual config.
+  const debuggerHost =
+    Constants.expoConfig?.hostUri ??
+    (Constants as unknown as { expoGoConfig?: { debuggerHost?: string } }).expoGoConfig
+      ?.debuggerHost;
+  const host = debuggerHost?.split(':')[0];
+  if (host && host !== 'localhost' && host !== '127.0.0.1') {
+    return `http://${host}:${API_PORT}`;
+  }
+  return configured ?? `http://localhost:${API_PORT}`;
+};
+
+const BASE_URL = resolveBaseUrl();
 
 let authToken: string | null = null;
 
@@ -76,6 +91,8 @@ export const authApi = {
       method: 'POST',
       body,
     }),
+  verifyResetCode: (body: { email: string; code: string }) =>
+    apiRequest<{ ok: true }>('/auth/password/verify-code', { method: 'POST', body }),
   resetPassword: (body: { email: string; code: string; newPassword: string }) =>
     apiRequest<{ token: string; user: UserDTO }>('/auth/password/reset', {
       method: 'POST',

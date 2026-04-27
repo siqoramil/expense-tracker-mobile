@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
-import { fmtDate, fmtMoney, today, unitOf } from '../../lib/format';
+import { fmtDate, fmtMoney, today, unitOf, type Currency } from '../../lib/format';
 import { tStr } from '../../lib/i18n';
-import { useStore, type Debt, type DebtDirection } from '../../lib/store';
+import { useStore, type Debt } from '../../lib/store';
 import type { Tokens } from '../../lib/tokens';
 import { Icon } from '../Icon';
-import { Card, EmptyState, Press, ScreenHeader, SegmentedControl } from '../ui';
+import { Card, EmptyState, Press, ScreenHeader } from '../ui';
 
 type Props = {
   t: Tokens;
@@ -13,43 +13,50 @@ type Props = {
   onAdd: () => void;
 };
 
-type Filter = 'all' | 'due' | 'overdue';
+type Filter = 'all' | 'owe_me' | 'i_owe' | 'overdue' | 'due';
 
 export const DebtorsScreen: React.FC<Props> = ({ t, onOpen, onAdd }) => {
   const s = useStore();
   const lang = s.prefs.lang;
-  const [dir, setDir] = useState<DebtDirection>('owe_me');
   const [q, setQ] = useState('');
   const [filter, setFilter] = useState<Filter>('all');
 
   const tdy = today();
-  const filtered = s.debts.filter((d) => {
-    if (d.archived) return false;
-    if (d.direction !== dir) return false;
+  const active = s.debts.filter((d) => !d.archived);
+
+  const oweMeTotal = active
+    .filter((d) => d.direction === 'owe_me')
+    .reduce((a, d) => a + (d.amount - d.paid), 0);
+  const iOweTotal = active
+    .filter((d) => d.direction === 'i_owe')
+    .reduce((a, d) => a + (d.amount - d.paid), 0);
+  const net = oweMeTotal - iOweTotal;
+
+  const isOverdue = (d: Debt) =>
+    new Date(d.due).getTime() < tdy.getTime() && d.paid < d.amount;
+  const isDueSoon = (d: Debt) => {
+    const ms = new Date(d.due).getTime() - tdy.getTime();
+    return ms >= 0 && ms < 7 * 86_400_000 && d.paid < d.amount;
+  };
+
+  const filtered = active.filter((d) => {
     if (q && !d.name.toLowerCase().includes(q.toLowerCase())) return false;
-    const overdue = new Date(d.due).getTime() < tdy.getTime() && d.paid < d.amount;
-    if (filter === 'overdue' && !overdue) return false;
-    if (filter === 'due' && !(new Date(d.due).getTime() - tdy.getTime() < 7 * 86_400_000 && !overdue)) return false;
+    if (filter === 'owe_me' && d.direction !== 'owe_me') return false;
+    if (filter === 'i_owe' && d.direction !== 'i_owe') return false;
+    if (filter === 'overdue' && !isOverdue(d)) return false;
+    if (filter === 'due' && !isDueSoon(d)) return false;
     return true;
   });
 
-  const total = filtered.reduce((a, d) => a + (d.amount - d.paid), 0);
-  const overdueN = s.debts.filter(
-    (d) => !d.archived && d.direction === dir && new Date(d.due).getTime() < tdy.getTime() && d.paid < d.amount,
-  ).length;
-  const dueWk = s.debts.filter(
-    (d) =>
-      !d.archived &&
-      d.direction === dir &&
-      new Date(d.due).getTime() - tdy.getTime() < 7 * 86_400_000 &&
-      new Date(d.due).getTime() >= tdy.getTime() &&
-      d.paid < d.amount,
-  ).length;
+  const overdueCount = active.filter(isOverdue).length;
+  const dueCount = active.filter(isDueSoon).length;
 
-  const filters: { k: Filter; l: string }[] = [
-    { k: 'all', l: 'All' },
-    { k: 'due', l: 'Due soon' },
-    { k: 'overdue', l: 'Overdue' },
+  const filters: { k: Filter; l: string; n?: number }[] = [
+    { k: 'all', l: lang === 'uz' ? 'Hammasi' : 'All', n: active.length },
+    { k: 'owe_me', l: tStr(lang, 'oweMe') },
+    { k: 'i_owe', l: tStr(lang, 'iOwe') },
+    { k: 'overdue', l: tStr(lang, 'overdue'), n: overdueCount },
+    { k: 'due', l: tStr(lang, 'dueThisWeek'), n: dueCount },
   ];
 
   return (
@@ -75,80 +82,68 @@ export const DebtorsScreen: React.FC<Props> = ({ t, onOpen, onAdd }) => {
         }
       />
 
-      <View style={{ paddingHorizontal: 20, paddingBottom: 14 }}>
-        <SegmentedControl
-          t={t}
-          value={dir}
-          onChange={setDir}
-          options={[
-            { k: 'owe_me', label: tStr(lang, 'oweMe') },
-            { k: 'i_owe', label: tStr(lang, 'iOwe') },
-          ]}
-        />
-      </View>
-
       <View style={{ paddingHorizontal: 20, paddingBottom: 16 }}>
-        <Card
-          t={t}
-          style={{
-            padding: 22,
-            backgroundColor: dir === 'owe_me' ? t.accent : t.expense,
-            borderColor: 'transparent',
-            overflow: 'hidden',
-          }}
-        >
-          <View
-            style={{
-              position: 'absolute',
-              top: -30,
-              right: -30,
-              width: 140,
-              height: 140,
-              borderRadius: 70,
-              backgroundColor: 'rgba(255,255,255,0.1)',
-            }}
-          />
-          <Text
-            style={{
-              fontSize: 12,
-              color: 'rgba(255,255,255,0.85)',
-              fontWeight: '600',
-              letterSpacing: 0.4,
-              marginBottom: 6,
-            }}
-          >
-            {dir === 'owe_me' ? tStr(lang, 'totalOwedYou') : tStr(lang, 'totalYouOwe')}
-          </Text>
-          <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 6 }}>
-            <Text
-              style={{
-                fontSize: 32,
-                fontWeight: '700',
-                color: '#fff',
-                letterSpacing: -1,
-              }}
-            >
-              {fmtMoney(total, s.prefs.currency)}
-            </Text>
-            {unitOf(s.prefs.currency) ? (
-              <Text style={{ fontSize: 13, color: 'rgba(255,255,255,0.85)', fontWeight: '500' }}>
-                {unitOf(s.prefs.currency)}
-              </Text>
-            ) : null}
+        <Card t={t} style={{ padding: 0, overflow: 'hidden' }}>
+          <View style={{ flexDirection: 'row' }}>
+            <BalanceCol
+              t={t}
+              label={tStr(lang, 'oweMe')}
+              amount={oweMeTotal}
+              currency={s.prefs.currency}
+              tone="income"
+              icon="arrow-down-left"
+              count={active.filter((d) => d.direction === 'owe_me').length}
+              countLabel={tStr(lang, 'active')}
+              onPress={() => setFilter(filter === 'owe_me' ? 'all' : 'owe_me')}
+              active={filter === 'owe_me'}
+            />
+            <View style={{ width: StyleSheet.hairlineWidth, backgroundColor: t.border }} />
+            <BalanceCol
+              t={t}
+              label={tStr(lang, 'iOwe')}
+              amount={iOweTotal}
+              currency={s.prefs.currency}
+              tone="expense"
+              icon="arrow-up-right"
+              count={active.filter((d) => d.direction === 'i_owe').length}
+              countLabel={tStr(lang, 'active')}
+              onPress={() => setFilter(filter === 'i_owe' ? 'all' : 'i_owe')}
+              active={filter === 'i_owe'}
+            />
           </View>
           <View
             style={{
-              marginTop: 12,
-              paddingTop: 12,
-              borderTopWidth: 1,
-              borderTopColor: 'rgba(255,255,255,0.18)',
+              borderTopWidth: StyleSheet.hairlineWidth,
+              borderTopColor: t.border,
+              paddingVertical: 12,
+              paddingHorizontal: 16,
               flexDirection: 'row',
-              gap: 18,
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              backgroundColor: t.surfaceAlt,
             }}
           >
-            <MiniS label={tStr(lang, 'active')} value={filtered.length} />
-            <MiniS label={tStr(lang, 'overdue')} value={overdueN} />
-            <MiniS label={tStr(lang, 'dueThisWeek')} value={dueWk} />
+            <Text style={{ fontSize: 12, fontWeight: '600', color: t.textSec, letterSpacing: 0.4 }}>
+              {(lang === 'uz' ? 'SOF BALANS' : 'NET BALANCE').toUpperCase()}
+            </Text>
+            <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 4 }}>
+              <Text
+                style={{
+                  fontSize: 16,
+                  fontWeight: '700',
+                  color: net === 0 ? t.text : net > 0 ? t.income : t.expense,
+                  letterSpacing: -0.3,
+                }}
+              >
+                {net > 0 ? '+' : net < 0 ? '−' : ''}
+                {fmtMoney(Math.abs(net), s.prefs.currency)}
+              </Text>
+              {unitOf(s.prefs.currency) ? (
+                <Text style={{ fontSize: 11, color: t.textSec, fontWeight: '500' }}>
+                  {unitOf(s.prefs.currency)}
+                </Text>
+              ) : null}
+            </View>
           </View>
         </Card>
       </View>
@@ -193,30 +188,59 @@ export const DebtorsScreen: React.FC<Props> = ({ t, onOpen, onAdd }) => {
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 12, gap: 6 }}
       >
-        {filters.map(({ k, l }) => (
-          <Pressable
-            key={k}
-            onPress={() => setFilter(k)}
-            style={{
-              paddingVertical: 6,
-              paddingHorizontal: 12,
-              borderRadius: 100,
-              backgroundColor: filter === k ? t.text : t.surface,
-              borderWidth: 1,
-              borderColor: filter === k ? t.text : t.border,
-            }}
-          >
-            <Text
+        {filters.map(({ k, l, n }) => {
+          const on = filter === k;
+          return (
+            <Pressable
+              key={k}
+              onPress={() => setFilter(k)}
               style={{
-                color: filter === k ? t.surface : t.text,
-                fontSize: 12,
-                fontWeight: '500',
+                paddingVertical: 7,
+                paddingHorizontal: 12,
+                borderRadius: 100,
+                backgroundColor: on ? t.text : t.surface,
+                borderWidth: 1,
+                borderColor: on ? t.text : t.border,
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 6,
               }}
             >
-              {l}
-            </Text>
-          </Pressable>
-        ))}
+              <Text
+                style={{
+                  color: on ? t.surface : t.text,
+                  fontSize: 12.5,
+                  fontWeight: '500',
+                }}
+              >
+                {l}
+              </Text>
+              {n !== undefined && n > 0 ? (
+                <View
+                  style={{
+                    minWidth: 18,
+                    height: 18,
+                    paddingHorizontal: 5,
+                    borderRadius: 9,
+                    backgroundColor: on ? 'rgba(255,255,255,0.18)' : t.surfaceAlt,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <Text
+                    style={{
+                      color: on ? t.surface : t.textSec,
+                      fontSize: 10.5,
+                      fontWeight: '700',
+                    }}
+                  >
+                    {n}
+                  </Text>
+                </View>
+              ) : null}
+            </Pressable>
+          );
+        })}
       </ScrollView>
 
       <View style={{ paddingHorizontal: 20, gap: 8 }}>
@@ -237,20 +261,86 @@ export const DebtorsScreen: React.FC<Props> = ({ t, onOpen, onAdd }) => {
   );
 };
 
-const MiniS: React.FC<{ label: string; value: number }> = ({ label, value }) => (
-  <View>
-    <Text style={{ fontSize: 17, fontWeight: '700', color: '#fff' }}>{value}</Text>
-    <Text style={{ fontSize: 10.5, color: 'rgba(255,255,255,0.75)', marginTop: 1, fontWeight: '500' }}>
-      {label}
-    </Text>
-  </View>
-);
+const BalanceCol: React.FC<{
+  t: Tokens;
+  label: string;
+  amount: number;
+  currency: Currency;
+  tone: 'income' | 'expense';
+  icon: 'arrow-down-left' | 'arrow-up-right';
+  count: number;
+  countLabel: string;
+  onPress: () => void;
+  active: boolean;
+}> = ({ t, label, amount, currency, tone, icon, count, countLabel, onPress, active }) => {
+  const color = tone === 'income' ? t.income : t.expense;
+  const soft = tone === 'income' ? t.incomeSoft : t.expenseSoft;
+  return (
+    <Pressable
+      onPress={onPress}
+      style={{
+        flex: 1,
+        padding: 16,
+        backgroundColor: active ? soft : 'transparent',
+      }}
+    >
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+        <View
+          style={{
+            width: 26,
+            height: 26,
+            borderRadius: 13,
+            backgroundColor: soft,
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <Icon name={icon} size={14} color={color} stroke={2.5} />
+        </View>
+        <Text
+          numberOfLines={1}
+          style={{ fontSize: 12, fontWeight: '600', color: t.textSec, flex: 1 }}
+        >
+          {label}
+        </Text>
+      </View>
+      <Text
+        numberOfLines={1}
+        adjustsFontSizeToFit
+        style={{
+          fontSize: 22,
+          fontWeight: '700',
+          color: t.text,
+          letterSpacing: -0.6,
+        }}
+      >
+        {fmtMoney(amount, currency)}
+      </Text>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 4 }}>
+        <View
+          style={{
+            width: 6,
+            height: 6,
+            borderRadius: 3,
+            backgroundColor: color,
+          }}
+        />
+        <Text style={{ fontSize: 11, color: t.textSec, fontWeight: '500' }}>
+          {count} {countLabel.toLowerCase()}
+        </Text>
+      </View>
+    </Pressable>
+  );
+};
 
 const DebtorCard: React.FC<{ debtor: Debt; t: Tokens; onPress: () => void }> = ({ debtor, t, onPress }) => {
   const s = useStore();
   const lang = s.prefs.lang;
   const overdue = new Date(debtor.due).getTime() < today().getTime() && debtor.paid < debtor.amount;
   const remaining = debtor.amount - debtor.paid;
+  const isOweMe = debtor.direction === 'owe_me';
+  const dirColor = isOweMe ? t.income : t.expense;
+  const dirSoft = isOweMe ? t.incomeSoft : t.expenseSoft;
   const initials = debtor.name
     .split(' ')
     .map((x) => x[0])
@@ -261,81 +351,114 @@ const DebtorCard: React.FC<{ debtor: Debt; t: Tokens; onPress: () => void }> = (
     <Pressable
       onPress={onPress}
       style={{
-        padding: 16,
         borderRadius: 16,
         backgroundColor: t.surface,
         borderWidth: StyleSheet.hairlineWidth,
         borderColor: t.border,
         flexDirection: 'row',
-        alignItems: 'center',
-        gap: 12,
+        alignItems: 'stretch',
+        overflow: 'hidden',
       }}
     >
+      <View style={{ width: 3, backgroundColor: dirColor }} />
       <View
         style={{
-          width: 42,
-          height: 42,
-          borderRadius: 21,
-          backgroundColor: debtor.color + '22',
+          flex: 1,
+          padding: 14,
+          paddingLeft: 13,
+          flexDirection: 'row',
           alignItems: 'center',
-          justifyContent: 'center',
+          gap: 12,
         }}
       >
-        <Text style={{ fontSize: 14, fontWeight: '700', color: debtor.color }}>{initials}</Text>
-      </View>
-      <View style={{ flex: 1, minWidth: 0 }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-          <Text
-            numberOfLines={1}
-            style={{ fontSize: 14.5, fontWeight: '600', color: t.text, flexShrink: 1 }}
-          >
-            {debtor.name}
-          </Text>
-          {overdue ? (
-            <View
-              style={{
-                paddingVertical: 2,
-                paddingHorizontal: 5,
-                borderRadius: 3,
-                backgroundColor: t.expenseSoft,
-              }}
+        <View
+          style={{
+            width: 42,
+            height: 42,
+            borderRadius: 21,
+            backgroundColor: debtor.color + '22',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <Text style={{ fontSize: 14, fontWeight: '700', color: debtor.color }}>{initials}</Text>
+        </View>
+        <View style={{ flex: 1, minWidth: 0 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+            <Text
+              numberOfLines={1}
+              style={{ fontSize: 14.5, fontWeight: '600', color: t.text, flexShrink: 1 }}
             >
-              <Text
+              {debtor.name}
+            </Text>
+            {overdue ? (
+              <View
                 style={{
-                  fontSize: 9.5,
-                  fontWeight: '700',
-                  color: t.expense,
-                  textTransform: 'uppercase',
-                  letterSpacing: 0.3,
+                  paddingVertical: 2,
+                  paddingHorizontal: 5,
+                  borderRadius: 3,
+                  backgroundColor: t.expenseSoft,
                 }}
               >
-                {tStr(lang, 'overdue')}
-              </Text>
-            </View>
-          ) : null}
-        </View>
-        {debtor.note ? (
-          <Text numberOfLines={1} style={{ fontSize: 12, color: t.textSec, marginTop: 2 }}>
-            {debtor.note}
-          </Text>
-        ) : null}
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3, marginTop: 1 }}>
-          <Icon name="calendar" size={10} color={t.textTer} stroke={2} />
-          <Text style={{ fontSize: 11, color: t.textTer }}>{fmtDate(debtor.due, lang)}</Text>
-          {debtor.paid > 0 ? (
-            <Text style={{ fontSize: 11, color: t.income, marginLeft: 6 }}>
-              · {fmtMoney(debtor.paid, s.prefs.currency)} {tStr(lang, 'paid').toLowerCase()}
+                <Text
+                  style={{
+                    fontSize: 9.5,
+                    fontWeight: '700',
+                    color: t.expense,
+                    textTransform: 'uppercase',
+                    letterSpacing: 0.3,
+                  }}
+                >
+                  {tStr(lang, 'overdue')}
+                </Text>
+              </View>
+            ) : null}
+          </View>
+          {debtor.note ? (
+            <Text numberOfLines={1} style={{ fontSize: 12, color: t.textSec, marginTop: 2 }}>
+              {debtor.note}
             </Text>
           ) : null}
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3, marginTop: 1 }}>
+            <Icon name="calendar" size={10} color={t.textTer} stroke={2} />
+            <Text style={{ fontSize: 11, color: t.textTer }}>{fmtDate(debtor.due, lang)}</Text>
+            {debtor.paid > 0 ? (
+              <Text style={{ fontSize: 11, color: t.income, marginLeft: 6 }}>
+                · {fmtMoney(debtor.paid, s.prefs.currency)} {tStr(lang, 'paid').toLowerCase()}
+              </Text>
+            ) : null}
+          </View>
         </View>
-      </View>
-      <View style={{ alignItems: 'flex-end' }}>
-        <Text style={{ fontSize: 15, fontWeight: '700', color: t.text }}>
-          {fmtMoney(remaining, s.prefs.currency)}
-        </Text>
-        <Text style={{ fontSize: 10, color: t.textSec, marginTop: 2 }}>
-          {unitOf(s.prefs.currency)}
-        </Text>
+        <View style={{ alignItems: 'flex-end' }}>
+          <View
+            style={{
+              paddingVertical: 2,
+              paddingHorizontal: 6,
+              borderRadius: 4,
+              backgroundColor: dirSoft,
+              marginBottom: 4,
+            }}
+          >
+            <Text
+              style={{
+                fontSize: 9,
+                fontWeight: '700',
+                color: dirColor,
+                textTransform: 'uppercase',
+                letterSpacing: 0.4,
+              }}
+            >
+              {isOweMe ? tStr(lang, 'oweMe') : tStr(lang, 'iOwe')}
+            </Text>
+          </View>
+          <Text style={{ fontSize: 15, fontWeight: '700', color: t.text }}>
+            {isOweMe ? '+' : '−'}
+            {fmtMoney(remaining, s.prefs.currency)}
+          </Text>
+          <Text style={{ fontSize: 10, color: t.textSec, marginTop: 2 }}>
+            {unitOf(s.prefs.currency)}
+          </Text>
+        </View>
       </View>
     </Pressable>
   );
