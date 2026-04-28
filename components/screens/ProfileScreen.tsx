@@ -1,7 +1,8 @@
+import * as ImagePicker from 'expo-image-picker';
 import React, { useState } from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActionSheetIOS, Alert, Image, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { tStr } from '../../lib/i18n';
-import { actions, store, useStore } from '../../lib/store';
+import { actions, isImageAvatar, store, useStore } from '../../lib/store';
 import { toast } from '../../lib/toast';
 import type { Tokens } from '../../lib/tokens';
 import { EditEmailSheet, EditNameSheet } from '../AccountSheets';
@@ -20,13 +21,95 @@ export const ProfileScreen: React.FC<{ t: Tokens; onNav: Nav; onLogout: () => vo
   const [editName, setEditName] = useState(false);
   const [editEmail, setEditEmail] = useState(false);
 
+  const hasImage = isImageAvatar(s.profile.avatar);
+
+  const pickImage = async (source: 'camera' | 'library') => {
+    try {
+      const perm =
+        source === 'camera'
+          ? await ImagePicker.requestCameraPermissionsAsync()
+          : await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (perm.status !== 'granted') {
+        toast(lang === 'uz' ? "Ruxsat berilmagan" : 'Permission denied');
+        return;
+      }
+      const result =
+        source === 'camera'
+          ? await ImagePicker.launchCameraAsync({
+              allowsEditing: true,
+              aspect: [1, 1],
+              quality: 0.5,
+              base64: true,
+            })
+          : await ImagePicker.launchImageLibraryAsync({
+              mediaTypes: ['images'],
+              allowsEditing: true,
+              aspect: [1, 1],
+              quality: 0.5,
+              base64: true,
+            });
+      if (result.canceled) return;
+      const asset = result.assets[0];
+      if (!asset?.base64) return;
+      const uri = `data:image/jpeg;base64,${asset.base64}`;
+      await actions.updateAvatar(uri);
+      toast(tStr(lang, 'saved'));
+    } catch {
+      toast(lang === 'uz' ? "Xatolik yuz berdi" : 'Something went wrong');
+    }
+  };
+
+  const openAvatarMenu = () => {
+    const labels = {
+      title: lang === 'uz' ? 'Profil rasmi' : 'Profile photo',
+      camera: lang === 'uz' ? 'Kamera' : 'Take photo',
+      library: lang === 'uz' ? 'Galereyadan tanlash' : 'Choose from library',
+      remove: lang === 'uz' ? "Rasmni o'chirish" : 'Remove photo',
+      cancel: tStr(lang, 'cancel'),
+    };
+    const options = hasImage
+      ? [labels.camera, labels.library, labels.remove, labels.cancel]
+      : [labels.camera, labels.library, labels.cancel];
+    const cancelIdx = options.length - 1;
+    const destructiveIdx = hasImage ? 2 : -1;
+
+    const handle = (idx: number) => {
+      if (idx === 0) void pickImage('camera');
+      else if (idx === 1) void pickImage('library');
+      else if (hasImage && idx === 2) void actions.removeAvatar();
+    };
+
+    if (Platform.OS === 'ios') {
+      ActionSheetIOS.showActionSheetWithOptions(
+        {
+          title: labels.title,
+          options,
+          cancelButtonIndex: cancelIdx,
+          destructiveButtonIndex: destructiveIdx >= 0 ? destructiveIdx : undefined,
+        },
+        handle,
+      );
+    } else {
+      const buttons = options.slice(0, -1).map((label, i) => ({
+        text: label,
+        style: (i === destructiveIdx ? 'destructive' : 'default') as 'destructive' | 'default',
+        onPress: () => handle(i),
+      }));
+      Alert.alert(labels.title, undefined, [
+        ...buttons,
+        { text: labels.cancel, style: 'cancel' },
+      ]);
+    }
+  };
+
   return (
     <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 160 }}>
       <ScreenHeader t={t} title={tStr(lang, 'profile')} />
 
       <View style={{ paddingHorizontal: 20, paddingBottom: 18 }}>
         <Card t={t} style={{ padding: 20, flexDirection: 'row', alignItems: 'center', gap: 14 }}>
-          <View
+          <Pressable
+            onPress={openAvatarMenu}
             style={{
               width: 60,
               height: 60,
@@ -34,6 +117,7 @@ export const ProfileScreen: React.FC<{ t: Tokens; onNav: Nav; onLogout: () => vo
               backgroundColor: t.accent,
               alignItems: 'center',
               justifyContent: 'center',
+              overflow: 'hidden',
               shadowColor: t.accent,
               shadowOpacity: 0.25,
               shadowRadius: 14,
@@ -41,8 +125,31 @@ export const ProfileScreen: React.FC<{ t: Tokens; onNav: Nav; onLogout: () => vo
               elevation: 4,
             }}
           >
-            <Text style={{ fontSize: 20, fontWeight: '700', color: '#fff' }}>{s.profile.avatar}</Text>
-          </View>
+            {hasImage ? (
+              <Image source={{ uri: s.profile.avatar }} style={{ width: 60, height: 60 }} />
+            ) : (
+              <Text style={{ fontSize: 20, fontWeight: '700', color: '#fff' }}>
+                {s.profile.avatar}
+              </Text>
+            )}
+            <View
+              style={{
+                position: 'absolute',
+                right: 0,
+                bottom: 0,
+                width: 22,
+                height: 22,
+                borderRadius: 11,
+                backgroundColor: t.surface,
+                borderWidth: 2,
+                borderColor: t.bg,
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Icon name="settings" size={11} color={t.textSec} stroke={2.4} />
+            </View>
+          </Pressable>
           <View style={{ flex: 1, minWidth: 0 }}>
             <Pressable
               onPress={() => setEditName(true)}

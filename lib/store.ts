@@ -219,6 +219,7 @@ export const hydrate = async () => {
       if (parsed.version === 2) state = parsed;
     }
   } catch {}
+  state = { ...state, onboarded: false };
   setAppLanguage(state.prefs.lang);
   if (state.token) setApiToken(state.token);
   hydrated = true;
@@ -260,6 +261,9 @@ const avatarFromName = (name: string) =>
     .join('')
     .toUpperCase();
 
+export const isImageAvatar = (a: string) =>
+  a.startsWith('data:image') || a.startsWith('http://') || a.startsWith('https://');
+
 const applyUserDTO = (s: State, user: UserDTO): State => ({
   ...s,
   profile: {
@@ -296,12 +300,31 @@ export const actions = {
   updateName: async (name: string) => {
     const trimmed = name.trim();
     if (!trimmed) throw new Error('empty_name');
+    const prev = store.get().profile.avatar;
+    const nextAvatar = isImageAvatar(prev) ? prev : avatarFromName(trimmed);
     store.set((s) => ({
       ...s,
-      profile: { ...s.profile, name: trimmed, avatar: avatarFromName(trimmed) },
+      profile: { ...s.profile, name: trimmed, avatar: nextAvatar },
     }));
     if (store.get().token) {
       const { user } = await authApi.updateMe({ name: trimmed });
+      store.set((s) => applyUserDTO(s, user));
+    }
+  },
+
+  updateAvatar: async (avatar: string) => {
+    store.set((s) => ({ ...s, profile: { ...s.profile, avatar } }));
+    if (store.get().token) {
+      const { user } = await authApi.updateMe({ avatar });
+      store.set((s) => applyUserDTO(s, user));
+    }
+  },
+
+  removeAvatar: async () => {
+    const initials = avatarFromName(store.get().profile.name);
+    store.set((s) => ({ ...s, profile: { ...s.profile, avatar: initials } }));
+    if (store.get().token) {
+      const { user } = await authApi.updateMe({ avatar: initials });
       store.set((s) => applyUserDTO(s, user));
     }
   },

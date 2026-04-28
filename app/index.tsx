@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { View } from 'react-native';
+import { BackHandler, View } from 'react-native';
 import Animated, {
   Easing,
   useAnimatedStyle,
@@ -103,6 +103,17 @@ export default function AppRoot() {
 
   const push = useCallback((entry: StackEntry) => setNavStack((st) => [...st, entry]), []);
   const pop = useCallback(() => setNavStack((st) => st.slice(0, -1)), []);
+
+  useEffect(() => {
+    const sub = BackHandler.addEventListener('hardwareBackPress', () => {
+      if (navStack.length > 0) {
+        pop();
+        return true;
+      }
+      return false;
+    });
+    return () => sub.remove();
+  }, [navStack.length, pop]);
 
   const onNav = useCallback(
     (screen: string, data?: unknown) => {

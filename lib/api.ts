@@ -77,7 +77,7 @@ export const authApi = {
   login: (body: { email: string; password: string }) =>
     apiRequest<{ token: string; user: UserDTO }>('/auth/login', { method: 'POST', body }),
   me: () => apiRequest<{ user: UserDTO }>('/auth/me'),
-  updateMe: (body: { name?: string; prefs?: Record<string, unknown> }) =>
+  updateMe: (body: { name?: string; avatar?: string; prefs?: Record<string, unknown> }) =>
     apiRequest<{ user: UserDTO }>('/auth/me', { method: 'PATCH', body }),
   requestEmailChange: (body: { newEmail: string }) =>
     apiRequest<{ sent: true; expiresInSeconds: number }>('/auth/email/request-change', {

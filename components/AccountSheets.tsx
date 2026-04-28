@@ -1,8 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
+  KeyboardAvoidingView,
   Modal,
+  Platform,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -24,60 +27,77 @@ const SheetContainer: React.FC<{
   title: string;
   children: React.ReactNode;
 }> = ({ t, visible, onClose, title, children }) => (
-  <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-    <Pressable
-      onPress={onClose}
-      style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'flex-end' }}
+  <Modal
+    visible={visible}
+    transparent
+    animationType="slide"
+    statusBarTranslucent
+    onRequestClose={onClose}
+  >
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      style={{ flex: 1 }}
     >
       <Pressable
-        onPress={() => {}}
-        style={{
-          backgroundColor: t.sheetBg,
-          borderTopLeftRadius: 28,
-          borderTopRightRadius: 28,
-          paddingHorizontal: 22,
-          paddingTop: 12,
-          paddingBottom: 34,
-        }}
+        onPress={onClose}
+        style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'flex-end' }}
       >
-        <View
+        <Pressable
+          onPress={() => {}}
           style={{
-            width: 40,
-            height: 4,
-            borderRadius: 2,
-            backgroundColor: t.borderStrong,
-            alignSelf: 'center',
-            marginBottom: 14,
-          }}
-        />
-        <View
-          style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            marginBottom: 18,
+            backgroundColor: t.sheetBg,
+            borderTopLeftRadius: 28,
+            borderTopRightRadius: 28,
+            paddingHorizontal: 22,
+            paddingTop: 12,
+            paddingBottom: 34,
+            maxHeight: '90%',
           }}
         >
-          <Text style={{ fontSize: 20, fontWeight: '700', color: t.text, letterSpacing: -0.4 }}>
-            {title}
-          </Text>
-          <Pressable
-            onPress={onClose}
+          <View
             style={{
-              width: 34,
-              height: 34,
-              borderRadius: 17,
-              backgroundColor: t.surfaceAlt,
+              width: 40,
+              height: 4,
+              borderRadius: 2,
+              backgroundColor: t.borderStrong,
+              alignSelf: 'center',
+              marginBottom: 14,
+            }}
+          />
+          <View
+            style={{
+              flexDirection: 'row',
               alignItems: 'center',
-              justifyContent: 'center',
+              justifyContent: 'space-between',
+              marginBottom: 18,
             }}
           >
-            <Icon name="close" size={16} color={t.textSec} stroke={2.2} />
-          </Pressable>
-        </View>
-        {children}
+            <Text style={{ fontSize: 20, fontWeight: '700', color: t.text, letterSpacing: -0.4 }}>
+              {title}
+            </Text>
+            <Pressable
+              onPress={onClose}
+              style={{
+                width: 34,
+                height: 34,
+                borderRadius: 17,
+                backgroundColor: t.surfaceAlt,
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Icon name="close" size={16} color={t.textSec} stroke={2.2} />
+            </Pressable>
+          </View>
+          <ScrollView
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
+            {children}
+          </ScrollView>
+        </Pressable>
       </Pressable>
-    </Pressable>
+    </KeyboardAvoidingView>
   </Modal>
 );
 
