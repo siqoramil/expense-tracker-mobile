@@ -43,7 +43,9 @@ export type IconName =
   | 'dots'
   | 'trending-up'
   | 'eye'
-  | 'eye-off';
+  | 'eye-off'
+  | 'mail'
+  | 'info';
 
 type Props = {
   name: IconName;
@@ -252,6 +254,20 @@ export const Icon: React.FC<Props> = ({ name, size = 22, color = '#000', stroke 
         <Svg width={size} height={size} viewBox={vb}>
           <Rect {...common} x={4} y={11} width={16} height={10} rx={2} />
           <Path {...common} d="M8 11V7a4 4 0 018 0v4" />
+        </Svg>
+      );
+    case 'mail':
+      return (
+        <Svg width={size} height={size} viewBox={vb}>
+          <Rect {...common} x={3} y={5} width={18} height={14} rx={2} />
+          <Path {...common} d="M3 7l9 6 9-6" />
+        </Svg>
+      );
+    case 'info':
+      return (
+        <Svg width={size} height={size} viewBox={vb}>
+          <Circle {...common} cx={12} cy={12} r={9} />
+          <Path {...common} d="M12 8v0M12 11v5" />
         </Svg>
       );
     case 'globe':

@@ -924,6 +924,15 @@
     dotenv-expand "~11.0.6"
     getenv "^2.0.0"
 
+"@expo/env@~2.1.1":
+  version "2.1.1"
+  resolved "https://registry.yarnpkg.com/@expo/env/-/env-2.1.1.tgz#95c047b69dee14a6ebaaa0415c4896ac69f1bf0d"
+  integrity sha512-rVvHC4I6xlPcg+mAO09ydUi2Wjv1ZytpLmHOSzvXzBAz9mMrJggqCe4s4dubjJvi/Ino/xQCLhbaLCnTtLpikg==
+  dependencies:
+    chalk "^4.0.0"
+    debug "^4.3.4"
+    getenv "^2.0.0"
+
 "@expo/fingerprint@0.15.4":
   version "0.15.4"
   resolved "https://registry.yarnpkg.com/@expo/fingerprint/-/fingerprint-0.15.4.tgz#578bd1e1179a13313f7de682ebaaacb703b2b7ac"
@@ -2630,6 +2639,11 @@ event-target-shim@^5.0.0:
   resolved "https://registry.yarnpkg.com/event-target-shim/-/event-target-shim-5.0.1.tgz#5d4d3ebdf9583d63a5333ce2deb7480ab2b05789"
   integrity sha512-i/2XbnSz/uxRCU6+NdVJgKWDTM427+MqYbkQzD321DuCQJUqOuJKIA0IM2+W2xtYHdKOmZ4dR6fExsd4SXL+WQ==
 
+expo-application@~55.0.14:
+  version "55.0.14"
+  resolved "https://registry.yarnpkg.com/expo-application/-/expo-application-55.0.14.tgz#f746896c535aa512e0b3cb50efffa02bc05a7a6d"
+  integrity sha512-NgqDIt3eCf4aVLp1L6AcEanCYoyJeuBsGrgGSzOIvxAsOvp5X3SYKW3ROgpKUnLQEKMWlzwETpjsUGszcqkk8g==
+
 expo-asset@~12.0.12:
   version "12.0.12"
   resolved "https://registry.yarnpkg.com/expo-asset/-/expo-asset-12.0.12.tgz#15eb7d92cd43cc81c37149e5bbcdc3091875a85b"
@@ -2638,6 +2652,18 @@ expo-asset@~12.0.12:
     "@expo/image-utils" "^0.8.8"
     expo-constants "~18.0.12"
 
+expo-auth-session@^55.0.15:
+  version "55.0.15"
+  resolved "https://registry.yarnpkg.com/expo-auth-session/-/expo-auth-session-55.0.15.tgz#6bc6d14e2d54fe6ddc6c6ec04428b9528a3d8970"
+  integrity sha512-RPnoLs6+FY2MMWnV0cqz4uNzi2b1dwjqE6vv7Izb5vWI2RCFUnBSMy1fgXp4BSWaFm0VZzeMl6UjsgVh2QFe0g==
+  dependencies:
+    expo-application "~55.0.14"
+    expo-constants "~55.0.15"
+    expo-crypto "~55.0.14"
+    expo-linking "~55.0.14"
+    expo-web-browser "~55.0.14"
+    invariant "^2.2.4"
+
 expo-constants@~18.0.12, expo-constants@~18.0.13:
   version "18.0.13"
   resolved "https://registry.yarnpkg.com/expo-constants/-/expo-constants-18.0.13.tgz#0117f1f3d43be7b645192c0f4f431fb4efc4803d"
@@ -2645,6 +2671,18 @@ expo-constants@~18.0.12, expo-constants@~18.0.13:
   dependencies:
     "@expo/config" "~12.0.13"
     "@expo/env" "~2.0.8"
+
+expo-constants@~55.0.15:
+  version "55.0.15"
+  resolved "https://registry.yarnpkg.com/expo-constants/-/expo-constants-55.0.15.tgz#62d1d828ff3384dda4bccdf45e990d700675fc70"
+  integrity sha512-w394fcZLJjeKN+9ZnJzL/HiarE1nwZFDa+3S9frevh6Ur+MAAs9QDrcXhDrV8T3xqRzzYaqsP6Z8TFZ4efWN1A==
+  dependencies:
+    "@expo/env" "~2.1.1"
+
+expo-crypto@^55.0.14, expo-crypto@~55.0.14:
+  version "55.0.14"
+  resolved "https://registry.yarnpkg.com/expo-crypto/-/expo-crypto-55.0.14.tgz#2a6b03f4d57c50b68b9524dbc7bd88f510032d0d"
+  integrity sha512-TfAADBGZNNv9OOmdKFJCz54wDj87ufxtzQNSY+Roycpm8e5tuCnDIL7EjqUOmNTGH99Jj8ftPGFt4KGG2Ii2fg==
 
 expo-dev-client@~6.0.20:
   version "6.0.20"
@@ -2711,6 +2749,14 @@ expo-keep-awake@~15.0.8:
   version "15.0.8"
   resolved "https://registry.yarnpkg.com/expo-keep-awake/-/expo-keep-awake-15.0.8.tgz#911c5effeba9baff2ccde79ef0ff5bf856215f8d"
   integrity sha512-YK9M1VrnoH1vLJiQzChZgzDvVimVoriibiDIFLbQMpjYBnvyfUeHJcin/Gx1a+XgupNXy92EQJLgI/9ZuXajYQ==
+
+expo-linking@~55.0.14:
+  version "55.0.14"
+  resolved "https://registry.yarnpkg.com/expo-linking/-/expo-linking-55.0.14.tgz#82e4de82c7204f2437835cbf71870c605f898abd"
+  integrity sha512-ZSqOvJyEquf04M5/ZpQo2diK9QRnNrzgqZo7p8gzxaPPHxP6IyUJnmcd12qT+dTxnRTVmUpxFQVHHWbvwPNIwQ==
+  dependencies:
+    expo-constants "~55.0.15"
+    invariant "^2.2.4"
 
 expo-linking@~8.0.11:
   version "8.0.11"
@@ -2803,6 +2849,11 @@ expo-web-browser@~15.0.10:
   version "15.0.10"
   resolved "https://registry.yarnpkg.com/expo-web-browser/-/expo-web-browser-15.0.10.tgz#ee7fb59b4f143f262c13c020433a83444181f1a3"
   integrity sha512-fvDhW4bhmXAeWFNFiInmsGCK83PAqAcQaFyp/3pE/jbdKmFKoRCWr46uZGIfN4msLK/OODhaQ/+US7GSJNDHJg==
+
+expo-web-browser@~55.0.14:
+  version "55.0.14"
+  resolved "https://registry.yarnpkg.com/expo-web-browser/-/expo-web-browser-55.0.14.tgz#ce58dcf8103123fd4e812d6909e390255ee6373b"
+  integrity sha512-bTDkBSQBnrlnYcM7Aak72AOvJuvdgA3M8p//Lazrm0Nfa77T9cRXzQ6KhLrB08V39n1+00d1dvuTWznJslkmdg==
 
 expo@~54.0.33:
   version "54.0.33"

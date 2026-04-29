@@ -1,6 +1,14 @@
-import * as ImagePicker from 'expo-image-picker';
 import React, { useState } from 'react';
 import { ActionSheetIOS, Alert, Image, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+
+type ImagePickerModule = typeof import('expo-image-picker');
+const loadImagePicker = (): ImagePickerModule | null => {
+  try {
+    return require('expo-image-picker') as ImagePickerModule;
+  } catch {
+    return null;
+  }
+};
 import { tStr } from '../../lib/i18n';
 import { actions, isImageAvatar, store, useStore } from '../../lib/store';
 import { toast } from '../../lib/toast';
@@ -24,6 +32,15 @@ export const ProfileScreen: React.FC<{ t: Tokens; onNav: Nav; onLogout: () => vo
   const hasImage = isImageAvatar(s.profile.avatar);
 
   const pickImage = async (source: 'camera' | 'library') => {
+    const ImagePicker = loadImagePicker();
+    if (!ImagePicker) {
+      toast(
+        lang === 'uz'
+          ? "Rasm tanlash mavjud emas — ilovani qayta build qiling"
+          : 'Image picker unavailable — rebuild the dev client',
+      );
+      return;
+    }
     try {
       const perm =
         source === 'camera'
@@ -38,24 +55,31 @@ export const ProfileScreen: React.FC<{ t: Tokens; onNav: Nav; onLogout: () => vo
           ? await ImagePicker.launchCameraAsync({
               allowsEditing: true,
               aspect: [1, 1],
-              quality: 0.5,
+              quality: 0.3,
               base64: true,
             })
           : await ImagePicker.launchImageLibraryAsync({
               mediaTypes: ['images'],
               allowsEditing: true,
               aspect: [1, 1],
-              quality: 0.5,
+              quality: 0.3,
               base64: true,
             });
       if (result.canceled) return;
       const asset = result.assets[0];
       if (!asset?.base64) return;
-      const uri = `data:image/jpeg;base64,${asset.base64}`;
+      const mime = asset.mimeType ?? 'image/jpeg';
+      const uri = `data:${mime};base64,${asset.base64}`;
       await actions.updateAvatar(uri);
       toast(tStr(lang, 'saved'));
-    } catch {
-      toast(lang === 'uz' ? "Xatolik yuz berdi" : 'Something went wrong');
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : '';
+      console.warn('avatar upload failed:', msg);
+      toast(
+        lang === 'uz'
+          ? `Xatolik: ${msg || 'noma\'lum'}`
+          : `Error: ${msg || 'unknown'}`,
+      );
     }
   };
 
@@ -285,7 +309,7 @@ export const ProfileScreen: React.FC<{ t: Tokens; onNav: Nav; onLogout: () => vo
 
       <View style={{ paddingHorizontal: 20, alignItems: 'center' }}>
         <Text style={{ fontSize: 11.5, color: t.textTer, fontWeight: '500' }}>
-          Ledgr v2.4.0 · Tashkent
+          Expense Tracker v2.4.0 · Tashkent
         </Text>
       </View>
     </ScrollView>

@@ -98,4 +98,6 @@ export const authApi = {
       method: 'POST',
       body,
     }),
+  google: (body: { idToken: string }) =>
+    apiRequest<{ token: string; user: UserDTO }>('/auth/google', { method: 'POST', body }),
 };

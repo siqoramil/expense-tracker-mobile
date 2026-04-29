@@ -148,7 +148,7 @@ export const LoginScreen: React.FC<{ t: Tokens; onDone: () => void }> = ({ t, on
         {mode === 'signin' ? tStr(lang, 'welcome') : tStr(lang, 'signUp')}
       </Text>
       <Text style={{ fontSize: 14, color: t.textSec, marginBottom: 32 }}>
-        {mode === 'signin' ? 'Sign in to continue to Ledgr' : 'Create your Ledgr account'}
+        {mode === 'signin' ? 'Sign in to continue to Expense Tracker' : 'Create your Expense Tracker account'}
       </Text>
 
       <View style={{ gap: 12, marginBottom: 16 }}>

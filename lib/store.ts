@@ -4,7 +4,7 @@ import { daysAgo, daysFromNow, isoDate, today, type Currency } from './format';
 import { authApi, setApiToken, type UserDTO } from './api';
 import { setAppLanguage, type Lang, type Localized } from './i18n';
 
-const STORAGE_KEY = 'ledgr_state_v2';
+const STORAGE_KEY = 'expense_tracker_state_v2';
 
 export type TxKind = 'income' | 'expense';
 export type DebtDirection = 'owe_me' | 'i_owe';
