@@ -16,7 +16,6 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { fmtDate, fmtMoney, unitOf } from '../lib/format';
-import type { Lang } from '../lib/i18n';
 import { catLabel, store, type Transaction, type TxKind } from '../lib/store';
 import type { Tokens } from '../lib/tokens';
 import { Icon, type IconName } from './Icon';

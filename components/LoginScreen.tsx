@@ -1,4 +1,7 @@
-import React, { useState } from 'react';
+import * as Google from 'expo-auth-session/providers/google';
+import Constants from 'expo-constants';
+import * as WebBrowser from 'expo-web-browser';
+import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Pressable,
@@ -8,12 +11,22 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import Svg, { Path } from 'react-native-svg';
 import { ApiError, authApi } from '../lib/api';
 import { tStr } from '../lib/i18n';
 import { actions, store } from '../lib/store';
 import type { Tokens } from '../lib/tokens';
 import { ForgotPasswordSheet } from './AccountSheets';
 import { Icon } from './Icon';
+
+WebBrowser.maybeCompleteAuthSession();
+
+type GoogleConfig = {
+  googleWebClientId?: string;
+  googleIosClientId?: string;
+  googleAndroidClientId?: string;
+};
+const gx = (Constants.expoConfig?.extra ?? {}) as GoogleConfig;
 
 export const LoginScreen: React.FC<{ t: Tokens; onDone: () => void }> = ({ t, onDone }) => {
   const [mode, setMode] = useState<'signin' | 'signup'>('signin');
@@ -25,6 +38,13 @@ export const LoginScreen: React.FC<{ t: Tokens; onDone: () => void }> = ({ t, on
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const lang = store.get().prefs.lang;
+
+  const googleEnabled = !!(gx.googleWebClientId || gx.googleIosClientId || gx.googleAndroidClientId);
+  const [googleRequest, googleResponse, googlePrompt] = Google.useIdTokenAuthRequest({
+    webClientId: gx.googleWebClientId,
+    iosClientId: gx.googleIosClientId,
+    androidClientId: gx.googleAndroidClientId,
+  });
 
   const friendly = (code: string): string => {
     const mappings: Record<string, { en: string; uz: string }> = {
@@ -44,6 +64,47 @@ export const LoginScreen: React.FC<{ t: Tokens; onDone: () => void }> = ({ t, on
     const m = mappings[code];
     if (m) return lang === 'uz' ? m.uz : m.en;
     return code;
+  };
+
+  useEffect(() => {
+    if (googleResponse?.type !== 'success') return;
+    const idToken = googleResponse.params?.id_token;
+    if (!idToken) return;
+    let cancelled = false;
+    (async () => {
+      setErr(null);
+      setBusy(true);
+      try {
+        const { token, user } = await authApi.google({ idToken });
+        if (cancelled) return;
+        actions.setAuth(token, user);
+        onDone();
+      } catch (e) {
+        if (cancelled) return;
+        if (e instanceof ApiError) setErr(friendly(e.message));
+        else if (e instanceof TypeError) setErr(friendly('network_error'));
+        else setErr(lang === 'uz' ? "Google bilan kirib bo'lmadi" : 'Google sign-in failed');
+      } finally {
+        if (!cancelled) setBusy(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [googleResponse]);
+
+  const handleGooglePress = async () => {
+    if (!googleEnabled) {
+      setErr(lang === 'uz' ? 'Google sozlanmagan' : 'Google sign-in not configured');
+      return;
+    }
+    setErr(null);
+    try {
+      await googlePrompt();
+    } catch {
+      setErr(lang === 'uz' ? "Google bilan kirib bo'lmadi" : 'Google sign-in failed');
+    }
   };
 
   const submit = async () => {
@@ -265,24 +326,49 @@ export const LoginScreen: React.FC<{ t: Tokens; onDone: () => void }> = ({ t, on
         <View style={{ flex: 1, height: StyleSheet.hairlineWidth, backgroundColor: t.divider }} />
       </View>
 
-      <View style={{ flexDirection: 'row', gap: 10, marginBottom: 28 }}>
-        {['Google', 'Apple'].map((p) => (
-          <Pressable
-            key={p}
-            style={{
-              flex: 1,
-              paddingVertical: 13,
-              borderRadius: 14,
-              backgroundColor: t.surface,
-              borderWidth: StyleSheet.hairlineWidth,
-              borderColor: t.border,
-              alignItems: 'center',
-            }}
-          >
-            <Text style={{ color: t.text, fontSize: 14, fontWeight: '500' }}>{p}</Text>
-          </Pressable>
-        ))}
-      </View>
+      <Pressable
+        onPress={busy || !googleRequest ? undefined : handleGooglePress}
+        style={({ pressed }) => [
+          {
+            alignSelf: 'center',
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 10,
+            paddingVertical: 13,
+            paddingHorizontal: 28,
+            borderRadius: 14,
+            backgroundColor: t.surface,
+            borderWidth: StyleSheet.hairlineWidth,
+            borderColor: t.border,
+            marginBottom: 28,
+            opacity: !googleRequest || busy ? 0.6 : 1,
+          },
+          pressed && !busy && { opacity: 0.85, transform: [{ scale: 0.98 }] },
+        ]}
+      >
+        <Svg width={18} height={18} viewBox="0 0 18 18">
+          <Path
+            d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.49h4.84a4.13 4.13 0 0 1-1.79 2.71v2.26h2.9c1.7-1.56 2.69-3.87 2.69-6.62z"
+            fill="#4285F4"
+          />
+          <Path
+            d="M9 18c2.43 0 4.47-.81 5.96-2.18l-2.9-2.26c-.8.54-1.83.86-3.06.86-2.35 0-4.34-1.59-5.05-3.72H.96v2.33A9 9 0 0 0 9 18z"
+            fill="#34A853"
+          />
+          <Path
+            d="M3.95 10.7A5.4 5.4 0 0 1 3.66 9c0-.59.1-1.16.29-1.7V4.97H.96A9 9 0 0 0 0 9c0 1.45.35 2.82.96 4.03l2.99-2.33z"
+            fill="#FBBC05"
+          />
+          <Path
+            d="M9 3.58c1.32 0 2.5.45 3.44 1.35l2.58-2.58A9 9 0 0 0 9 0 9 9 0 0 0 .96 4.97L3.95 7.3C4.66 5.17 6.65 3.58 9 3.58z"
+            fill="#EA4335"
+          />
+        </Svg>
+        <Text style={{ color: t.text, fontSize: 14, fontWeight: '600' }}>
+          {lang === 'uz' ? 'Google bilan davom eting' : 'Continue with Google'}
+        </Text>
+      </Pressable>
 
       <View style={{ flexDirection: 'row', justifyContent: 'center' }}>
         <Text style={{ fontSize: 13, color: t.textSec }}>

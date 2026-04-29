@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { BackHandler, View } from 'react-native';
+import { BackHandler } from 'react-native';
 import Animated, {
   Easing,
   useAnimatedStyle,

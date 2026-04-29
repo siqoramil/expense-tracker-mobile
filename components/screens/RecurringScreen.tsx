@@ -1,7 +1,6 @@
 import React from 'react';
 import { ScrollView, Text, View } from 'react-native';
 import { today } from '../../lib/format';
-import { tStr } from '../../lib/i18n';
 import { actions, catLabel, useStore } from '../../lib/store';
 import type { Tokens } from '../../lib/tokens';
 import { Card, CatIcon, MoneyText, ScreenHeader, Switch } from '../ui';
