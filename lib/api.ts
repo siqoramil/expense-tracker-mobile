@@ -1,23 +1,9 @@
 import Constants from 'expo-constants';
 
-const API_PORT = 3000;
+const DEFAULT_API_URL = 'https://expensetracker.ovrin.uz';
 
-const resolveBaseUrl = (): string => {
-  const configured = (Constants.expoConfig?.extra as { apiUrl?: string } | undefined)?.apiUrl;
-  // In dev, derive the LAN IP from Expo's host so physical devices and
-  // Android emulators can reach the backend without manual config.
-  const debuggerHost =
-    Constants.expoConfig?.hostUri ??
-    (Constants as unknown as { expoGoConfig?: { debuggerHost?: string } }).expoGoConfig
-      ?.debuggerHost;
-  const host = debuggerHost?.split(':')[0];
-  if (host && host !== 'localhost' && host !== '127.0.0.1') {
-    return `http://${host}:${API_PORT}`;
-  }
-  return configured ?? `http://localhost:${API_PORT}`;
-};
-
-const BASE_URL = resolveBaseUrl();
+const configuredApiUrl = (Constants.expoConfig?.extra as { apiUrl?: string } | undefined)?.apiUrl;
+const BASE_URL = (configuredApiUrl ?? DEFAULT_API_URL).replace(/\/+$/, '');
 
 let authToken: string | null = null;
 
