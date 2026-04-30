@@ -22,7 +22,10 @@
         "backgroundColor": "#ffffff"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.ramildeveloper.expensetracker"
+      "package": "com.ramildeveloper.expensetracker",
+      "permissions": [
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "web": {
       "bundler": "metro",
@@ -50,7 +53,7 @@
       "googleIosClientId": "117558488241-clq1pfoivvjcnvs8diedcc5ml468sh28.apps.googleusercontent.com",
       "googleAndroidClientId": "117558488241-3g4g7r8lq2651ne0gimojtbe6rbvspem.apps.googleusercontent.com",
       "eas": {
-        "projectId": "fca2bb69-efa7-4f96-9831-03b85be7218e"
+        "projectId": "c9c42b83-a352-4234-b4c4-5958ed2489ed"
       }
     }
   }
