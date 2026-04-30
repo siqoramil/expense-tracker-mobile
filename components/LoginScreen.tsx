@@ -1,6 +1,4 @@
-import * as Google from 'expo-auth-session/providers/google';
 import Constants from 'expo-constants';
-import * as WebBrowser from 'expo-web-browser';
 import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
@@ -13,13 +11,12 @@ import {
 } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import { ApiError, authApi } from '../lib/api';
+import { isGoogleAuthAvailable, useGoogleIdTokenAuthRequest } from '../lib/googleAuth';
 import { tStr } from '../lib/i18n';
 import { actions, store } from '../lib/store';
 import type { Tokens } from '../lib/tokens';
 import { ForgotPasswordSheet } from './AccountSheets';
 import { Icon } from './Icon';
-
-WebBrowser.maybeCompleteAuthSession();
 
 type GoogleConfig = {
   googleWebClientId?: string;
@@ -39,8 +36,10 @@ export const LoginScreen: React.FC<{ t: Tokens; onDone: () => void }> = ({ t, on
   const [err, setErr] = useState<string | null>(null);
   const lang = store.get().prefs.lang;
 
-  const googleEnabled = !!(gx.googleWebClientId || gx.googleIosClientId || gx.googleAndroidClientId);
-  const [googleRequest, googleResponse, googlePrompt] = Google.useIdTokenAuthRequest({
+  const googleEnabled =
+    isGoogleAuthAvailable() &&
+    !!(gx.googleWebClientId || gx.googleIosClientId || gx.googleAndroidClientId);
+  const [googleRequest, googleResponse, googlePrompt] = useGoogleIdTokenAuthRequest({
     webClientId: gx.googleWebClientId,
     iosClientId: gx.googleIosClientId,
     androidClientId: gx.googleAndroidClientId,
@@ -95,6 +94,22 @@ export const LoginScreen: React.FC<{ t: Tokens; onDone: () => void }> = ({ t, on
   }, [googleResponse]);
 
   const handleGooglePress = async () => {
+    if (!isGoogleAuthAvailable()) {
+      setErr(
+        lang === 'uz'
+          ? 'Dev client eski — qayta build qiling: npx expo run:android'
+          : 'Old dev client — rebuild required: npx expo run:android',
+      );
+      return;
+    }
+    if (!googleRequest) {
+      setErr(
+        lang === 'uz'
+          ? 'Google so\'rov hali tayyor emas, biroz kuting'
+          : 'Google request not ready, please wait',
+      );
+      return;
+    }
     if (!googleEnabled) {
       setErr(lang === 'uz' ? 'Google sozlanmagan' : 'Google sign-in not configured');
       return;
@@ -102,8 +117,14 @@ export const LoginScreen: React.FC<{ t: Tokens; onDone: () => void }> = ({ t, on
     setErr(null);
     try {
       await googlePrompt();
-    } catch {
-      setErr(lang === 'uz' ? "Google bilan kirib bo'lmadi" : 'Google sign-in failed');
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : '';
+      console.warn('Google prompt failed:', msg);
+      setErr(
+        lang === 'uz'
+          ? `Google: ${msg || "kirib bo'lmadi"}`
+          : `Google: ${msg || 'sign-in failed'}`,
+      );
     }
   };
 
@@ -327,7 +348,7 @@ export const LoginScreen: React.FC<{ t: Tokens; onDone: () => void }> = ({ t, on
       </View>
 
       <Pressable
-        onPress={busy || !googleRequest ? undefined : handleGooglePress}
+        onPress={busy ? undefined : handleGooglePress}
         style={({ pressed }) => [
           {
             alignSelf: 'center',
@@ -342,7 +363,7 @@ export const LoginScreen: React.FC<{ t: Tokens; onDone: () => void }> = ({ t, on
             borderWidth: StyleSheet.hairlineWidth,
             borderColor: t.border,
             marginBottom: 28,
-            opacity: !googleRequest || busy ? 0.6 : 1,
+            opacity: busy ? 0.6 : 1,
           },
           pressed && !busy && { opacity: 0.85, transform: [{ scale: 0.98 }] },
         ]}
