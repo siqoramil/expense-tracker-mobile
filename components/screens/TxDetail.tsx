@@ -62,7 +62,12 @@ export const TxDetail: React.FC<Props> = ({ t, tx, onBack, onEdit }) => {
           <DetailRow t={t} label={tStr(lang, 'note')} value={tx.note || '—'} />
           <DetailRow t={t} label={tStr(lang, 'category')} value={catLabel(cat, lang)} />
           <DetailRow t={t} label={tStr(lang, 'wallet')} value={walletName(w, lang)} />
-          <DetailRow t={t} label={tStr(lang, 'date')} value={fmtDate(tx.date, lang)} last />
+          <DetailRow
+            t={t}
+            label={tStr(lang, 'date')}
+            value={`${fmtDate(tx.date, lang)}${tx.time ? ` · ${tx.time}` : ''}`}
+            last
+          />
         </Card>
       </View>
       <View style={{ paddingHorizontal: 20, flexDirection: 'row', gap: 10 }}>

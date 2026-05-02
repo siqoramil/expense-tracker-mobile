@@ -7,6 +7,7 @@ import { setAppLanguage, type Lang, type Localized } from './i18n';
 const STORAGE_KEY = 'expense_tracker_state_v2';
 
 export type TxKind = 'income' | 'expense';
+export type CategoryKind = TxKind | 'subscription';
 export type DebtDirection = 'owe_me' | 'i_owe';
 
 export type Category = {
@@ -14,7 +15,8 @@ export type Category = {
   label: Localized;
   icon: string;
   color: string;
-  kind: TxKind;
+  kind: CategoryKind;
+  hidden?: boolean;
 };
 
 export type Wallet = {
@@ -23,6 +25,7 @@ export type Wallet = {
   icon: string;
   color: string;
   balance: number;
+  hidden?: boolean;
 };
 
 export type Transaction = {
@@ -33,6 +36,7 @@ export type Transaction = {
   amount: number;
   note?: string;
   date: string;
+  time?: string;
 };
 
 export type Payment = { id: string; amount: number; date: string };
@@ -117,6 +121,10 @@ const SEED_CATEGORIES: Category[] = [
   { id: 'bills', label: { en: 'Bills', uz: 'Kommunal' }, icon: 'phone', color: '#06B6D4', kind: 'expense' },
   { id: 'salary', label: { en: 'Salary', uz: 'Maosh' }, icon: 'briefcase', color: '#10B981', kind: 'income' },
   { id: 'bonus', label: { en: 'Bonus', uz: 'Bonus' }, icon: 'gift', color: '#14B8A6', kind: 'income' },
+  { id: 'sub_streaming', label: { en: 'Streaming', uz: 'Streaming' }, icon: 'tag', color: '#EF4444', kind: 'subscription' },
+  { id: 'sub_internet', label: { en: 'Internet', uz: 'Internet' }, icon: 'globe', color: '#06B6D4', kind: 'subscription' },
+  { id: 'sub_gym', label: { en: 'Gym', uz: 'Sport zali' }, icon: 'trending-up', color: '#F59E0B', kind: 'subscription' },
+  { id: 'sub_software', label: { en: 'Software', uz: 'Dasturlar' }, icon: 'lock', color: '#8B5CF6', kind: 'subscription' },
 ];
 
 const SEED_WALLETS: Wallet[] = [
@@ -219,7 +227,11 @@ export const hydrate = async () => {
       if (parsed.version === 2) state = parsed;
     }
   } catch {}
-  state = { ...state, onboarded: false };
+  const haveIds = new Set(state.categories.map((c) => c.id));
+  const missingSeeds = SEED_CATEGORIES.filter((c) => !haveIds.has(c.id));
+  if (missingSeeds.length > 0) {
+    state = { ...state, categories: [...state.categories, ...missingSeeds] };
+  }
   setAppLanguage(state.prefs.lang);
   if (state.token) setApiToken(state.token);
   hydrated = true;
@@ -432,6 +444,16 @@ export const actions = {
     store.set((s) => ({ ...s, categories: [...s.categories, { id: 'c' + Date.now(), ...c }] })),
   deleteCategory: (id: string) =>
     store.set((s) => ({ ...s, categories: s.categories.filter((c) => c.id !== id) })),
+  setCategoryHidden: (id: string, hidden: boolean) =>
+    store.set((s) => ({
+      ...s,
+      categories: s.categories.map((c) => (c.id === id ? { ...c, hidden } : c)),
+    })),
+  setWalletHidden: (id: string, hidden: boolean) =>
+    store.set((s) => ({
+      ...s,
+      wallets: s.wallets.map((w) => (w.id === id ? { ...w, hidden } : w)),
+    })),
 
   addBudget: (b: Omit<Budget, 'id'>) =>
     store.set((s) => ({ ...s, budgets: [...s.budgets, { id: 'b' + Date.now(), ...b }] })),

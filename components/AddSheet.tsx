@@ -20,6 +20,7 @@ import {
 } from '../lib/store';
 import { toast } from '../lib/toast';
 import type { Tokens } from '../lib/tokens';
+import { ModalBackdrop } from './Glass';
 import { Icon, type IconName } from './Icon';
 import { SegmentedControl } from './ui';
 
@@ -52,17 +53,26 @@ export const AddSheet: React.FC<Props> = ({ t, visible, mode, editTx, editDebt, 
   const [amount, setAmount] = useState<string>(
     editTx ? String(editTx.amount) : editDebt ? String(editDebt.amount) : '',
   );
+  const matchKind = (cKind: string, txKind: 'income' | 'expense' | 'debt') =>
+    txKind === 'income' ? cKind === 'income' : cKind === 'expense' || cKind === 'subscription';
   const [cat, setCat] = useState<string>(
     editTx
       ? editTx.cat
-      : s.categories.find((c) => c.kind === (initialKind === 'income' ? 'income' : 'expense'))?.id || '',
+      : s.categories.find((c) => !c.hidden && matchKind(c.kind, initialKind))?.id || '',
   );
-  const [wallet, setWallet] = useState<string>(editTx ? editTx.wallet : s.wallets[0]?.id || '');
+  const [wallet, setWallet] = useState<string>(
+    editTx ? editTx.wallet : s.wallets.find((w) => !w.hidden)?.id || '',
+  );
   const [note, setNote] = useState<string>(editTx?.note || editDebt?.note || '');
   const [name, setName] = useState<string>(editDebt?.name || '');
   const [direction, setDirection] = useState<'owe_me' | 'i_owe'>(editDebt?.direction || 'owe_me');
   const [due, setDue] = useState<string>(editDebt?.due || daysFromNow(14));
   const [date, setDate] = useState<string>(editTx?.date || isoDate(today()));
+  const nowTime = () => {
+    const d = new Date();
+    return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+  };
+  const [time, setTime] = useState<string>(editTx?.time || nowTime());
 
   useEffect(() => {
     if (!visible) return;
@@ -71,16 +81,16 @@ export const AddSheet: React.FC<Props> = ({ t, visible, mode, editTx, editDebt, 
   }, [visible, initialKind, editTx, editDebt]);
 
   const cats = useMemo(
-    () => s.categories.filter((c) => c.kind === (kind === 'income' ? 'income' : 'expense')),
+    () => s.categories.filter((c) => !c.hidden && matchKind(c.kind, kind)),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [s.categories, kind],
   );
 
   useEffect(() => {
     if (kind !== 'debt') {
-      const first = s.categories.find((c) => c.kind === (kind === 'income' ? 'income' : 'expense'));
-      if (first && !cats.find((c) => c.id === cat)) setCat(first.id);
+      if (!cats.find((c) => c.id === cat)) setCat(cats[0]?.id ?? '');
     }
-  }, [kind, cats, cat, s.categories]);
+  }, [kind, cats, cat]);
 
   const title =
     kind === 'debt'
@@ -111,7 +121,7 @@ export const AddSheet: React.FC<Props> = ({ t, visible, mode, editTx, editDebt, 
         });
       }
     } else {
-      const payload = { kind, cat, wallet, amount: amt, note, date };
+      const payload = { kind, cat, wallet, amount: amt, note, date, time };
       if (editTx) actions.updateTx(editTx.id, payload);
       else actions.addTx(payload);
     }
@@ -139,10 +149,11 @@ export const AddSheet: React.FC<Props> = ({ t, visible, mode, editTx, editDebt, 
 
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <Pressable
-        onPress={onClose}
-        style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'flex-end' }}
-      >
+      <ModalBackdrop>
+        <Pressable
+          onPress={onClose}
+          style={{ flex: 1, justifyContent: 'flex-end' }}
+        >
         <Pressable
           onPress={() => {}}
           style={{
@@ -275,7 +286,7 @@ export const AddSheet: React.FC<Props> = ({ t, visible, mode, editTx, editDebt, 
                   ]}
                 />
                 <Field t={t} label={tStr(lang, 'person')}>
-                  <Input t={t} value={name} onChangeText={setName} placeholder="e.g. Azizbek Karimov" />
+                  <Input t={t} value={name} onChangeText={setName} placeholder="John Doe" />
                 </Field>
                 <Field t={t} label={tStr(lang, 'dueDate')}>
                   <DateField t={t} value={due} onChange={setDue} />
@@ -338,7 +349,7 @@ export const AddSheet: React.FC<Props> = ({ t, visible, mode, editTx, editDebt, 
 
                 <Field t={t} label={tStr(lang, 'wallet')}>
                   <View style={{ flexDirection: 'row', gap: 6 }}>
-                    {s.wallets.map((w) => {
+                    {s.wallets.filter((w) => !w.hidden).map((w) => {
                       const on = wallet === w.id;
                       return (
                         <Pressable
@@ -377,7 +388,13 @@ export const AddSheet: React.FC<Props> = ({ t, visible, mode, editTx, editDebt, 
                 </Field>
 
                 <Field t={t} label={tStr(lang, 'date')} mt={10}>
-                  <DateField t={t} value={date} onChange={setDate} />
+                  <DateTimeField
+                    t={t}
+                    date={date}
+                    time={time}
+                    onChangeDate={setDate}
+                    onChangeTime={setTime}
+                  />
                 </Field>
               </>
             )}
@@ -393,7 +410,6 @@ export const AddSheet: React.FC<Props> = ({ t, visible, mode, editTx, editDebt, 
               paddingBottom: 30,
               borderTopWidth: StyleSheet.hairlineWidth,
               borderTopColor: t.divider,
-              backgroundColor: t.sheetBg,
             }}
           >
             {editTx || editDebt ? (
@@ -436,7 +452,8 @@ export const AddSheet: React.FC<Props> = ({ t, visible, mode, editTx, editDebt, 
             </Pressable>
           </View>
         </Pressable>
-      </Pressable>
+        </Pressable>
+      </ModalBackdrop>
     </Modal>
   );
 };
@@ -690,11 +707,244 @@ const DateField: React.FC<{
       </Pressable>
 
       <Modal visible={show} transparent animationType="fade" onRequestClose={() => setShow(false)}>
+        <ModalBackdrop>
+          <Pressable
+            onPress={() => setShow(false)}
+            style={{
+              flex: 1,
+              justifyContent: 'center',
+              alignItems: 'center',
+              padding: 20,
+            }}
+          >
+            <Pressable
+              onPress={() => {}}
+              style={{
+                backgroundColor: t.sheetBg,
+                borderRadius: 24,
+                padding: 18,
+                width: '100%',
+                maxWidth: 360,
+                shadowColor: '#000',
+                shadowOpacity: 0.25,
+                shadowRadius: 30,
+                shadowOffset: { width: 0, height: 12 },
+                elevation: 20,
+              }}
+            >
+              <Calendar t={t} value={draft} onSelect={setDraft} />
+
+              <View style={{ flexDirection: 'row', gap: 10, marginTop: 16 }}>
+                <Pressable
+                  onPress={() => setDraft(today())}
+                  style={{
+                    flex: 1,
+                    paddingVertical: 13,
+                    borderRadius: 12,
+                    backgroundColor: t.surfaceAlt,
+                    alignItems: 'center',
+                  }}
+                >
+                  <Text style={{ color: t.text, fontSize: 14, fontWeight: '600' }}>Today</Text>
+                </Pressable>
+                <Pressable
+                  onPress={confirm}
+                  style={{
+                    flex: 1,
+                    paddingVertical: 13,
+                    borderRadius: 12,
+                    backgroundColor: t.accent,
+                    alignItems: 'center',
+                    shadowColor: t.accent,
+                    shadowOpacity: 0.3,
+                    shadowRadius: 12,
+                    shadowOffset: { width: 0, height: 4 },
+                    elevation: 4,
+                  }}
+                >
+                  <Text style={{ color: '#fff', fontSize: 14, fontWeight: '700' }}>Done</Text>
+                </Pressable>
+              </View>
+            </Pressable>
+          </Pressable>
+        </ModalBackdrop>
+      </Modal>
+    </>
+  );
+};
+
+const parseTime = (hhmm: string): { h: number; m: number } => {
+  const [hStr, mStr] = (hhmm || '12:00').split(':');
+  const h = Math.max(0, Math.min(23, Number(hStr) || 0));
+  const m = Math.max(0, Math.min(59, Number(mStr) || 0));
+  return { h, m };
+};
+const formatTime = (h: number, m: number) =>
+  `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+
+const TimePicker: React.FC<{
+  t: Tokens;
+  value: string;
+  onChange: (hhmm: string) => void;
+}> = ({ t, value, onChange }) => {
+  const { h, m } = parseTime(value);
+
+  const Stepper: React.FC<{
+    label: string;
+    value: number;
+    max: number;
+    onChange: (v: number) => void;
+  }> = ({ label, value, max, onChange }) => (
+    <View style={{ alignItems: 'center', flex: 1 }}>
+      <Text style={{ fontSize: 11, color: t.textTer, fontWeight: '600', letterSpacing: 0.3 }}>
+        {label}
+      </Text>
+      <View
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: 8,
+          marginTop: 6,
+        }}
+      >
+        <Pressable
+          onPress={() => onChange((value - 1 + (max + 1)) % (max + 1))}
+          hitSlop={8}
+          style={{
+            width: 32,
+            height: 32,
+            borderRadius: 16,
+            backgroundColor: t.surfaceAlt,
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <Icon name="chevron-left" size={16} color={t.text} stroke={2.4} />
+        </Pressable>
+        <Text
+          style={{
+            fontSize: 22,
+            fontWeight: '700',
+            color: t.text,
+            minWidth: 38,
+            textAlign: 'center',
+            letterSpacing: -0.3,
+          }}
+        >
+          {String(value).padStart(2, '0')}
+        </Text>
+        <Pressable
+          onPress={() => onChange((value + 1) % (max + 1))}
+          hitSlop={8}
+          style={{
+            width: 32,
+            height: 32,
+            borderRadius: 16,
+            backgroundColor: t.surfaceAlt,
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <Icon name="chevron-right" size={16} color={t.text} stroke={2.4} />
+        </Pressable>
+      </View>
+    </View>
+  );
+
+  return (
+    <View
+      style={{
+        marginTop: 12,
+        paddingTop: 12,
+        borderTopWidth: StyleSheet.hairlineWidth,
+        borderTopColor: t.divider,
+        flexDirection: 'row',
+        alignItems: 'center',
+      }}
+    >
+      <Stepper
+        label="HOUR"
+        value={h}
+        max={23}
+        onChange={(v) => onChange(formatTime(v, m))}
+      />
+      <Text
+        style={{
+          fontSize: 22,
+          fontWeight: '700',
+          color: t.textTer,
+          marginTop: 18,
+        }}
+      >
+        :
+      </Text>
+      <Stepper
+        label="MINUTE"
+        value={m}
+        max={59}
+        onChange={(v) => onChange(formatTime(h, v))}
+      />
+    </View>
+  );
+};
+
+const DateTimeField: React.FC<{
+  t: Tokens;
+  date: string;
+  time: string;
+  onChangeDate: (iso: string) => void;
+  onChangeTime: (hhmm: string) => void;
+}> = ({ t, date, time, onChangeDate, onChangeTime }) => {
+  const [show, setShow] = useState(false);
+  const [draftDate, setDraftDate] = useState<Date>(parseIsoDate(date));
+  const [draftTime, setDraftTime] = useState<string>(time);
+
+  const open = () => {
+    setDraftDate(parseIsoDate(date));
+    setDraftTime(time);
+    setShow(true);
+  };
+
+  const confirm = () => {
+    onChangeDate(isoDate(draftDate));
+    onChangeTime(draftTime);
+    setShow(false);
+  };
+
+  const setNow = () => {
+    setDraftDate(today());
+    const d = new Date();
+    setDraftTime(formatTime(d.getHours(), d.getMinutes()));
+  };
+
+  return (
+    <>
+      <Pressable
+        onPress={open}
+        style={{
+          paddingVertical: 14,
+          paddingHorizontal: 16,
+          borderRadius: 14,
+          backgroundColor: t.surfaceAlt,
+          borderWidth: StyleSheet.hairlineWidth,
+          borderColor: t.border,
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+        }}
+      >
+        <Text style={{ color: t.text, fontSize: 15 }}>
+          {fmtPickerDate(date)} · {time}
+        </Text>
+        <Icon name="calendar" size={18} color={t.textSec} stroke={1.8} />
+      </Pressable>
+
+      <Modal visible={show} transparent animationType="fade" onRequestClose={() => setShow(false)}>
+        <ModalBackdrop>
         <Pressable
           onPress={() => setShow(false)}
           style={{
             flex: 1,
-            backgroundColor: 'rgba(0,0,0,0.45)',
             justifyContent: 'center',
             alignItems: 'center',
             padding: 20,
@@ -715,11 +965,13 @@ const DateField: React.FC<{
               elevation: 20,
             }}
           >
-            <Calendar t={t} value={draft} onSelect={setDraft} />
+            <Calendar t={t} value={draftDate} onSelect={setDraftDate} />
+
+            <TimePicker t={t} value={draftTime} onChange={setDraftTime} />
 
             <View style={{ flexDirection: 'row', gap: 10, marginTop: 16 }}>
               <Pressable
-                onPress={() => setDraft(today())}
+                onPress={setNow}
                 style={{
                   flex: 1,
                   paddingVertical: 13,
@@ -728,7 +980,7 @@ const DateField: React.FC<{
                   alignItems: 'center',
                 }}
               >
-                <Text style={{ color: t.text, fontSize: 14, fontWeight: '600' }}>Today</Text>
+                <Text style={{ color: t.text, fontSize: 14, fontWeight: '600' }}>Now</Text>
               </Pressable>
               <Pressable
                 onPress={confirm}
@@ -750,6 +1002,7 @@ const DateField: React.FC<{
             </View>
           </Pressable>
         </Pressable>
+        </ModalBackdrop>
       </Modal>
     </>
   );

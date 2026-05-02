@@ -1,5 +1,5 @@
 import React from 'react';
-import { Dimensions, Pressable, View } from 'react-native';
+import { Dimensions, Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
 import type { Lang } from '../lib/i18n';
@@ -8,22 +8,35 @@ import { Icon, type IconName } from './Icon';
 
 export type TabKey = 'home' | 'stats' | 'debtors' | 'profile';
 
-const BAR_H = 64;
-const BAR_RADIUS = 32;
+const BAR_H = 60;
 const BAR_MARGIN_H = 16;
-const BAR_MARGIN_B = 0;
-const FAB_SIZE = 56;
-const FAB_LIFT = 26;
+const FAB_SIZE = 60;
+const FAB_LIFT = 40;
 const NOTCH_R = 42;
-const NOTCH_D = 22;
-const NOTCH_EASE = 14;
+const NOTCH_D = 32;
+const NOTCH_EASE = 20;
 
 const SCREEN_W = Dimensions.get('window').width;
 const BAR_W = SCREEN_W - BAR_MARGIN_H * 2;
 
-const notchCutoutPath = (w: number) => {
-  const c = w / 2;
-  return `M ${c - NOTCH_R - NOTCH_EASE} 0 C ${c - NOTCH_R} 0 ${c - NOTCH_R} ${NOTCH_D} ${c} ${NOTCH_D} C ${c + NOTCH_R} ${NOTCH_D} ${c + NOTCH_R} 0 ${c + NOTCH_R + NOTCH_EASE} 0 Z`;
+const buildBarPath = (W: number, H: number) => {
+  const r = H / 2;
+  const c = W / 2;
+  return [
+    `M ${r} 0`,
+    `L ${c - NOTCH_R - NOTCH_EASE} 0`,
+    `C ${c - NOTCH_R} 0 ${c - NOTCH_R} ${NOTCH_D} ${c} ${NOTCH_D}`,
+    `C ${c + NOTCH_R} ${NOTCH_D} ${c + NOTCH_R} 0 ${c + NOTCH_R + NOTCH_EASE} 0`,
+    `L ${W - r} 0`,
+    `A ${r} ${r} 0 0 1 ${W} ${r}`,
+    `L ${W} ${H - r}`,
+    `A ${r} ${r} 0 0 1 ${W - r} ${H}`,
+    `L ${r} ${H}`,
+    `A ${r} ${r} 0 0 1 0 ${H - r}`,
+    `L 0 ${r}`,
+    `A ${r} ${r} 0 0 1 ${r} 0`,
+    `Z`,
+  ].join(' ');
 };
 
 export const TabBar: React.FC<{
@@ -40,7 +53,7 @@ export const TabBar: React.FC<{
     { k: 'debtors', icon: 'users', iconFill: 'users-fill' },
     { k: 'profile', icon: 'user', iconFill: 'user-fill' },
   ];
-  const bottomPad = Math.max(insets.bottom, 8) + BAR_MARGIN_B;
+  const bottomPad = Math.max(insets.bottom, 12);
 
   return (
     <View
@@ -59,25 +72,18 @@ export const TabBar: React.FC<{
           top: 0,
           left: 0,
           right: 0,
-          bottom: 0,
-          borderRadius: BAR_RADIUS,
-          backgroundColor: t.tabBg,
+          height: BAR_H,
           shadowColor: '#000',
-          shadowOpacity: 0.12,
-          shadowRadius: 20,
-          shadowOffset: { width: 0, height: 8 },
-          elevation: 10,
+          shadowOpacity: t.dark ? 0.45 : 0.14,
+          shadowRadius: 22,
+          shadowOffset: { width: 0, height: 10 },
+          elevation: 12,
         }}
-      />
-
-      <Svg
-        width={BAR_W}
-        height={BAR_H}
-        style={{ position: 'absolute', top: 0, left: 0 }}
-        pointerEvents="none"
       >
-        <Path d={notchCutoutPath(BAR_W)} fill={t.bg} />
-      </Svg>
+        <Svg width={BAR_W} height={BAR_H} pointerEvents="none">
+          <Path d={buildBarPath(BAR_W, BAR_H)} fill={t.tabBg} />
+        </Svg>
+      </View>
 
       <View
         style={{
@@ -96,7 +102,7 @@ export const TabBar: React.FC<{
             t={t}
           />
         ))}
-        <View style={{ width: FAB_SIZE + 16 }} />
+        <View style={{ width: NOTCH_R * 2 + NOTCH_EASE * 2 - 16 }} />
         {tabs.slice(2).map((tab) => (
           <TabItem
             key={tab.k}
@@ -128,15 +134,27 @@ export const TabBar: React.FC<{
               backgroundColor: t.accent,
               alignItems: 'center',
               justifyContent: 'center',
-              shadowColor: t.accent,
-              shadowOpacity: 0.4,
+              shadowColor: '#0F1729',
+              shadowOpacity: 0.22,
               shadowRadius: 14,
-              shadowOffset: { width: 0, height: 6 },
-              elevation: 12,
+              shadowOffset: { width: 0, height: 8 },
+              elevation: 14,
+              overflow: 'hidden',
             },
             pressed && { transform: [{ scale: 0.92 }] },
           ]}
         >
+          <View
+            pointerEvents="none"
+            style={[
+              StyleSheet.absoluteFill,
+              {
+                borderRadius: FAB_SIZE / 2,
+                borderTopWidth: 1,
+                borderTopColor: 'rgba(255,255,255,0.45)',
+              },
+            ]}
+          />
           <Icon name="plus" size={26} color="#fff" stroke={2.5} />
         </Pressable>
       </View>
@@ -152,18 +170,30 @@ const TabItem: React.FC<{
 }> = ({ tab, active, onPress, t }) => (
   <Pressable
     onPress={onPress}
-    style={{
-      flex: 1,
-      height: '100%',
-      alignItems: 'center',
-      justifyContent: 'center',
-    }}
+    style={({ pressed }) => [
+      {
+        flex: 1,
+        height: '100%',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 4,
+      },
+      pressed && { opacity: 0.55 },
+    ]}
   >
     <Icon
       name={active ? tab.iconFill : tab.icon}
-      size={24}
+      size={22}
       color={active ? t.accent : t.textSec}
-      stroke={1.8}
+      stroke={2}
+    />
+    <View
+      style={{
+        width: 5,
+        height: 5,
+        borderRadius: 2.5,
+        backgroundColor: active ? t.accent : 'transparent',
+      }}
     />
   </Pressable>
 );

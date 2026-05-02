@@ -171,7 +171,7 @@ export const ProfileScreen: React.FC<{ t: Tokens; onNav: Nav; onLogout: () => vo
                 justifyContent: 'center',
               }}
             >
-              <Icon name="settings" size={11} color={t.textSec} stroke={2.4} />
+              <Icon name="pen" size={11} color={t.textSec} stroke={2.4} />
             </View>
           </Pressable>
           <View style={{ flex: 1, minWidth: 0 }}>

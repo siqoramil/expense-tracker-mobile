@@ -16,6 +16,7 @@ import { tStr } from '../lib/i18n';
 import { actions, useStore } from '../lib/store';
 import { toast } from '../lib/toast';
 import type { Tokens } from '../lib/tokens';
+import { ModalBackdrop } from './Glass';
 import { Icon } from './Icon';
 
 type SheetProps = { t: Tokens; visible: boolean; onClose: () => void };
@@ -38,9 +39,10 @@ const SheetContainer: React.FC<{
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       style={{ flex: 1 }}
     >
+      <ModalBackdrop>
       <Pressable
         onPress={onClose}
-        style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'flex-end' }}
+        style={{ flex: 1, justifyContent: 'flex-end' }}
       >
         <Pressable
           onPress={() => {}}
@@ -97,6 +99,7 @@ const SheetContainer: React.FC<{
           </ScrollView>
         </Pressable>
       </Pressable>
+      </ModalBackdrop>
     </KeyboardAvoidingView>
   </Modal>
 );

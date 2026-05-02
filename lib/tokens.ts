@@ -1,4 +1,5 @@
 export type Tokens = {
+  dark: boolean;
   bg: string;
   surface: string;
   surfaceElev: string;
@@ -23,6 +24,7 @@ export type Tokens = {
 export const makeTokens = (dark: boolean): Tokens =>
   dark
     ? {
+        dark: true,
         bg: '#0B0B0F',
         surface: '#151519',
         surfaceElev: '#1E1E24',
@@ -32,8 +34,8 @@ export const makeTokens = (dark: boolean): Tokens =>
         text: '#FAFAFA',
         textSec: 'rgba(235,235,245,0.6)',
         textTer: 'rgba(235,235,245,0.38)',
-        accent: '#6366F1',
-        accentSoft: 'rgba(99,102,241,0.16)',
+        accent: '#10B981',
+        accentSoft: 'rgba(16,185,129,0.18)',
         income: '#10B981',
         incomeSoft: 'rgba(16,185,129,0.16)',
         expense: '#EF4444',
@@ -44,17 +46,18 @@ export const makeTokens = (dark: boolean): Tokens =>
         divider: 'rgba(255,255,255,0.06)',
       }
     : {
-        bg: '#F4F4F5',
+        dark: false,
+        bg: '#E9EAEC',
         surface: '#FFFFFF',
         surfaceElev: '#FFFFFF',
-        surfaceAlt: '#FAFAFA',
+        surfaceAlt: '#F5F5F7',
         border: 'rgba(0,0,0,0.06)',
         borderStrong: 'rgba(0,0,0,0.1)',
         text: '#0A0A0A',
         textSec: '#71717A',
         textTer: '#A1A1AA',
-        accent: '#4F46E5',
-        accentSoft: 'rgba(79,70,229,0.08)',
+        accent: '#059669',
+        accentSoft: 'rgba(5,150,105,0.10)',
         income: '#059669',
         incomeSoft: 'rgba(5,150,105,0.08)',
         expense: '#DC2626',

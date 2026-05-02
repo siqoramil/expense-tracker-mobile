@@ -2,6 +2,7 @@ import Constants from 'expo-constants';
 import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
+  Image,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -17,6 +18,7 @@ import { actions, store } from '../lib/store';
 import type { Tokens } from '../lib/tokens';
 import { ForgotPasswordSheet } from './AccountSheets';
 import { Icon } from './Icon';
+import { Card } from './ui';
 
 type GoogleConfig = {
   googleWebClientId?: string;
@@ -105,7 +107,7 @@ export const LoginScreen: React.FC<{ t: Tokens; onDone: () => void }> = ({ t, on
     if (!googleRequest) {
       setErr(
         lang === 'uz'
-          ? 'Google so\'rov hali tayyor emas, biroz kuting'
+          ? "Google so'rov hali tayyor emas, biroz kuting"
           : 'Google request not ready, please wait',
       );
       return;
@@ -116,9 +118,13 @@ export const LoginScreen: React.FC<{ t: Tokens; onDone: () => void }> = ({ t, on
     }
     setErr(null);
     try {
-      await googlePrompt();
+      const result = await googlePrompt();
+      if (result?.type === 'error') {
+        setErr(lang === 'uz' ? "Google bilan kirib bo'lmadi" : 'Google sign-in failed');
+      }
     } catch (e) {
-      const msg = e instanceof Error ? e.message : '';
+      const msg = e instanceof Error ? e.message.toLowerCase() : '';
+      if (/cancel|dismiss|user.?closed|aborted/.test(msg)) return;
       console.warn('Google prompt failed:', msg);
       setErr(
         lang === 'uz'
@@ -132,7 +138,7 @@ export const LoginScreen: React.FC<{ t: Tokens; onDone: () => void }> = ({ t, on
     setErr(null);
     const emailTrim = email.trim().toLowerCase();
     if (!emailTrim || !pw) {
-      setErr(lang === 'uz' ? 'Email va parolni to\'ldiring' : 'Fill in email and password');
+      setErr(lang === 'uz' ? "Email va parolni to'ldiring" : 'Fill in email and password');
       return;
     }
     if (mode === 'signup' && !name.trim()) {
@@ -141,7 +147,7 @@ export const LoginScreen: React.FC<{ t: Tokens; onDone: () => void }> = ({ t, on
     }
     if (pw.length < 6) {
       setErr(
-        lang === 'uz' ? 'Parol kamida 6 belgi bo\'lsin' : 'Password must be at least 6 characters',
+        lang === 'uz' ? "Parol kamida 6 belgi bo'lsin" : 'Password must be at least 6 characters',
       );
       return;
     }
@@ -169,23 +175,28 @@ export const LoginScreen: React.FC<{ t: Tokens; onDone: () => void }> = ({ t, on
     }
   };
 
-  const inputStyle = {
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    borderRadius: 14,
-    backgroundColor: t.surface,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: t.border,
-    color: t.text,
-    fontSize: 15,
-  };
+  const Label: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+    <Text
+      style={{
+        fontSize: 11,
+        fontWeight: '600',
+        color: t.textSec,
+        letterSpacing: 0.6,
+        marginBottom: 8,
+        marginLeft: 4,
+      }}
+    >
+      {children}
+    </Text>
+  );
 
-  const labelStyle = {
-    fontSize: 12,
-    color: t.textSec,
-    fontWeight: '600' as const,
-    marginBottom: 6,
+  const inputStyle = {
+    color: t.text,
+    fontSize: 16,
+    fontWeight: '500' as const,
     letterSpacing: 0.3,
+    padding: 0,
+    margin: 0,
   };
 
   return (
@@ -193,75 +204,103 @@ export const LoginScreen: React.FC<{ t: Tokens; onDone: () => void }> = ({ t, on
       contentContainerStyle={{
         flexGrow: 1,
         backgroundColor: t.bg,
-        paddingTop: 24,
-        paddingHorizontal: 28,
-        paddingBottom: 24,
+        paddingTop: 48,
+        paddingHorizontal: 20,
+        paddingBottom: 40,
       }}
       keyboardShouldPersistTaps="handled"
+      showsVerticalScrollIndicator={false}
     >
-      <View
-        style={{
-          width: 56,
-          height: 56,
-          borderRadius: 16,
-          backgroundColor: t.accent,
-          alignItems: 'center',
-          justifyContent: 'center',
-          marginBottom: 28,
-          shadowColor: t.accent,
-          shadowOpacity: 0.3,
-          shadowRadius: 24,
-          shadowOffset: { width: 0, height: 8 },
-          elevation: 6,
-        }}
-      >
-        <Icon name="wallet" size={28} color="#fff" stroke={2.2} />
+      <View style={{ alignItems: 'center', marginBottom: 32 }}>
+        <View
+          style={{
+            width: 168,
+            height: 168,
+            borderRadius: 38,
+            overflow: 'hidden',
+            shadowColor: t.accent,
+            shadowOpacity: 0.32,
+            shadowRadius: 32,
+            shadowOffset: { width: 0, height: 16 },
+            elevation: 16,
+            marginBottom: 24,
+          }}
+        >
+          <Image
+            source={require('../assets/images/icon.png')}
+            style={{ width: 168, height: 168 }}
+            resizeMode="cover"
+          />
+        </View>
+
+        <Text
+          style={{
+            fontSize: 30,
+            fontWeight: '700',
+            color: t.text,
+            letterSpacing: -0.7,
+            marginBottom: 6,
+            textAlign: 'center',
+          }}
+        >
+          {mode === 'signin' ? tStr(lang, 'welcome') : tStr(lang, 'signUp')}
+        </Text>
+        <Text
+          style={{
+            fontSize: 14,
+            color: t.textSec,
+            textAlign: 'center',
+            paddingHorizontal: 12,
+          }}
+        >
+          {mode === 'signin'
+            ? lang === 'uz'
+              ? 'Hisobingizga kiring'
+              : 'Sign in to continue'
+            : lang === 'uz'
+              ? 'Yangi hisob yarating'
+              : 'Create your account'}
+        </Text>
       </View>
 
-      <Text
-        style={{
-          fontSize: 30,
-          fontWeight: '700',
-          color: t.text,
-          letterSpacing: -0.8,
-          marginBottom: 6,
-        }}
-      >
-        {mode === 'signin' ? tStr(lang, 'welcome') : tStr(lang, 'signUp')}
-      </Text>
-      <Text style={{ fontSize: 14, color: t.textSec, marginBottom: 32 }}>
-        {mode === 'signin' ? 'Sign in to continue to Expense Tracker' : 'Create your Expense Tracker account'}
-      </Text>
-
-      <View style={{ gap: 12, marginBottom: 16 }}>
-        {mode === 'signup' ? (
-          <View>
-            <Text style={labelStyle}>{tStr(lang, 'name').toUpperCase()}</Text>
+      {mode === 'signup' ? (
+        <View style={{ marginBottom: 14 }}>
+          <Label>{tStr(lang, 'name').toUpperCase()}</Label>
+          <Card t={t} style={{ paddingHorizontal: 16, paddingVertical: 14 }}>
             <TextInput
               value={name}
               onChangeText={setName}
               autoCapitalize="words"
-              placeholder="Your full name"
+              placeholder="John Doe"
               style={inputStyle}
               placeholderTextColor={t.textTer}
             />
-          </View>
-        ) : null}
-        <View>
-          <Text style={labelStyle}>{tStr(lang, 'email').toUpperCase()}</Text>
+          </Card>
+        </View>
+      ) : null}
+      <View style={{ marginBottom: 14 }}>
+        <Label>{tStr(lang, 'email').toUpperCase()}</Label>
+        <Card t={t} style={{ paddingHorizontal: 16, paddingVertical: 14 }}>
           <TextInput
             value={email}
             onChangeText={setEmail}
             autoCapitalize="none"
             keyboardType="email-address"
-            placeholder="you@example.com"
+            placeholder="email@gmail.com"
             style={inputStyle}
             placeholderTextColor={t.textTer}
           />
-        </View>
-        <View>
-          <Text style={labelStyle}>{tStr(lang, 'password').toUpperCase()}</Text>
-          <View style={{ position: 'relative', justifyContent: 'center' }}>
+        </Card>
+      </View>
+      <View style={{ marginBottom: 14 }}>
+        <Label>{tStr(lang, 'password').toUpperCase()}</Label>
+        <Card t={t} style={{ paddingHorizontal: 16, paddingVertical: 14 }}>
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+            }}
+          >
             <TextInput
               value={pw}
               onChangeText={setPw}
@@ -269,68 +308,67 @@ export const LoginScreen: React.FC<{ t: Tokens; onDone: () => void }> = ({ t, on
               autoCapitalize="none"
               autoCorrect={false}
               placeholder="••••••••"
-              style={[inputStyle, { paddingRight: 48 }]}
+              style={[inputStyle, { flex: 1 }]}
               placeholderTextColor={t.textTer}
             />
-            <Pressable
-              onPress={() => setShowPw((v) => !v)}
-              hitSlop={10}
-              style={{
-                position: 'absolute',
-                right: 8,
-                top: 0,
-                bottom: 0,
-                width: 40,
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
+            <Pressable onPress={() => setShowPw((v) => !v)} hitSlop={12}>
               <Icon name={showPw ? 'eye-off' : 'eye'} size={18} color={t.textSec} />
             </Pressable>
           </View>
-          {mode === 'signin' ? (
-            <Pressable
-              onPress={() => setForgot(true)}
-              style={{ alignSelf: 'flex-end', marginTop: 8 }}
-              hitSlop={8}
-            >
-              <Text style={{ color: t.accent, fontSize: 13, fontWeight: '600' }}>
-                {lang === 'uz' ? 'Parolni unutdingizmi?' : 'Forgot password?'}
-              </Text>
-            </Pressable>
-          ) : null}
-        </View>
+        </Card>
       </View>
 
+      {mode === 'signin' ? (
+        <Pressable
+          onPress={() => setForgot(true)}
+          style={{ alignSelf: 'flex-end', marginBottom: 14 }}
+          hitSlop={8}
+        >
+          <Text style={{ color: t.accent, fontSize: 13, fontWeight: '600' }}>
+            {lang === 'uz' ? 'Parolni unutdingizmi?' : 'Forgot password?'}
+          </Text>
+        </Pressable>
+      ) : null}
+
       {err ? (
-        <Text
+        <View
           style={{
-            color: t.expense,
-            fontSize: 13,
-            fontWeight: '500',
-            marginBottom: 12,
+            backgroundColor: t.expenseSoft,
+            borderRadius: 12,
+            paddingHorizontal: 14,
+            paddingVertical: 10,
+            marginBottom: 14,
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 8,
           }}
         >
-          {err}
-        </Text>
+          <Icon name="info" size={16} color={t.expense} />
+          <Text style={{ color: t.expense, fontSize: 13, fontWeight: '500', flex: 1 }}>
+            {err}
+          </Text>
+        </View>
       ) : null}
 
       <Pressable
         onPress={busy ? undefined : submit}
-        style={{
-          height: 52,
-          borderRadius: 14,
-          backgroundColor: t.accent,
-          alignItems: 'center',
-          justifyContent: 'center',
-          marginBottom: 20,
-          opacity: busy ? 0.7 : 1,
-          shadowColor: t.accent,
-          shadowOpacity: 0.25,
-          shadowRadius: 14,
-          shadowOffset: { width: 0, height: 4 },
-          elevation: 4,
-        }}
+        style={({ pressed }) => [
+          {
+            height: 54,
+            borderRadius: 16,
+            backgroundColor: t.accent,
+            alignItems: 'center',
+            justifyContent: 'center',
+            marginBottom: 18,
+            opacity: busy ? 0.7 : 1,
+            shadowColor: t.accent,
+            shadowOpacity: 0.32,
+            shadowRadius: 16,
+            shadowOffset: { width: 0, height: 8 },
+            elevation: 8,
+          },
+          pressed && !busy && { transform: [{ scale: 0.98 }] },
+        ]}
       >
         {busy ? (
           <ActivityIndicator color="#fff" />
@@ -341,9 +379,11 @@ export const LoginScreen: React.FC<{ t: Tokens; onDone: () => void }> = ({ t, on
         )}
       </Pressable>
 
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 20 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 16 }}>
         <View style={{ flex: 1, height: StyleSheet.hairlineWidth, backgroundColor: t.divider }} />
-        <Text style={{ fontSize: 12, color: t.textTer }}>{tStr(lang, 'orContinue')}</Text>
+        <Text style={{ fontSize: 12, color: t.textTer, letterSpacing: 0.3 }}>
+          {tStr(lang, 'orContinue').toUpperCase()}
+        </Text>
         <View style={{ flex: 1, height: StyleSheet.hairlineWidth, backgroundColor: t.divider }} />
       </View>
 
@@ -351,17 +391,15 @@ export const LoginScreen: React.FC<{ t: Tokens; onDone: () => void }> = ({ t, on
         onPress={busy ? undefined : handleGooglePress}
         style={({ pressed }) => [
           {
-            alignSelf: 'center',
+            height: 54,
+            borderRadius: 16,
+            backgroundColor: t.surface,
+            borderWidth: StyleSheet.hairlineWidth,
+            borderColor: t.border,
             flexDirection: 'row',
             alignItems: 'center',
             justifyContent: 'center',
             gap: 10,
-            paddingVertical: 13,
-            paddingHorizontal: 28,
-            borderRadius: 14,
-            backgroundColor: t.surface,
-            borderWidth: StyleSheet.hairlineWidth,
-            borderColor: t.border,
             marginBottom: 28,
             opacity: busy ? 0.6 : 1,
           },
@@ -386,22 +424,27 @@ export const LoginScreen: React.FC<{ t: Tokens; onDone: () => void }> = ({ t, on
             fill="#EA4335"
           />
         </Svg>
-        <Text style={{ color: t.text, fontSize: 14, fontWeight: '600' }}>
+        <Text style={{ color: t.text, fontSize: 15, fontWeight: '600' }}>
           {lang === 'uz' ? 'Google bilan davom eting' : 'Continue with Google'}
         </Text>
       </Pressable>
 
-      <View style={{ flexDirection: 'row', justifyContent: 'center' }}>
-        <Text style={{ fontSize: 13, color: t.textSec }}>
-          {mode === 'signin' ? tStr(lang, 'noAccount') : 'Already have an account?'}{' '}
+      <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }}>
+        <Text style={{ fontSize: 13.5, color: t.textSec }}>
+          {mode === 'signin'
+            ? tStr(lang, 'noAccount')
+            : lang === 'uz'
+              ? "Hisobingiz bormi?"
+              : 'Already have an account?'}{' '}
         </Text>
         <Pressable
           onPress={() => {
             setErr(null);
             setMode(mode === 'signin' ? 'signup' : 'signin');
           }}
+          hitSlop={6}
         >
-          <Text style={{ color: t.accent, fontWeight: '600', fontSize: 13 }}>
+          <Text style={{ color: t.accent, fontWeight: '700', fontSize: 13.5 }}>
             {mode === 'signin' ? tStr(lang, 'signUp') : tStr(lang, 'signIn')}
           </Text>
         </Pressable>

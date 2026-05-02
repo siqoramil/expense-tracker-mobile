@@ -45,7 +45,8 @@ export type IconName =
   | 'eye'
   | 'eye-off'
   | 'mail'
-  | 'info';
+  | 'info'
+  | 'pen';
 
 type Props = {
   name: IconName;
@@ -362,6 +363,16 @@ export const Icon: React.FC<Props> = ({ name, size = 22, color = '#000', stroke 
           <Path
             {...common}
             d="M17.94 17.94A10.1 10.1 0 0112 20c-6.5 0-10-8-10-8a18.4 18.4 0 014.22-5.22M9.9 4.24A9.1 9.1 0 0112 4c6.5 0 10 8 10 8a18.4 18.4 0 01-2.16 3.19M14.12 14.12a3 3 0 11-4.24-4.24M2 2l20 20"
+          />
+        </Svg>
+      );
+    case 'pen':
+      return (
+        <Svg width={size} height={size} viewBox={vb}>
+          <Path {...common} d="M12 20h9" />
+          <Path
+            {...common}
+            d="M16.5 3.5a2.121 2.121 0 1 1 3 3L7 19l-4 1 1-4 12.5-12.5z"
           />
         </Svg>
       );

@@ -46,7 +46,7 @@ export const HomeScreen: React.FC<Props> = ({ t, onNav, onAdd, onOpenTx }) => {
   const income = monthData.income;
   const expense = monthData.expense;
   const pctSaved = income > 0 ? Math.round((net / income) * 100) : 0;
-  const totalBalance = s.wallets.reduce((a, w) => a + w.balance, 0);
+  const totalBalance = s.wallets.filter((w) => !w.hidden).reduce((a, w) => a + w.balance, 0);
 
   const spark = useMemo(() => {
     const days: number[] = [];
@@ -103,7 +103,7 @@ export const HomeScreen: React.FC<Props> = ({ t, onNav, onAdd, onOpenTx }) => {
             ) : null}
           </View>
           <View style={{ flexDirection: 'row', gap: 8, marginTop: 14 }}>
-            {s.wallets.map((w) => (
+            {s.wallets.filter((w) => !w.hidden).map((w) => (
               <View
                 key={w.id}
                 style={{
@@ -340,7 +340,7 @@ export const HomeScreen: React.FC<Props> = ({ t, onNav, onAdd, onOpenTx }) => {
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 20, gap: 10 }}
       >
-        {s.wallets.map((w) => (
+        {s.wallets.filter((w) => !w.hidden).map((w) => (
           <Pressable
             key={w.id}
             onPress={() => onNav('wallets')}
