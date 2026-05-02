@@ -13,7 +13,7 @@ import { tStr } from '../../lib/i18n';
 import { actions, isImageAvatar, store, useStore } from '../../lib/store';
 import { toast } from '../../lib/toast';
 import type { Tokens } from '../../lib/tokens';
-import { EditEmailSheet, EditNameSheet } from '../AccountSheets';
+import { DeleteAccountSheet, EditEmailSheet, EditNameSheet } from '../AccountSheets';
 import { Icon, type IconName } from '../Icon';
 import { Card, ScreenHeader, SectionHeader, Switch } from '../ui';
 
@@ -28,6 +28,7 @@ export const ProfileScreen: React.FC<{ t: Tokens; onNav: Nav; onLogout: () => vo
   const lang = s.prefs.lang;
   const [editName, setEditName] = useState(false);
   const [editEmail, setEditEmail] = useState(false);
+  const [deleteAccountOpen, setDeleteAccountOpen] = useState(false);
 
   const hasImage = isImageAvatar(s.profile.avatar);
 
@@ -212,6 +213,12 @@ export const ProfileScreen: React.FC<{ t: Tokens; onNav: Nav; onLogout: () => vo
 
       <EditNameSheet t={t} visible={editName} onClose={() => setEditName(false)} />
       <EditEmailSheet t={t} visible={editEmail} onClose={() => setEditEmail(false)} />
+      <DeleteAccountSheet
+        t={t}
+        visible={deleteAccountOpen}
+        onClose={() => setDeleteAccountOpen(false)}
+        onDeleted={onLogout}
+      />
 
       <SectionHeader t={t} title={tStr(lang, 'preferences')} />
       <View style={{ paddingHorizontal: 20, paddingBottom: 16 }}>
@@ -292,7 +299,15 @@ export const ProfileScreen: React.FC<{ t: Tokens; onNav: Nav; onLogout: () => vo
               ]);
             }}
           />
-          <NavRow t={t} icon="arrow-up-right" color={t.expense} label={tStr(lang, 'signOut')} onPress={onLogout} last />
+          <NavRow t={t} icon="arrow-up-right" color={t.expense} label={tStr(lang, 'signOut')} onPress={onLogout} />
+          <NavRow
+            t={t}
+            icon="close"
+            color={t.expense}
+            label={tStr(lang, 'deleteAccount')}
+            onPress={() => setDeleteAccountOpen(true)}
+            last
+          />
         </Card>
       </View>
 

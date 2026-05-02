@@ -86,6 +86,8 @@
   "settings": "Sozlamalar",
   "signOut": "Chiqish",
   "resetData": "Demo ma'lumotni tiklash",
+  "deleteAccount": "Hisobni o'chirish",
+  "deleteAccountWarning": "Hisobingiz va barcha ma'lumotlaringiz (amallar, byudjetlar, qarzlar, hamyonlar) butunlay o'chiriladi. Bu amalni qaytarib bo'lmaydi.",
   "welcome": "Xush kelibsiz",
   "signIn": "Kirish",
   "signUp": "Ro'yxat",

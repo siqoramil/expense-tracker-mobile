@@ -589,6 +589,155 @@ export const ForgotPasswordSheet: React.FC<SheetProps> = ({ t, visible, onClose 
   );
 };
 
+export const DeleteAccountSheet: React.FC<SheetProps & { onDeleted: () => void }> = ({
+  t,
+  visible,
+  onClose,
+  onDeleted,
+}) => {
+  const s = useStore();
+  const lang = s.prefs.lang;
+  const email = s.profile.email;
+  const [step, setStep] = useState<1 | 2>(1);
+  const [code, setCode] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (visible) {
+      setStep(1);
+      setCode('');
+      setBusy(false);
+      setErr(null);
+    }
+  }, [visible]);
+
+  const requestCode = async () => {
+    setErr(null);
+    setBusy(true);
+    try {
+      await actions.requestAccountDelete();
+      toast(lang === 'uz' ? 'Kod yuborildi' : 'Code sent');
+      setStep(2);
+    } catch (e) {
+      setErr(extractError(e, lang));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const confirm = async () => {
+    setErr(null);
+    if (code.length !== 6) {
+      setErr(lang === 'uz' ? '6 xonali kodni kiriting' : 'Enter the 6-digit code');
+      return;
+    }
+    setBusy(true);
+    try {
+      await actions.confirmAccountDelete(code);
+      toast(tStr(lang, 'deleted'));
+      onClose();
+      onDeleted();
+    } catch (e) {
+      setErr(extractError(e, lang));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const dangerBtn = (label: string, onPress: () => void, busyState: boolean) => (
+    <Pressable
+      onPress={busyState ? undefined : onPress}
+      style={{
+        height: 52,
+        borderRadius: 14,
+        backgroundColor: t.expense,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginTop: 16,
+        opacity: busyState ? 0.7 : 1,
+      }}
+    >
+      {busyState ? (
+        <ActivityIndicator color="#fff" />
+      ) : (
+        <Text style={{ color: '#fff', fontSize: 16, fontWeight: '700', letterSpacing: 0.2 }}>
+          {label}
+        </Text>
+      )}
+    </Pressable>
+  );
+
+  return (
+    <SheetContainer
+      t={t}
+      visible={visible}
+      onClose={onClose}
+      title={tStr(lang, 'deleteAccount')}
+    >
+      {step === 1 ? (
+        <>
+          <Text
+            style={{
+              fontSize: 13,
+              color: t.textSec,
+              marginBottom: 14,
+              lineHeight: 19,
+            }}
+          >
+            {tStr(lang, 'deleteAccountWarning')}
+          </Text>
+          <Text
+            style={{
+              fontSize: 13,
+              color: t.textSec,
+              marginBottom: 14,
+              lineHeight: 19,
+            }}
+          >
+            {lang === 'uz'
+              ? `Davom etish uchun ${email} manziliga 6 xonali kod yuboriladi.`
+              : `To continue, a 6-digit code will be sent to ${email}.`}
+          </Text>
+          {errorText(t, err)}
+          {dangerBtn(lang === 'uz' ? 'Kod yuborish' : 'Send code', requestCode, busy)}
+        </>
+      ) : (
+        <>
+          <Text
+            style={{
+              fontSize: 13,
+              color: t.textSec,
+              marginBottom: 14,
+              lineHeight: 19,
+            }}
+          >
+            {lang === 'uz'
+              ? `${email} ga yuborilgan 6 xonali kodni kiriting. Tasdiqlasangiz, hisob va barcha ma'lumotlar butunlay o'chiriladi.`
+              : `Enter the 6-digit code sent to ${email}. Confirming will permanently delete your account and all data.`}
+          </Text>
+          {fieldLabel(t, lang === 'uz' ? 'Tasdiqlash kodi' : 'Verification code')}
+          <TextInput
+            value={code}
+            onChangeText={(v) => setCode(v.replace(/\D/g, '').slice(0, 6))}
+            autoFocus
+            keyboardType="number-pad"
+            placeholder="000000"
+            placeholderTextColor={t.textTer}
+            maxLength={6}
+            style={[
+              inputStyle(t),
+              { fontSize: 22, textAlign: 'center', letterSpacing: 8, fontWeight: '700' },
+            ]}
+          />
+          {errorText(t, err)}
+          {dangerBtn(tStr(lang, 'deleteAccount'), confirm, busy)}
+        </>
+      )}
+    </SheetContainer>
+  );
+};
+
 const StepIndicator: React.FC<{ t: Tokens; step: 1 | 2 | 3 }> = ({ t, step }) => (
   <View style={{ flexDirection: 'row', gap: 6, marginBottom: 18 }}>
     {[1, 2, 3].map((n) => (

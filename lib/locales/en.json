@@ -86,6 +86,8 @@
   "settings": "Settings",
   "signOut": "Sign out",
   "resetData": "Reset demo data",
+  "deleteAccount": "Delete account",
+  "deleteAccountWarning": "This will permanently delete your account and all your data (transactions, budgets, debts, wallets). This cannot be undone.",
   "welcome": "Welcome back",
   "signIn": "Sign in",
   "signUp": "Sign up",

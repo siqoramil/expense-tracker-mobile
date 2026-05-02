@@ -294,6 +294,16 @@ export const actions = {
     store.set((s) => ({ ...s, loggedIn: false, token: null }));
   },
 
+  requestAccountDelete: async () => {
+    await authApi.requestAccountDelete();
+  },
+
+  confirmAccountDelete: async (code: string) => {
+    await authApi.confirmAccountDelete({ code });
+    setApiToken(null);
+    store.reset();
+  },
+
   setAuth: (token: string, user: UserDTO) => {
     setApiToken(token);
     store.set((s) => ({

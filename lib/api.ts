@@ -65,6 +65,12 @@ export const authApi = {
   me: () => apiRequest<{ user: UserDTO }>('/auth/me'),
   updateMe: (body: { name?: string; avatar?: string; prefs?: Record<string, unknown> }) =>
     apiRequest<{ user: UserDTO }>('/auth/me', { method: 'PATCH', body }),
+  requestAccountDelete: () =>
+    apiRequest<{ sent: true; expiresInSeconds: number }>('/auth/account/request-delete', {
+      method: 'POST',
+    }),
+  confirmAccountDelete: (body: { code: string }) =>
+    apiRequest<void>('/auth/account/confirm-delete', { method: 'POST', body }),
   requestEmailChange: (body: { newEmail: string }) =>
     apiRequest<{ sent: true; expiresInSeconds: number }>('/auth/email/request-change', {
       method: 'POST',
