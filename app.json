@@ -14,7 +14,7 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.ramildeveloper.expensetracker"
+      "bundleIdentifier": "com.siqoramil.extracker"
     },
     "android": {
       "adaptiveIcon": {
@@ -22,10 +22,8 @@
         "backgroundColor": "#059669"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.ramildeveloper.expensetracker",
-      "permissions": [
-        "android.permission.RECORD_AUDIO"
-      ]
+      "package": "com.siqoramil.extracker",
+      "permissions": []
     },
     "web": {
       "bundler": "metro",
@@ -38,7 +36,8 @@
         "expo-image-picker",
         {
           "photosPermission": "Allow $(PRODUCT_NAME) to access your photos to set a profile picture.",
-          "cameraPermission": "Allow $(PRODUCT_NAME) to use the camera to take a profile picture."
+          "cameraPermission": false,
+          "microphonePermission": false
         }
       ],
       "expo-web-browser"

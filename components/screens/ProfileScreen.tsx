@@ -31,7 +31,7 @@ export const ProfileScreen: React.FC<{ t: Tokens; onNav: Nav; onLogout: () => vo
 
   const hasImage = isImageAvatar(s.profile.avatar);
 
-  const pickImage = async (source: 'camera' | 'library') => {
+  const pickImage = async () => {
     const ImagePicker = loadImagePicker();
     if (!ImagePicker) {
       toast(
@@ -42,29 +42,18 @@ export const ProfileScreen: React.FC<{ t: Tokens; onNav: Nav; onLogout: () => vo
       return;
     }
     try {
-      const perm =
-        source === 'camera'
-          ? await ImagePicker.requestCameraPermissionsAsync()
-          : await ImagePicker.requestMediaLibraryPermissionsAsync();
+      const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (perm.status !== 'granted') {
         toast(lang === 'uz' ? "Ruxsat berilmagan" : 'Permission denied');
         return;
       }
-      const result =
-        source === 'camera'
-          ? await ImagePicker.launchCameraAsync({
-              allowsEditing: true,
-              aspect: [1, 1],
-              quality: 0.3,
-              base64: true,
-            })
-          : await ImagePicker.launchImageLibraryAsync({
-              mediaTypes: ['images'],
-              allowsEditing: true,
-              aspect: [1, 1],
-              quality: 0.3,
-              base64: true,
-            });
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.3,
+        base64: true,
+      });
       if (result.canceled) return;
       const asset = result.assets[0];
       if (!asset?.base64) return;
@@ -84,23 +73,23 @@ export const ProfileScreen: React.FC<{ t: Tokens; onNav: Nav; onLogout: () => vo
   };
 
   const openAvatarMenu = () => {
+    if (!hasImage) {
+      void pickImage();
+      return;
+    }
     const labels = {
       title: lang === 'uz' ? 'Profil rasmi' : 'Profile photo',
-      camera: lang === 'uz' ? 'Kamera' : 'Take photo',
       library: lang === 'uz' ? 'Galereyadan tanlash' : 'Choose from library',
       remove: lang === 'uz' ? "Rasmni o'chirish" : 'Remove photo',
       cancel: tStr(lang, 'cancel'),
     };
-    const options = hasImage
-      ? [labels.camera, labels.library, labels.remove, labels.cancel]
-      : [labels.camera, labels.library, labels.cancel];
+    const options = [labels.library, labels.remove, labels.cancel];
     const cancelIdx = options.length - 1;
-    const destructiveIdx = hasImage ? 2 : -1;
+    const destructiveIdx = 1;
 
     const handle = (idx: number) => {
-      if (idx === 0) void pickImage('camera');
-      else if (idx === 1) void pickImage('library');
-      else if (hasImage && idx === 2) void actions.removeAvatar();
+      if (idx === 0) void pickImage();
+      else if (idx === 1) void actions.removeAvatar();
     };
 
     if (Platform.OS === 'ios') {
