@@ -1,0 +1,26 @@
+<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#22C55E"/>
+      <stop offset="100%" stop-color="#059669"/>
+    </linearGradient>
+  </defs>
+  <rect width="200" height="200" rx="44" fill="url(#bg1)"/>
+  
+  <!-- Card 1 (back, slightly rotated) -->
+  <rect x="58" y="56" width="76" height="50" rx="8" fill="#FFFFFF" opacity="0.55" transform="rotate(-8 96 81)"/>
+  
+  <!-- Card 2 (middle) -->
+  <rect x="62" y="62" width="80" height="52" rx="8" fill="#FFFFFF" opacity="0.85"/>
+  <rect x="70" y="98" width="20" height="6" rx="2" fill="#10B981" opacity="0.6"/>
+  
+  <!-- Wallet body (front) -->
+  <rect x="44" y="100" width="112" height="74" rx="14" fill="#FFFFFF"/>
+  
+  <!-- Wallet flap/clasp -->
+  <rect x="108" y="126" width="44" height="22" rx="6" fill="#10B981"/>
+  <circle cx="138" cy="137" r="4" fill="#FFFFFF"/>
+  
+  <!-- Subtle inner line -->
+  <rect x="44" y="116" width="112" height="2" fill="#10B981" opacity="0.15"/>
+</svg>
