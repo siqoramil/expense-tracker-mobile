@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useEffect, useState } from 'react';
 import { daysAgo, daysFromNow, isoDate, today, type Currency } from './format';
-import { authApi, setApiToken, type UserDTO } from './api';
+import { authApi, setApiToken, setUnauthorizedHandler, type UserDTO } from './api';
 import { setAppLanguage, type Lang, type Localized } from './i18n';
 
 const STORAGE_KEY = 'expense_tracker_state_v2';
@@ -101,7 +101,14 @@ export type State = {
   onboarded: boolean;
   loggedIn: boolean;
   token: string | null;
-  profile: { name: string; email: string; avatar: string; pro: boolean };
+  profile: {
+    name: string;
+    email: string;
+    avatar: string;
+    pro: boolean;
+    hasPassword: boolean;
+    hasGoogle: boolean;
+  };
   prefs: Prefs;
   categories: Category[];
   wallets: Wallet[];
@@ -189,7 +196,14 @@ const SEED = (): State => ({
   onboarded: false,
   loggedIn: false,
   token: null,
-  profile: { name: 'Sardor Akmalov', email: 'sardor.akmalov@gmail.com', avatar: 'SA', pro: true },
+  profile: {
+    name: 'Sardor Akmalov',
+    email: 'sardor.akmalov@gmail.com',
+    avatar: 'SA',
+    pro: true,
+    hasPassword: true,
+    hasGoogle: false,
+  },
   prefs: {
     lang: 'en',
     currency: 'UZS',
@@ -234,6 +248,12 @@ export const hydrate = async () => {
   }
   setAppLanguage(state.prefs.lang);
   if (state.token) setApiToken(state.token);
+  // Bounce the user out as soon as the server reports the token is no
+  // longer valid (revoked, expired, or the user was deleted).
+  setUnauthorizedHandler(() => {
+    setApiToken(null);
+    store.set((s) => ({ ...s, loggedIn: false, token: null }));
+  });
   hydrated = true;
   listeners.forEach((fn) => fn(state));
 };
@@ -283,6 +303,10 @@ const applyUserDTO = (s: State, user: UserDTO): State => ({
     email: user.email,
     avatar: user.avatar || avatarFromName(user.name),
     pro: user.pro,
+    // Older servers may omit these flags; treat undefined as false so the
+    // mobile app degrades to "no password / no google" assumptions cleanly.
+    hasPassword: Boolean(user.hasPassword),
+    hasGoogle: Boolean(user.hasGoogle),
   },
 });
 
@@ -298,8 +322,11 @@ export const actions = {
     await authApi.requestAccountDelete();
   },
 
-  confirmAccountDelete: async (code: string) => {
-    await authApi.confirmAccountDelete({ code });
+  confirmAccountDelete: async (
+    code: string,
+    reauth: { password?: string; idToken?: string },
+  ) => {
+    await authApi.confirmAccountDelete({ code, ...reauth });
     setApiToken(null);
     store.reset();
   },
@@ -374,6 +401,14 @@ export const actions = {
       code,
       newPassword,
     });
+  },
+
+  // Attach a Google identity to the currently signed-in account. The
+  // server requires that the Google email matches the account email,
+  // closing the auto-link takeover gap that /auth/google used to leave open.
+  linkGoogle: async (idToken: string) => {
+    const { user } = await authApi.linkGoogle({ idToken });
+    store.set((s) => applyUserDTO(s, user));
   },
 
   addTx: (tx: Omit<Transaction, 'id'>) =>

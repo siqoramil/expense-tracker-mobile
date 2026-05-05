@@ -57,6 +57,26 @@ export const LoginScreen: React.FC<{ t: Tokens; onDone: () => void }> = ({ t, on
         en: 'This email is already registered',
         uz: "Bu email allaqachon ro'yxatdan o'tgan",
       },
+      account_link_required: {
+        en: 'This email already has a password account. Sign in with your password first, then link Google from your profile.',
+        uz: "Bu email allaqachon parol bilan ro'yxatdan o'tgan. Avval parol bilan kiring, keyin profilingizdan Google'ni ulang.",
+      },
+      google_account_in_use: {
+        en: 'This Google account is already linked to a different user',
+        uz: 'Bu Google akkaunt boshqa foydalanuvchiga ulangan',
+      },
+      email_mismatch: {
+        en: 'Google account email does not match this account',
+        uz: 'Google akkaunt emaili bu hisobga mos emas',
+      },
+      invalid_google_token: {
+        en: "Google sign-in failed. Try again.",
+        uz: "Google bilan kirib bo'lmadi. Qayta urining.",
+      },
+      google_auth_disabled: {
+        en: 'Google sign-in is unavailable on this server',
+        uz: 'Bu serverda Google sozlanmagan',
+      },
       network_error: {
         en: 'Cannot reach the server. Check your connection.',
         uz: "Serverga ulanib bo'lmadi. Internetni tekshiring.",

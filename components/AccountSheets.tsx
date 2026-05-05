@@ -1,3 +1,4 @@
+import Constants from 'expo-constants';
 import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
@@ -12,12 +13,20 @@ import {
   View,
 } from 'react-native';
 import { ApiError } from '../lib/api';
+import { isGoogleAuthAvailable, useGoogleIdTokenAuthRequest } from '../lib/googleAuth';
 import { tStr } from '../lib/i18n';
 import { actions, useStore } from '../lib/store';
 import { toast } from '../lib/toast';
 import type { Tokens } from '../lib/tokens';
 import { ModalBackdrop } from './Glass';
 import { Icon } from './Icon';
+
+type GoogleConfig = {
+  googleWebClientId?: string;
+  googleIosClientId?: string;
+  googleAndroidClientId?: string;
+};
+const googleCfg = (Constants.expoConfig?.extra ?? {}) as GoogleConfig;
 
 type SheetProps = { t: Tokens; visible: boolean; onClose: () => void };
 
@@ -186,6 +195,26 @@ const extractError = (e: unknown, lang: 'uz' | string = 'en'): string => {
       mail_send_failed: {
         en: 'Could not send email. Try again later.',
         uz: 'Emailni yuborib bo‘lmadi. Keyinroq urinib ko‘ring.',
+      },
+      invalid_credentials: {
+        en: 'Invalid password',
+        uz: "Parol noto'g'ri",
+      },
+      password_required: {
+        en: 'Enter your password to confirm',
+        uz: 'Tasdiqlash uchun parolni kiriting',
+      },
+      id_token_required: {
+        en: 'Sign in with Google again to confirm',
+        uz: 'Tasdiqlash uchun Google bilan qayta kiring',
+      },
+      invalid_google_token: {
+        en: 'Google sign-in failed. Try again.',
+        uz: "Google bilan kirib bo'lmadi. Qayta urining.",
+      },
+      google_auth_disabled: {
+        en: 'Google sign-in is unavailable on this server',
+        uz: 'Bu serverda Google sozlanmagan',
       },
     };
     const m = map[e.message];
@@ -598,19 +627,62 @@ export const DeleteAccountSheet: React.FC<SheetProps & { onDeleted: () => void }
   const s = useStore();
   const lang = s.prefs.lang;
   const email = s.profile.email;
+  // Server 1.1.0 reports which credentials are configured. Treat a missing
+  // hasPassword flag (older servers / unhydrated state) as "password account"
+  // so we don't accidentally require Google re-auth where it isn't possible.
+  const isGoogleOnly = s.profile.hasGoogle && !s.profile.hasPassword;
   const [step, setStep] = useState<1 | 2>(1);
   const [code, setCode] = useState('');
+  const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+
+  // Google flow is only mounted for Google-only accounts to avoid extra
+  // network setup for password users. The hook returns no-ops if the
+  // expo-auth-session module isn't available.
+  const googleEnabled =
+    isGoogleOnly &&
+    isGoogleAuthAvailable() &&
+    !!(googleCfg.googleWebClientId || googleCfg.googleIosClientId || googleCfg.googleAndroidClientId);
+  const [googleRequest, googleResponse, googlePrompt] = useGoogleIdTokenAuthRequest({
+    webClientId: googleCfg.googleWebClientId,
+    iosClientId: googleCfg.googleIosClientId,
+    androidClientId: googleCfg.googleAndroidClientId,
+  });
 
   useEffect(() => {
     if (visible) {
       setStep(1);
       setCode('');
+      setPassword('');
       setBusy(false);
       setErr(null);
     }
   }, [visible]);
+
+  const finishConfirm = async (reauth: { password?: string; idToken?: string }) => {
+    try {
+      await actions.confirmAccountDelete(code, reauth);
+      toast(tStr(lang, 'deleted'));
+      onClose();
+      onDeleted();
+    } catch (e) {
+      setErr(extractError(e, lang));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  // Pick up the idToken once the Google sheet returns successfully and
+  // forward it to the delete endpoint.
+  useEffect(() => {
+    if (!isGoogleOnly) return;
+    if (googleResponse?.type !== 'success') return;
+    const idToken = googleResponse.params?.id_token;
+    if (!idToken) return;
+    void finishConfirm({ idToken });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [googleResponse]);
 
   const requestCode = async () => {
     setErr(null);
@@ -632,17 +704,22 @@ export const DeleteAccountSheet: React.FC<SheetProps & { onDeleted: () => void }
       setErr(lang === 'uz' ? '6 xonali kodni kiriting' : 'Enter the 6-digit code');
       return;
     }
-    setBusy(true);
-    try {
-      await actions.confirmAccountDelete(code);
-      toast(tStr(lang, 'deleted'));
-      onClose();
-      onDeleted();
-    } catch (e) {
-      setErr(extractError(e, lang));
-    } finally {
-      setBusy(false);
+    if (isGoogleOnly) {
+      if (!googleEnabled || !googleRequest) {
+        setErr(lang === 'uz' ? 'Google sozlanmagan' : 'Google sign-in not configured');
+        return;
+      }
+      setBusy(true);
+      // Result is consumed by the useEffect above.
+      void googlePrompt();
+      return;
     }
+    if (!password) {
+      setErr(lang === 'uz' ? 'Parolni kiriting' : 'Enter your password');
+      return;
+    }
+    setBusy(true);
+    await finishConfirm({ password });
   };
 
   const dangerBtn = (label: string, onPress: () => void, busyState: boolean) => (
@@ -730,6 +807,34 @@ export const DeleteAccountSheet: React.FC<SheetProps & { onDeleted: () => void }
               { fontSize: 22, textAlign: 'center', letterSpacing: 8, fontWeight: '700' },
             ]}
           />
+          {isGoogleOnly ? (
+            <Text
+              style={{
+                fontSize: 12,
+                color: t.textSec,
+                marginTop: 10,
+                lineHeight: 17,
+              }}
+            >
+              {lang === 'uz'
+                ? 'Tasdiqlash uchun Google bilan qayta kirish so‘raladi.'
+                : "You'll be asked to sign in with Google again to confirm."}
+            </Text>
+          ) : (
+            <View style={{ marginTop: 14 }}>
+              {fieldLabel(t, lang === 'uz' ? 'Joriy parol' : 'Current password')}
+              <TextInput
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry
+                autoCapitalize="none"
+                autoCorrect={false}
+                placeholder="••••••••"
+                placeholderTextColor={t.textTer}
+                style={inputStyle(t)}
+              />
+            </View>
+          )}
           {errorText(t, err)}
           {dangerBtn(tStr(lang, 'deleteAccount'), confirm, busy)}
         </>
