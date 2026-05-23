@@ -1,10 +1,17 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as SecureStore from 'expo-secure-store';
 import { useEffect, useState } from 'react';
 import { daysAgo, daysFromNow, isoDate, today, type Currency } from './format';
 import { authApi, setApiToken, setUnauthorizedHandler, type UserDTO } from './api';
 import { setAppLanguage, type Lang, type Localized } from './i18n';
 
 const STORAGE_KEY = 'expense_tracker_state_v2';
+// JWT lives in SecureStore (Keychain on iOS, EncryptedSharedPreferences on
+// Android) — AsyncStorage is plaintext in the app sandbox and survives
+// adb backup / rooted-device extraction. Everything else (UI state,
+// transactions cache) stays in AsyncStorage; the server is the source of
+// truth and refetches on login.
+const TOKEN_KEY = 'expense_tracker_token';
 
 export type TxKind = 'income' | 'expense';
 export type CategoryKind = TxKind | 'subscription';
@@ -228,7 +235,17 @@ const listeners = new Set<(s: State) => void>();
 
 const persist = async (s: State) => {
   try {
-    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(s));
+    // Persist everything EXCEPT the token to AsyncStorage. The token rides
+    // in SecureStore (see persistToken).
+    const { token: _t, ...rest } = s;
+    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(rest));
+  } catch {}
+};
+
+const persistToken = async (token: string | null) => {
+  try {
+    if (token) await SecureStore.setItemAsync(TOKEN_KEY, token);
+    else await SecureStore.deleteItemAsync(TOKEN_KEY);
   } catch {}
 };
 
@@ -238,9 +255,32 @@ export const hydrate = async () => {
     const raw = await AsyncStorage.getItem(STORAGE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw) as State;
-      if (parsed.version === 2) state = parsed;
+      if (parsed.version === 2) state = { ...parsed, token: null };
     }
   } catch {}
+
+  // One-shot migration: older builds wrote { token } into AsyncStorage.
+  // Move any leftover token into SecureStore and clear the plaintext copy.
+  let token: string | null = null;
+  try {
+    const raw = await AsyncStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw) as Partial<State> & { token?: string | null };
+      if (typeof parsed.token === 'string' && parsed.token.length > 0) {
+        token = parsed.token;
+        await SecureStore.setItemAsync(TOKEN_KEY, token);
+        const { token: _t, ...rest } = parsed as State;
+        await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(rest));
+      }
+    }
+  } catch {}
+  if (!token) {
+    try {
+      token = await SecureStore.getItemAsync(TOKEN_KEY);
+    } catch {}
+  }
+  state = { ...state, token, loggedIn: state.loggedIn && Boolean(token) };
+
   const haveIds = new Set(state.categories.map((c) => c.id));
   const missingSeeds = SEED_CATEGORIES.filter((c) => !haveIds.has(c.id));
   if (missingSeeds.length > 0) {
@@ -252,6 +292,7 @@ export const hydrate = async () => {
   // longer valid (revoked, expired, or the user was deleted).
   setUnauthorizedHandler(() => {
     setApiToken(null);
+    void persistToken(null);
     store.set((s) => ({ ...s, loggedIn: false, token: null }));
   });
   hydrated = true;
@@ -275,6 +316,7 @@ export const store = {
     state = SEED();
     listeners.forEach((fn) => fn(state));
     void persist(state);
+    void persistToken(null);
   },
 };
 
@@ -315,6 +357,7 @@ export const actions = {
   login: () => store.set((s) => ({ ...s, loggedIn: true, onboarded: true })),
   logout: () => {
     setApiToken(null);
+    void persistToken(null);
     store.set((s) => ({ ...s, loggedIn: false, token: null }));
   },
 
@@ -328,11 +371,13 @@ export const actions = {
   ) => {
     await authApi.confirmAccountDelete({ code, ...reauth });
     setApiToken(null);
+    // store.reset() clears the SecureStore token via persistToken(null).
     store.reset();
   },
 
   setAuth: (token: string, user: UserDTO) => {
     setApiToken(token);
+    void persistToken(token);
     store.set((s) => ({
       ...applyUserDTO(s, user),
       token,

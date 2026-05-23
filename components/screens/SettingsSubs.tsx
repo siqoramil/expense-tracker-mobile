@@ -6,7 +6,6 @@ import { actions, useStore } from '../../lib/store';
 import type { Tokens } from '../../lib/tokens';
 import { Icon } from '../Icon';
 import { Card, ScreenHeader } from '../ui';
-import { ToggleRow } from './ProfileScreen';
 
 export const LanguageScreen: React.FC<{ t: Tokens; onBack: () => void }> = ({ t, onBack }) => {
   const s = useStore();
@@ -81,31 +80,51 @@ export const CurrencyScreen: React.FC<{ t: Tokens; onBack: () => void }> = ({ t,
   );
 };
 
+// The previous version of this screen exposed "App PIN lock" and
+// "Biometric unlock" toggles, but flipping them only mutated a pref flag —
+// nothing in the app actually checked them at launch. That conveyed a
+// false sense of security, so the toggles are hidden until the underlying
+// lock screen + expo-local-authentication wiring lands.
 export const SecurityScreen: React.FC<{ t: Tokens; onBack: () => void }> = ({ t, onBack }) => {
   const s = useStore();
   const lang = s.prefs.lang;
+  const heading =
+    lang === 'uz'
+      ? 'Qulflar tez orada'
+      : lang === 'ru'
+        ? 'Блокировки скоро'
+        : 'App locks coming soon';
+  const body =
+    lang === 'uz'
+      ? 'PIN va biometrik qulf hozircha mavjud emas. Hisobingizni himoya qilish uchun kuchli parol ishlating va telefoningizning ekran qulfini yoqing.'
+      : lang === 'ru'
+        ? 'PIN и биометрическая блокировка пока недоступны. Используйте надёжный пароль и блокировку экрана устройства.'
+        : 'PIN and biometric locks are not available yet. Use a strong password and your phone’s screen lock to protect your account.';
   return (
     <ScrollView contentContainerStyle={{ paddingBottom: 120 }}>
       <ScreenHeader t={t} title={tStr(lang, 'security')} onBack={onBack} />
       <View style={{ paddingHorizontal: 20 }}>
-        <Card t={t}>
-          <ToggleRow
-            t={t}
-            icon="lock"
-            color="#8B5CF6"
-            label="App PIN lock"
-            on={s.prefs.pin}
-            onChange={(v) => actions.setPref('pin', v)}
-          />
-          <ToggleRow
-            t={t}
-            icon="user"
-            color="#06B6D4"
-            label="Biometric unlock"
-            on={s.prefs.biometric}
-            onChange={(v) => actions.setPref('biometric', v)}
-            last
-          />
+        <Card t={t} style={{ paddingHorizontal: 18, paddingVertical: 22 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 14 }}>
+            <View
+              style={{
+                width: 38,
+                height: 38,
+                borderRadius: 19,
+                backgroundColor: t.surfaceAlt,
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Icon name="lock" size={18} color={t.textSec} stroke={2} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={{ fontSize: 15, fontWeight: '700', color: t.text, marginBottom: 6 }}>
+                {heading}
+              </Text>
+              <Text style={{ fontSize: 13, color: t.textSec, lineHeight: 19 }}>{body}</Text>
+            </View>
+          </View>
         </Card>
       </View>
     </ScrollView>

@@ -165,10 +165,21 @@ export const LoginScreen: React.FC<{ t: Tokens; onDone: () => void }> = ({ t, on
       setErr(lang === 'uz' ? 'Ismni kiriting' : 'Enter your name');
       return;
     }
-    if (pw.length < 6) {
-      setErr(
-        lang === 'uz' ? "Parol kamida 6 belgi bo'lsin" : 'Password must be at least 6 characters',
-      );
+    // Only enforce strength on sign-up — existing accounts may pre-date the
+    // current rule. Mirrors the server's PASSWORD_PATTERN
+    // (^(?=.*[A-Za-z])(?=.*\d).{8,128}$) so the client doesn't ship a
+    // request the server will reject.
+    if (mode === 'signup') {
+      const strong = /^(?=.*[A-Za-z])(?=.*\d).{8,128}$/.test(pw);
+      if (!strong) {
+        setErr(
+          lang === 'uz'
+            ? "Parol kamida 8 belgi, harf va raqamdan iborat bo'lsin"
+            : 'Password must be at least 8 characters with a letter and a digit',
+        );
+        return;
+      }
+    } else if (pw.length < 1) {
       return;
     }
 

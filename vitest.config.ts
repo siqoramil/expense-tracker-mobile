@@ -18,6 +18,10 @@ export default defineConfig({
         './tests/__mocks__/async-storage.ts',
         import.meta.url,
       ).pathname,
+      'expo-secure-store': new URL(
+        './tests/__mocks__/expo-secure-store.ts',
+        import.meta.url,
+      ).pathname,
       'react-i18next': new URL('./tests/__mocks__/react-i18next.ts', import.meta.url).pathname,
     },
   },
