@@ -206,11 +206,11 @@ describe('unauthorized handler integration', () => {
 });
 
 describe('actions.logout', () => {
-  it('drops both the in-memory token and the store token', () => {
+  it('drops both the in-memory token and the store token', async () => {
     api.setApiToken('jwt');
     store.store.set((s) => ({ ...s, loggedIn: true, token: 'jwt' }));
 
-    store.actions.logout();
+    await store.actions.logout();
 
     expect(api.getApiToken()).toBeNull();
     expect(store.store.get().loggedIn).toBe(false);

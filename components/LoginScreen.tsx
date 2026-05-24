@@ -98,7 +98,7 @@ export const LoginScreen: React.FC<{ t: Tokens; onDone: () => void }> = ({ t, on
       try {
         const { token, user } = await authApi.google({ idToken });
         if (cancelled) return;
-        actions.setAuth(token, user);
+        await actions.setAuth(token, user);
         onDone();
       } catch (e) {
         if (cancelled) return;

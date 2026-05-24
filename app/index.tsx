@@ -205,7 +205,15 @@ export default function AppRoot() {
         );
         break;
       case 'profile':
-        rootContent = <ProfileScreen t={t} onNav={onNav} onLogout={() => actions.logout()} />;
+        rootContent = (
+          <ProfileScreen
+            t={t}
+            onNav={onNav}
+            onLogout={() => {
+              void actions.logout();
+            }}
+          />
+        );
         break;
     }
   }

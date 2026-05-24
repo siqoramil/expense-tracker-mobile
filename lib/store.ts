@@ -242,9 +242,18 @@ const persist = async (s: State) => {
   } catch {}
 };
 
-const persistToken = async (token: string | null) => {
+// WHEN_UNLOCKED_THIS_DEVICE_ONLY scopes the JWT to this physical
+// device — it never rides into an iCloud Keychain backup, so an
+// attacker who compromises the user's iCloud password can't extract
+// the token. The trade-off is that a fresh device install must
+// re-authenticate, which is the right default for a finance app.
+const SECURE_STORE_OPTS: SecureStore.SecureStoreOptions = {
+  keychainAccessible: SecureStore.WHEN_UNLOCKED_THIS_DEVICE_ONLY,
+};
+
+const persistToken = async (token: string | null): Promise<void> => {
   try {
-    if (token) await SecureStore.setItemAsync(TOKEN_KEY, token);
+    if (token) await SecureStore.setItemAsync(TOKEN_KEY, token, SECURE_STORE_OPTS);
     else await SecureStore.deleteItemAsync(TOKEN_KEY);
   } catch {}
 };
@@ -268,7 +277,7 @@ export const hydrate = async () => {
       const parsed = JSON.parse(raw) as Partial<State> & { token?: string | null };
       if (typeof parsed.token === 'string' && parsed.token.length > 0) {
         token = parsed.token;
-        await SecureStore.setItemAsync(TOKEN_KEY, token);
+        await SecureStore.setItemAsync(TOKEN_KEY, token, SECURE_STORE_OPTS);
         const { token: _t, ...rest } = parsed as State;
         await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(rest));
       }
@@ -289,10 +298,13 @@ export const hydrate = async () => {
   setAppLanguage(state.prefs.lang);
   if (state.token) setApiToken(state.token);
   // Bounce the user out as soon as the server reports the token is no
-  // longer valid (revoked, expired, or the user was deleted).
-  setUnauthorizedHandler(() => {
+  // longer valid (revoked, expired, or the user was deleted). Clear
+  // SecureStore BEFORE flipping in-memory state — that way the on-disk
+  // token can't outlive the logout even if the user kills the app a
+  // millisecond later.
+  setUnauthorizedHandler(async () => {
     setApiToken(null);
-    void persistToken(null);
+    await persistToken(null);
     store.set((s) => ({ ...s, loggedIn: false, token: null }));
   });
   hydrated = true;
@@ -312,11 +324,14 @@ export const store = {
       listeners.delete(fn);
     };
   },
-  reset: () => {
+  reset: async () => {
     state = SEED();
     listeners.forEach((fn) => fn(state));
+    // Await SecureStore so the token is gone on disk before this
+    // promise resolves; the AsyncStorage persist races freely since
+    // it never holds sensitive bytes.
     void persist(state);
-    void persistToken(null);
+    await persistToken(null);
   },
 };
 
@@ -355,9 +370,15 @@ const applyUserDTO = (s: State, user: UserDTO): State => ({
 export const actions = {
   completeOnboarding: () => store.set((s) => ({ ...s, onboarded: true })),
   login: () => store.set((s) => ({ ...s, loggedIn: true, onboarded: true })),
-  logout: () => {
+  // Sensitive transitions (logout / setAuth / confirmAccountDelete) are
+  // async because they touch SecureStore. Callers MUST await, otherwise
+  // the JS engine can be killed (force-quit, low-memory eviction) before
+  // the keychain write/delete settles — leaving an authenticated token
+  // on disk after a user-initiated logout, or a half-written token
+  // after sign-in.
+  logout: async (): Promise<void> => {
     setApiToken(null);
-    void persistToken(null);
+    await persistToken(null);
     store.set((s) => ({ ...s, loggedIn: false, token: null }));
   },
 
@@ -371,13 +392,15 @@ export const actions = {
   ) => {
     await authApi.confirmAccountDelete({ code, ...reauth });
     setApiToken(null);
-    // store.reset() clears the SecureStore token via persistToken(null).
-    store.reset();
+    // store.reset() awaits persistToken(null) internally — chain it so
+    // callers waiting on confirmAccountDelete don't return until disk
+    // is clean.
+    await store.reset();
   },
 
-  setAuth: (token: string, user: UserDTO) => {
+  setAuth: async (token: string, user: UserDTO): Promise<void> => {
     setApiToken(token);
-    void persistToken(token);
+    await persistToken(token);
     store.set((s) => ({
       ...applyUserDTO(s, user),
       token,
