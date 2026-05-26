@@ -108,6 +108,10 @@ export type State = {
   onboarded: boolean;
   loggedIn: boolean;
   token: string | null;
+  // Local privacy toggle. Banking-app style: when true, every money amount
+  // across the app is masked. Persisted locally, not synced to the server —
+  // it's a UX preference, not an account setting.
+  hideBalance: boolean;
   profile: {
     name: string;
     email: string;
@@ -203,6 +207,7 @@ const SEED = (): State => ({
   onboarded: false,
   loggedIn: false,
   token: null,
+  hideBalance: false,
   profile: {
     name: 'Sardor Akmalov',
     email: 'sardor.akmalov@gmail.com',
@@ -412,6 +417,10 @@ export const actions = {
   setPref: <K extends keyof Prefs>(k: K, v: Prefs[K]) => {
     if (k === 'lang') setAppLanguage(v as Lang);
     store.set((s) => ({ ...s, prefs: { ...s.prefs, [k]: v } }));
+  },
+
+  toggleHideBalance: () => {
+    store.set((s) => ({ ...s, hideBalance: !s.hideBalance }));
   },
 
   updateName: async (name: string) => {

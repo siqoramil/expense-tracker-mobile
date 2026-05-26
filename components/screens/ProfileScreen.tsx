@@ -9,6 +9,7 @@ const loadImagePicker = (): ImagePickerModule | null => {
     return null;
   }
 };
+import { errorMessage } from '../../lib/errors';
 import { tStr } from '../../lib/i18n';
 import { actions, isImageAvatar, store, useStore } from '../../lib/store';
 import { toast } from '../../lib/toast';
@@ -60,16 +61,16 @@ export const ProfileScreen: React.FC<{ t: Tokens; onNav: Nav; onLogout: () => vo
       if (!asset?.base64) return;
       const mime = asset.mimeType ?? 'image/jpeg';
       const uri = `data:${mime};base64,${asset.base64}`;
+      // Server caps avatars at ~600KB (auth.ts maxLength on /auth/me). Check
+      // client-side so we surface a friendly message instead of a generic 400.
+      if (uri.length > 600_000) {
+        toast(tStr(lang, 'err_invalid_avatar'));
+        return;
+      }
       await actions.updateAvatar(uri);
       toast(tStr(lang, 'saved'));
     } catch (err) {
-      const msg = err instanceof Error ? err.message : '';
-      console.warn('avatar upload failed:', msg);
-      toast(
-        lang === 'uz'
-          ? `Xatolik: ${msg || 'noma\'lum'}`
-          : `Error: ${msg || 'unknown'}`,
-      );
+      toast(errorMessage(lang, err));
     }
   };
 

@@ -2,9 +2,7 @@ import Constants from 'expo-constants';
 import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
-  KeyboardAvoidingView,
   Modal,
-  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -12,14 +10,15 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import { ApiError } from '../lib/api';
+import { errorMessage } from '../lib/errors';
 import { isGoogleAuthAvailable, useGoogleIdTokenAuthRequest } from '../lib/googleAuth';
-import { tStr } from '../lib/i18n';
+import { tStr, type Lang } from '../lib/i18n';
 import { actions, useStore } from '../lib/store';
 import { toast } from '../lib/toast';
 import type { Tokens } from '../lib/tokens';
 import { ModalBackdrop } from './Glass';
 import { Icon } from './Icon';
+import { KeyboardAvoider } from './KeyboardAvoider';
 
 type GoogleConfig = {
   googleWebClientId?: string;
@@ -44,11 +43,8 @@ const SheetContainer: React.FC<{
     statusBarTranslucent
     onRequestClose={onClose}
   >
-    <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={{ flex: 1 }}
-    >
-      <ModalBackdrop>
+    <ModalBackdrop>
+      <KeyboardAvoider>
       <Pressable
         onPress={onClose}
         style={{ flex: 1, justifyContent: 'flex-end' }}
@@ -108,8 +104,8 @@ const SheetContainer: React.FC<{
           </ScrollView>
         </Pressable>
       </Pressable>
-      </ModalBackdrop>
-    </KeyboardAvoidingView>
+      </KeyboardAvoider>
+    </ModalBackdrop>
   </Modal>
 );
 
@@ -171,59 +167,7 @@ const errorText = (t: Tokens, msg: string | null) =>
     <Text style={{ color: t.expense, fontSize: 13, marginTop: 10, fontWeight: '500' }}>{msg}</Text>
   ) : null;
 
-const extractError = (e: unknown, lang: 'uz' | string = 'en'): string => {
-  const isUz = lang === 'uz';
-  if (e instanceof TypeError) {
-    return isUz ? "Serverga ulanib bo'lmadi. Internetni tekshiring." : 'Cannot reach the server.';
-  }
-  if (e instanceof ApiError) {
-    const map: Record<string, { en: string; uz: string }> = {
-      invalid_code: { en: 'Invalid code', uz: "Kod noto'g'ri" },
-      code_expired: {
-        en: 'Code expired. Request a new one.',
-        uz: 'Kod muddati tugagan. Yangi kod oling.',
-      },
-      too_many_attempts: {
-        en: 'Too many attempts. Try again later.',
-        uz: 'Urinishlar ko‘p. Keyinroq urinib ko‘ring.',
-      },
-      email_taken: {
-        en: 'This email is already registered',
-        uz: "Bu email allaqachon ro'yxatdan o'tgan",
-      },
-      same_email: { en: 'This is already your email', uz: 'Bu sizning emailingiz' },
-      mail_send_failed: {
-        en: 'Could not send email. Try again later.',
-        uz: 'Emailni yuborib bo‘lmadi. Keyinroq urinib ko‘ring.',
-      },
-      invalid_credentials: {
-        en: 'Invalid password',
-        uz: "Parol noto'g'ri",
-      },
-      password_required: {
-        en: 'Enter your password to confirm',
-        uz: 'Tasdiqlash uchun parolni kiriting',
-      },
-      id_token_required: {
-        en: 'Sign in with Google again to confirm',
-        uz: 'Tasdiqlash uchun Google bilan qayta kiring',
-      },
-      invalid_google_token: {
-        en: 'Google sign-in failed. Try again.',
-        uz: "Google bilan kirib bo'lmadi. Qayta urining.",
-      },
-      google_auth_disabled: {
-        en: 'Google sign-in is unavailable on this server',
-        uz: 'Bu serverda Google sozlanmagan',
-      },
-    };
-    const m = map[e.message];
-    if (m) return isUz ? m.uz : m.en;
-    return e.message;
-  }
-  if (e instanceof Error) return e.message;
-  return 'unknown_error';
-};
+const extractError = (e: unknown, lang: Lang): string => errorMessage(lang, e);
 
 export const EditNameSheet: React.FC<SheetProps> = ({ t, visible, onClose }) => {
   const s = useStore();
@@ -268,6 +212,7 @@ export const EditNameSheet: React.FC<SheetProps> = ({ t, visible, onClose }) => 
         autoFocus
         placeholder="Your name"
         placeholderTextColor={t.textTer}
+        maxLength={80}
         style={inputStyle(t)}
       />
       {errorText(t, err)}
@@ -353,6 +298,7 @@ export const EditEmailSheet: React.FC<SheetProps> = ({ t, visible, onClose }) =>
             keyboardType="email-address"
             placeholder="you@example.com"
             placeholderTextColor={t.textTer}
+            maxLength={200}
             style={inputStyle(t)}
           />
           {errorText(t, err)}
@@ -467,8 +413,12 @@ export const ForgotPasswordSheet: React.FC<SheetProps> = ({ t, visible, onClose 
 
   const reset = async () => {
     setErr(null);
-    if (newPassword.length < 6) {
-      setErr(lang === 'uz' ? 'Parol kamida 6 belgi' : 'Password must be at least 6 characters');
+    if (!/^(?=.*[A-Za-z])(?=.*\d).{8,128}$/.test(newPassword)) {
+      setErr(
+        lang === 'uz'
+          ? "Parol kamida 8 belgi, harf va raqamdan iborat bo'lsin"
+          : 'Password must be at least 8 characters with a letter and a digit',
+      );
       return;
     }
     if (newPassword !== confirmPassword) {
@@ -528,6 +478,7 @@ export const ForgotPasswordSheet: React.FC<SheetProps> = ({ t, visible, onClose 
             keyboardType="email-address"
             placeholder="you@example.com"
             placeholderTextColor={t.textTer}
+            maxLength={200}
             style={inputStyle(t)}
           />
           {errorText(t, err)}
@@ -596,6 +547,7 @@ export const ForgotPasswordSheet: React.FC<SheetProps> = ({ t, visible, onClose 
             autoCorrect={false}
             placeholder="••••••••"
             placeholderTextColor={t.textTer}
+            maxLength={128}
             style={inputStyle(t)}
           />
           <View style={{ height: 14 }} />
@@ -608,6 +560,7 @@ export const ForgotPasswordSheet: React.FC<SheetProps> = ({ t, visible, onClose 
             autoCorrect={false}
             placeholder="••••••••"
             placeholderTextColor={t.textTer}
+            maxLength={128}
             style={inputStyle(t)}
           />
           {errorText(t, err)}
@@ -831,6 +784,7 @@ export const DeleteAccountSheet: React.FC<SheetProps & { onDeleted: () => void }
                 autoCorrect={false}
                 placeholder="••••••••"
                 placeholderTextColor={t.textTer}
+                maxLength={128}
                 style={inputStyle(t)}
               />
             </View>

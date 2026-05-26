@@ -1,6 +1,7 @@
 import Constants from 'expo-constants';
 
 const DEFAULT_API_URL = 'https://expensetracker.ovrin.uz';
+const REQUEST_TIMEOUT_MS = 12_000;
 
 const configuredApiUrl = (Constants.expoConfig?.extra as { apiUrl?: string } | undefined)?.apiUrl;
 const BASE_URL = (configuredApiUrl ?? DEFAULT_API_URL).replace(/\/+$/, '');
@@ -13,48 +14,110 @@ export const setApiToken = (token: string | null) => {
 
 export const getApiToken = () => authToken;
 
-// Called by apiRequest when the server returns 401, so the store layer can
-// drop the bad token and bounce the user to login. Wired in store.ts to
-// avoid a circular import between api.ts and store.ts.
 let onUnauthorized: (() => void) | null = null;
 export const setUnauthorizedHandler = (fn: (() => void) | null) => {
   onUnauthorized = fn;
+};
+
+type ServerStatus = 'ok' | 'unreachable';
+type ServerStatusListener = (status: ServerStatus) => void;
+const serverStatusListeners = new Set<ServerStatusListener>();
+let currentServerStatus: ServerStatus = 'ok';
+
+export const getServerStatus = (): ServerStatus => currentServerStatus;
+
+export const subscribeServerStatus = (fn: ServerStatusListener): (() => void) => {
+  serverStatusListeners.add(fn);
+  return () => {
+    serverStatusListeners.delete(fn);
+  };
+};
+
+const setServerStatus = (status: ServerStatus) => {
+  if (currentServerStatus === status) return;
+  currentServerStatus = status;
+  serverStatusListeners.forEach((fn) => fn(status));
 };
 
 type RequestOptions = {
   method?: 'GET' | 'POST' | 'PATCH' | 'DELETE';
   body?: unknown;
   signal?: AbortSignal;
-  // Set to skip the global 401 → logout side-effect (e.g. login attempts
-  // where 401 is an expected outcome, not a session-expiry signal).
   skipAuthRefresh?: boolean;
+  timeoutMs?: number;
 };
 
 export class ApiError extends Error {
   status: number;
   constructor(message: string, status: number) {
     super(message);
+    this.name = 'ApiError';
     this.status = status;
+  }
+}
+
+export class NetworkError extends Error {
+  constructor(message = 'network_error') {
+    super(message);
+    this.name = 'NetworkError';
+  }
+}
+
+export class TimeoutError extends Error {
+  constructor(message = 'request_timeout') {
+    super(message);
+    this.name = 'TimeoutError';
   }
 }
 
 export const apiRequest = async <T>(path: string, opts: RequestOptions = {}): Promise<T> => {
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };
   if (authToken) headers.Authorization = `Bearer ${authToken}`;
-  const res = await fetch(`${BASE_URL}${path}`, {
-    method: opts.method ?? 'GET',
-    headers,
-    body: opts.body ? JSON.stringify(opts.body) : undefined,
-    signal: opts.signal,
-  });
+
+  const controller = new AbortController();
+  const timeoutMs = opts.timeoutMs ?? REQUEST_TIMEOUT_MS;
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+  if (opts.signal) {
+    if (opts.signal.aborted) controller.abort();
+    else opts.signal.addEventListener('abort', () => controller.abort(), { once: true });
+  }
+
+  let res: Response;
+  try {
+    res = await fetch(`${BASE_URL}${path}`, {
+      method: opts.method ?? 'GET',
+      headers,
+      body: opts.body ? JSON.stringify(opts.body) : undefined,
+      signal: controller.signal,
+    });
+  } catch (err) {
+    clearTimeout(timeoutId);
+    if (controller.signal.aborted && !opts.signal?.aborted) {
+      throw new TimeoutError();
+    }
+    // fetch rejects with TypeError on DNS/network failure. Surface this as
+    // an unreachable signal so the global ServerUnreachable overlay can show.
+    setServerStatus('unreachable');
+    throw new NetworkError();
+  }
+  clearTimeout(timeoutId);
+
+  // 5xx (excluding 501 which is "not implemented" by a working server) means
+  // the server is reachable but failing. Treat 502/503/504 as unreachable so
+  // the global overlay surfaces — proxies emit these when upstream is dead.
+  if (res.status === 502 || res.status === 503 || res.status === 504) {
+    setServerStatus('unreachable');
+  } else {
+    setServerStatus('ok');
+  }
+
   if (!res.ok) {
     let msg = `HTTP ${res.status}`;
     try {
       const data = await res.json();
       if (data?.error) msg = String(data.error);
     } catch {}
-    // 401 with a token in hand means the session was revoked or expired
-    // (e.g. password reset bumped passwordChangedAt server-side). Drop it.
     if (res.status === 401 && authToken && !opts.skipAuthRefresh) {
       onUnauthorized?.();
     }
@@ -71,7 +134,6 @@ export type UserDTO = {
   avatar: string;
   pro: boolean;
   prefs: Record<string, unknown>;
-  // New in server 1.1.0 — older servers may omit these. Treat missing as false.
   hasPassword?: boolean;
   hasGoogle?: boolean;
 };
@@ -96,8 +158,6 @@ export const authApi = {
     apiRequest<{ sent: true; expiresInSeconds: number }>('/auth/account/request-delete', {
       method: 'POST',
     }),
-  // Server 1.1.0 requires re-auth: password for password accounts, fresh
-  // Google idToken for Google-only accounts. Both fields are server-validated.
   confirmAccountDelete: (body: { code: string; password?: string; idToken?: string }) =>
     apiRequest<void>('/auth/account/confirm-delete', { method: 'POST', body }),
   requestEmailChange: (body: { newEmail: string }) =>
@@ -131,10 +191,8 @@ export const authApi = {
       body,
       skipAuthRefresh: true,
     }),
-  // Authenticated link flow: caller is already signed in with their
-  // password account and is attaching a Google identity whose email
-  // matches the account email. Replaces the auto-link that /auth/google
-  // used to do (which enabled an account-takeover gap).
   linkGoogle: (body: { idToken: string }) =>
     apiRequest<{ user: UserDTO }>('/auth/google/link', { method: 'POST', body }),
+  // Lightweight reachability check used by the ServerUnreachable retry button.
+  ping: () => apiRequest<unknown>('/auth/me', { timeoutMs: 6_000 }),
 };

@@ -1,8 +1,8 @@
 import React, { useMemo, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
-import { fmtMoney, isoDate, last6Months, today, unitOf } from '../../lib/format';
+import { fmtMoney, isoDate, last6Months, maskAmount, today, unitOf } from '../../lib/format';
 import { tStr } from '../../lib/i18n';
-import { selectMonth, useStore, walletName, type Transaction } from '../../lib/store';
+import { actions, selectMonth, useStore, walletName, type Transaction } from '../../lib/store';
 import type { Tokens } from '../../lib/tokens';
 import { Icon, type IconName } from '../Icon';
 import { Sparkline } from '../Sparkline';
@@ -32,7 +32,7 @@ export const HomeScreen: React.FC<Props> = ({ t, onNav, onAdd, onOpenTx }) => {
   const [monthIdx, setMonthIdx] = useState(months.length - 1);
   const month = months[monthIdx];
   const monthData = selectMonth(s, month.key);
-  const [hideBalance, setHideBalance] = useState(false);
+  const hideBalance = s.hideBalance;
   const [variant, setVariant] = useState<'net' | 'balance'>('net');
 
   const greet = () => {
@@ -244,7 +244,7 @@ export const HomeScreen: React.FC<Props> = ({ t, onNav, onAdd, onOpenTx }) => {
         <View style={{ flexDirection: 'row', gap: 8 }}>
           <IconButton
             icon={hideBalance ? 'eye-off' : 'eye'}
-            onPress={() => setHideBalance(!hideBalance)}
+            onPress={() => actions.toggleHideBalance()}
             t={t}
           />
           <IconButton
@@ -504,24 +504,9 @@ const BlurMoney: React.FC<{ value: string; hidden: boolean; color: string }> = (
     fontSize: 38,
     fontWeight: '700' as const,
     letterSpacing: -1.4,
+    color,
   };
-  if (!hidden) {
-    return <Text style={[base, { color }]}>{value}</Text>;
-  }
-  const blurStyle = {
-    ...base,
-    color: 'transparent',
-    textShadowColor: 'rgba(148, 163, 184, 0.55)',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 16,
-  };
-  return (
-    <View>
-      <Text style={blurStyle}>{value}</Text>
-      <Text style={[blurStyle, { position: 'absolute', top: 0, left: 0 }]}>{value}</Text>
-      <Text style={[blurStyle, { position: 'absolute', top: 0, left: 0 }]}>{value}</Text>
-    </View>
-  );
+  return <Text style={base}>{hidden ? maskAmount(value) : value}</Text>;
 };
 
 const MiniStat: React.FC<{

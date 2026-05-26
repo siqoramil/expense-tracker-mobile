@@ -11,13 +11,15 @@ import {
   View,
 } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
-import { ApiError, authApi } from '../lib/api';
+import { authApi } from '../lib/api';
+import { errorMessage } from '../lib/errors';
 import { isGoogleAuthAvailable, useGoogleIdTokenAuthRequest } from '../lib/googleAuth';
 import { tStr } from '../lib/i18n';
 import { actions, store } from '../lib/store';
 import type { Tokens } from '../lib/tokens';
 import { ForgotPasswordSheet } from './AccountSheets';
 import { Icon } from './Icon';
+import { KeyboardSpacer } from './KeyboardAvoider';
 import { Card } from './ui';
 
 type GoogleConfig = {
@@ -47,46 +49,6 @@ export const LoginScreen: React.FC<{ t: Tokens; onDone: () => void }> = ({ t, on
     androidClientId: gx.googleAndroidClientId,
   });
 
-  const friendly = (code: string): string => {
-    const mappings: Record<string, { en: string; uz: string }> = {
-      invalid_credentials: {
-        en: 'Invalid email or password',
-        uz: "Email yoki parol noto'g'ri",
-      },
-      email_taken: {
-        en: 'This email is already registered',
-        uz: "Bu email allaqachon ro'yxatdan o'tgan",
-      },
-      account_link_required: {
-        en: 'This email already has a password account. Sign in with your password first, then link Google from your profile.',
-        uz: "Bu email allaqachon parol bilan ro'yxatdan o'tgan. Avval parol bilan kiring, keyin profilingizdan Google'ni ulang.",
-      },
-      google_account_in_use: {
-        en: 'This Google account is already linked to a different user',
-        uz: 'Bu Google akkaunt boshqa foydalanuvchiga ulangan',
-      },
-      email_mismatch: {
-        en: 'Google account email does not match this account',
-        uz: 'Google akkaunt emaili bu hisobga mos emas',
-      },
-      invalid_google_token: {
-        en: "Google sign-in failed. Try again.",
-        uz: "Google bilan kirib bo'lmadi. Qayta urining.",
-      },
-      google_auth_disabled: {
-        en: 'Google sign-in is unavailable on this server',
-        uz: 'Bu serverda Google sozlanmagan',
-      },
-      network_error: {
-        en: 'Cannot reach the server. Check your connection.',
-        uz: "Serverga ulanib bo'lmadi. Internetni tekshiring.",
-      },
-    };
-    const m = mappings[code];
-    if (m) return lang === 'uz' ? m.uz : m.en;
-    return code;
-  };
-
   useEffect(() => {
     if (googleResponse?.type !== 'success') return;
     const idToken = googleResponse.params?.id_token;
@@ -102,9 +64,7 @@ export const LoginScreen: React.FC<{ t: Tokens; onDone: () => void }> = ({ t, on
         onDone();
       } catch (e) {
         if (cancelled) return;
-        if (e instanceof ApiError) setErr(friendly(e.message));
-        else if (e instanceof TypeError) setErr(friendly('network_error'));
-        else setErr(lang === 'uz' ? "Google bilan kirib bo'lmadi" : 'Google sign-in failed');
+        setErr(errorMessage(lang, e));
       } finally {
         if (!cancelled) setBusy(false);
       }
@@ -192,15 +152,7 @@ export const LoginScreen: React.FC<{ t: Tokens; onDone: () => void }> = ({ t, on
       actions.setAuth(token, user);
       onDone();
     } catch (e) {
-      if (e instanceof ApiError) {
-        setErr(friendly(e.message));
-      } else if (e instanceof TypeError) {
-        setErr(friendly('network_error'));
-      } else if (e instanceof Error) {
-        setErr(e.message);
-      } else {
-        setErr('unknown_error');
-      }
+      setErr(errorMessage(lang, e));
     } finally {
       setBusy(false);
     }
@@ -303,6 +255,7 @@ export const LoginScreen: React.FC<{ t: Tokens; onDone: () => void }> = ({ t, on
               onChangeText={setName}
               autoCapitalize="words"
               placeholder="John Doe"
+              maxLength={80}
               style={inputStyle}
               placeholderTextColor={t.textTer}
             />
@@ -318,6 +271,7 @@ export const LoginScreen: React.FC<{ t: Tokens; onDone: () => void }> = ({ t, on
             autoCapitalize="none"
             keyboardType="email-address"
             placeholder="email@gmail.com"
+            maxLength={200}
             style={inputStyle}
             placeholderTextColor={t.textTer}
           />
@@ -339,6 +293,7 @@ export const LoginScreen: React.FC<{ t: Tokens; onDone: () => void }> = ({ t, on
               autoCapitalize="none"
               autoCorrect={false}
               placeholder="••••••••"
+              maxLength={128}
               style={[inputStyle, { flex: 1 }]}
               placeholderTextColor={t.textTer}
             />
@@ -482,6 +437,7 @@ export const LoginScreen: React.FC<{ t: Tokens; onDone: () => void }> = ({ t, on
       </View>
 
       <ForgotPasswordSheet t={t} visible={forgot} onClose={() => setForgot(false)} />
+      <KeyboardSpacer />
     </ScrollView>
   );
 };

@@ -22,6 +22,7 @@ import { toast } from '../lib/toast';
 import type { Tokens } from '../lib/tokens';
 import { ModalBackdrop } from './Glass';
 import { Icon, type IconName } from './Icon';
+import { KeyboardAvoider } from './KeyboardAvoider';
 import { SegmentedControl } from './ui';
 
 export type AddMode = 'expense' | 'income' | 'debt';
@@ -150,6 +151,7 @@ export const AddSheet: React.FC<Props> = ({ t, visible, mode, editTx, editDebt, 
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <ModalBackdrop>
+        <KeyboardAvoider>
         <Pressable
           onPress={onClose}
           style={{ flex: 1, justifyContent: 'flex-end' }}
@@ -453,6 +455,7 @@ export const AddSheet: React.FC<Props> = ({ t, visible, mode, editTx, editDebt, 
           </View>
         </Pressable>
         </Pressable>
+        </KeyboardAvoider>
       </ModalBackdrop>
     </Modal>
   );

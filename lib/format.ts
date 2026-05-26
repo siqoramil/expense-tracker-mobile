@@ -27,7 +27,9 @@ export const CURRENCY_LIST: CurrencyMeta[] = [
   CURRENCIES.RUB,
 ];
 
-export const fmtMoney = (n: number, currency: Currency): string => {
+export const maskAmount = (formatted: string): string => formatted.replace(/\d/g, '*');
+
+export const fmtMoney = (n: number, currency: Currency, hidden = false): string => {
   const c = CURRENCIES[currency];
   const v = n * c.rate;
   const abs = Math.abs(v);
@@ -38,8 +40,8 @@ export const fmtMoney = (n: number, currency: Currency): string => {
           .replace(/\B(?=(\d{3})+(?=\.))/g, ' ')
       : Math.round(abs).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
   const sign = v < 0 ? '−' : '';
-  if (c.symbol) return sign + c.symbol + num;
-  return sign + num;
+  const out = c.symbol ? sign + c.symbol + num : sign + num;
+  return hidden ? maskAmount(out) : out;
 };
 
 export const unitOf = (currency: Currency): string => CURRENCIES[currency].suffix ?? '';
