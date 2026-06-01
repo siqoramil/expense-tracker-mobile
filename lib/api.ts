@@ -71,7 +71,11 @@ export class TimeoutError extends Error {
 }
 
 export const apiRequest = async <T>(path: string, opts: RequestOptions = {}): Promise<T> => {
-  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  const headers: Record<string, string> = {};
+  // Fastify v5 rejects requests that advertise Content-Type: application/json
+  // but carry an empty body (FST_ERR_CTP_EMPTY_JSON_BODY -> 400). Only set it
+  // when we actually have something to send.
+  if (opts.body !== undefined) headers['Content-Type'] = 'application/json';
   if (authToken) headers.Authorization = `Bearer ${authToken}`;
 
   const controller = new AbortController();
