@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { fmtDate, fmtMoney, today, unitOf, type Currency } from '../../lib/format';
 import { tStr } from '../../lib/i18n';
@@ -32,24 +32,27 @@ export const DebtorsScreen: React.FC<Props> = ({ t, onOpen, onAdd }) => {
     .reduce((a, d) => a + (d.amount - d.paid), 0);
   const net = oweMeTotal - iOweTotal;
 
-  const isOverdue = (d: Debt) =>
-    new Date(d.due).getTime() < tdy.getTime() && d.paid < d.amount;
-  const isDueSoon = (d: Debt) => {
-    const ms = new Date(d.due).getTime() - tdy.getTime();
-    return ms >= 0 && ms < 7 * 86_400_000 && d.paid < d.amount;
-  };
+  const tdyMs = tdy.getTime();
+  const { overdueIds, dueIds, overdueCount, dueCount } = useMemo(() => {
+    const overdueIds = new Set<string>();
+    const dueIds = new Set<string>();
+    active.forEach((d) => {
+      const dueMs = new Date(d.due).getTime();
+      if (d.paid >= d.amount) return;
+      if (dueMs < tdyMs) overdueIds.add(d.id);
+      else if (dueMs - tdyMs < 7 * 86_400_000) dueIds.add(d.id);
+    });
+    return { overdueIds, dueIds, overdueCount: overdueIds.size, dueCount: dueIds.size };
+  }, [s.debts, tdyMs]);
 
   const filtered = active.filter((d) => {
     if (q && !d.name.toLowerCase().includes(q.toLowerCase())) return false;
     if (filter === 'owe_me' && d.direction !== 'owe_me') return false;
     if (filter === 'i_owe' && d.direction !== 'i_owe') return false;
-    if (filter === 'overdue' && !isOverdue(d)) return false;
-    if (filter === 'due' && !isDueSoon(d)) return false;
+    if (filter === 'overdue' && !overdueIds.has(d.id)) return false;
+    if (filter === 'due' && !dueIds.has(d.id)) return false;
     return true;
   });
-
-  const overdueCount = active.filter(isOverdue).length;
-  const dueCount = active.filter(isDueSoon).length;
 
   const filters: { k: Filter; l: string; n?: number }[] = [
     { k: 'all', l: lang === 'uz' ? 'Hammasi' : 'All', n: active.length },

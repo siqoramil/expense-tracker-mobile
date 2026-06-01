@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { fmtDate, isoDate, today } from '../../lib/format';
 import { tStr } from '../../lib/i18n';
@@ -35,16 +35,19 @@ export const CalendarScreen: React.FC<{ t: Tokens; onBack: () => void }> = ({ t,
   const daysInMonth = new Date(cursor.y, cursor.m + 1, 0).getDate();
   const startOffset = (firstDay.getDay() + 6) % 7;
 
-  const byDay: Record<number, { inc: number; exp: number }> = {};
-  s.tx.forEach((x) => {
-    const d = new Date(x.date);
-    if (d.getFullYear() === cursor.y && d.getMonth() === cursor.m) {
-      const day = d.getDate();
-      byDay[day] = byDay[day] || { inc: 0, exp: 0 };
-      if (x.kind === 'income') byDay[day].inc += x.amount;
-      else byDay[day].exp += x.amount;
-    }
-  });
+  const byDay = useMemo(() => {
+    const map: Record<number, { inc: number; exp: number }> = {};
+    s.tx.forEach((x) => {
+      const d = new Date(x.date);
+      if (d.getFullYear() === cursor.y && d.getMonth() === cursor.m) {
+        const day = d.getDate();
+        map[day] = map[day] || { inc: 0, exp: 0 };
+        if (x.kind === 'income') map[day].inc += x.amount;
+        else map[day].exp += x.amount;
+      }
+    });
+    return map;
+  }, [s.tx, cursor.y, cursor.m]);
 
   const selTx = s.tx.filter((x) => x.date === selected);
 

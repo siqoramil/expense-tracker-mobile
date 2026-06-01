@@ -46,7 +46,10 @@ export const HomeScreen: React.FC<Props> = ({ t, onNav, onAdd, onOpenTx }) => {
   const income = monthData.income;
   const expense = monthData.expense;
   const pctSaved = income > 0 ? Math.round((net / income) * 100) : 0;
-  const totalBalance = s.wallets.filter((w) => !w.hidden).reduce((a, w) => a + w.balance, 0);
+  const totalBalance = useMemo(
+    () => s.wallets.filter((w) => !w.hidden).reduce((a, w) => a + w.balance, 0),
+    [s.wallets],
+  );
 
   const spark = useMemo(() => {
     const days: number[] = [];
@@ -63,10 +66,16 @@ export const HomeScreen: React.FC<Props> = ({ t, onNav, onAdd, onOpenTx }) => {
     return days;
   }, [s.tx]);
 
-  const upcoming = s.recurring
-    .filter((r) => r.enabled && r.kind === 'expense')
-    .sort((a, b) => a.nextDate.localeCompare(b.nextDate))
-    .slice(0, 3);
+  const upcoming = useMemo(
+    () =>
+      s.recurring
+        .filter((r) => r.enabled && r.kind === 'expense')
+        .sort((a, b) => a.nextDate.localeCompare(b.nextDate))
+        .slice(0, 3),
+    [s.recurring],
+  );
+
+  const unreadNotifs = useMemo(() => s.notifs.filter((n) => !n.read).length, [s.notifs]);
 
   const heroCard = () => {
     if (variant === 'balance') {
@@ -251,7 +260,7 @@ export const HomeScreen: React.FC<Props> = ({ t, onNav, onAdd, onOpenTx }) => {
             icon="bell"
             onPress={() => onNav('notifications')}
             t={t}
-            badge={s.notifs.filter((n) => !n.read).length}
+            badge={unreadNotifs}
           />
         </View>
       </View>

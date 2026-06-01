@@ -105,7 +105,6 @@ export const LoginScreen: React.FC<{ t: Tokens; onDone: () => void }> = ({ t, on
     } catch (e) {
       const msg = e instanceof Error ? e.message.toLowerCase() : '';
       if (/cancel|dismiss|user.?closed|aborted/.test(msg)) return;
-      console.warn('Google prompt failed:', msg);
       setErr(
         lang === 'uz'
           ? `Google: ${msg || "kirib bo'lmadi"}`

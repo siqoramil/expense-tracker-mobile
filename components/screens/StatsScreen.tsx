@@ -10,7 +10,7 @@ import { Card, CatIcon, EmptyState, ScreenHeader, SectionHeader } from '../ui';
 export const StatsScreen: React.FC<{ t: Tokens }> = ({ t }) => {
   const s = useStore();
   const lang = s.prefs.lang;
-  const months = last6Months();
+  const months = useMemo(() => last6Months(), []);
   const data = months.map((m) => {
     const md = selectMonth(s, m.key);
     return { m: m.label, income: md.income, expense: md.expense };

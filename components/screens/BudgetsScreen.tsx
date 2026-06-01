@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { ScrollView, Text, View } from 'react-native';
 import { fmtMoney, last6Months } from '../../lib/format';
 import { tStr } from '../../lib/i18n';
@@ -10,6 +10,15 @@ export const BudgetsScreen: React.FC<{ t: Tokens; onBack: () => void }> = ({ t, 
   const s = useStore();
   const lang = s.prefs.lang;
   const curMo = last6Months().slice(-1)[0].key;
+  const spentByCat = useMemo(() => {
+    const map: Record<string, number> = {};
+    s.tx.forEach((x) => {
+      if (x.kind === 'expense' && x.date.startsWith(curMo)) {
+        map[x.cat] = (map[x.cat] || 0) + x.amount;
+      }
+    });
+    return map;
+  }, [s.tx, curMo]);
   return (
     <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 120 }}>
       <ScreenHeader t={t} title={tStr(lang, 'budgets')} onBack={onBack} />
@@ -21,9 +30,7 @@ export const BudgetsScreen: React.FC<{ t: Tokens; onBack: () => void }> = ({ t, 
         ) : (
           s.budgets.map((b) => {
             const cat = s.categories.find((c) => c.id === b.cat);
-            const spent = s.tx
-              .filter((x) => x.cat === b.cat && x.kind === 'expense' && x.date.startsWith(curMo))
-              .reduce((a, x) => a + x.amount, 0);
+            const spent = spentByCat[b.cat] || 0;
             const pct = Math.min(100, (spent / b.limit) * 100);
             const over = spent > b.limit;
             return (

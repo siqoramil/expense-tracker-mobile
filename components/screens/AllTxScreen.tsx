@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { fmtDate } from '../../lib/format';
 import { tStr } from '../../lib/i18n';
@@ -19,21 +19,31 @@ export const AllTxScreen: React.FC<{
   const [q, setQ] = useState('');
   const [filter, setFilter] = useState<Filter>('all');
 
-  const filtered = s.tx.filter((x) => {
-    if (filter !== 'all' && x.kind !== filter) return false;
-    if (q) {
-      const cat = s.categories.find((c) => c.id === x.cat);
-      const hay = ((x.note || '') + ' ' + catLabel(cat, lang)).toLowerCase();
-      if (!hay.includes(q.toLowerCase())) return false;
-    }
-    return true;
-  });
+  const catById = useMemo(() => {
+    const map: Record<string, (typeof s.categories)[number]> = {};
+    s.categories.forEach((c) => {
+      map[c.id] = c;
+    });
+    return map;
+  }, [s.categories]);
 
-  const groups: Record<string, Transaction[]> = {};
-  filtered.forEach((x) => {
-    (groups[x.date] = groups[x.date] || []).push(x);
-  });
-  const sortedDates = Object.keys(groups).sort((a, b) => b.localeCompare(a));
+  const { filtered, groups, sortedDates } = useMemo(() => {
+    const ql = q.toLowerCase();
+    const filtered = s.tx.filter((x) => {
+      if (filter !== 'all' && x.kind !== filter) return false;
+      if (q) {
+        const hay = ((x.note || '') + ' ' + catLabel(catById[x.cat], lang)).toLowerCase();
+        if (!hay.includes(ql)) return false;
+      }
+      return true;
+    });
+    const groups: Record<string, Transaction[]> = {};
+    filtered.forEach((x) => {
+      (groups[x.date] = groups[x.date] || []).push(x);
+    });
+    const sortedDates = Object.keys(groups).sort((a, b) => b.localeCompare(a));
+    return { filtered, groups, sortedDates };
+  }, [s.tx, catById, lang, q, filter]);
 
   return (
     <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 120 }}>
