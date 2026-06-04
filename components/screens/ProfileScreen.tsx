@@ -1,22 +1,33 @@
 import React, { useState } from 'react';
-import { ActionSheetIOS, Alert, Image, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-
-type ImagePickerModule = typeof import('expo-image-picker');
-const loadImagePicker = (): ImagePickerModule | null => {
-  try {
-    return require('expo-image-picker') as ImagePickerModule;
-  } catch {
-    return null;
-  }
-};
+import {
+  ActionSheetIOS,
+  Alert,
+  Image,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import { errorMessage } from '../../lib/errors';
 import { tStr } from '../../lib/i18n';
-import { actions, isImageAvatar, store, useStore } from '../../lib/store';
+import { actions, isImageAvatar, useStore } from '../../lib/store';
 import { toast } from '../../lib/toast';
 import type { Tokens } from '../../lib/tokens';
 import { DeleteAccountSheet, EditEmailSheet, EditNameSheet } from '../AccountSheets';
 import { Icon, type IconName } from '../Icon';
 import { Card, ScreenHeader, SectionHeader, Switch } from '../ui';
+
+type ImagePickerModule = typeof import('expo-image-picker');
+const loadImagePicker = (): ImagePickerModule | null => {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    return require('expo-image-picker') as ImagePickerModule;
+  } catch {
+    return null;
+  }
+};
 
 type Nav = (screen: string, data?: unknown) => void;
 
@@ -38,7 +49,7 @@ export const ProfileScreen: React.FC<{ t: Tokens; onNav: Nav; onLogout: () => vo
     if (!ImagePicker) {
       toast(
         lang === 'uz'
-          ? "Rasm tanlash mavjud emas — ilovani qayta build qiling"
+          ? 'Rasm tanlash mavjud emas — ilovani qayta build qiling'
           : 'Image picker unavailable — rebuild the dev client',
       );
       return;
@@ -46,7 +57,7 @@ export const ProfileScreen: React.FC<{ t: Tokens; onNav: Nav; onLogout: () => vo
     try {
       const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (perm.status !== 'granted') {
-        toast(lang === 'uz' ? "Ruxsat berilmagan" : 'Permission denied');
+        toast(lang === 'uz' ? 'Ruxsat berilmagan' : 'Permission denied');
         return;
       }
       const result = await ImagePicker.launchImageLibraryAsync({
@@ -110,10 +121,7 @@ export const ProfileScreen: React.FC<{ t: Tokens; onNav: Nav; onLogout: () => vo
         style: (i === destructiveIdx ? 'destructive' : 'default') as 'destructive' | 'default',
         onPress: () => handle(i),
       }));
-      Alert.alert(labels.title, undefined, [
-        ...buttons,
-        { text: labels.cancel, style: 'cancel' },
-      ]);
+      Alert.alert(labels.title, undefined, [...buttons, { text: labels.cancel, style: 'cancel' }]);
     }
   };
 
@@ -147,23 +155,6 @@ export const ProfileScreen: React.FC<{ t: Tokens; onNav: Nav; onLogout: () => vo
                 {s.profile.avatar}
               </Text>
             )}
-            <View
-              style={{
-                position: 'absolute',
-                right: 0,
-                bottom: 0,
-                width: 22,
-                height: 22,
-                borderRadius: 11,
-                backgroundColor: t.surface,
-                borderWidth: 2,
-                borderColor: t.bg,
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <Icon name="pen" size={11} color={t.textSec} stroke={2.4} />
-            </View>
           </Pressable>
           <View style={{ flex: 1, minWidth: 0 }}>
             <Pressable
@@ -182,10 +173,7 @@ export const ProfileScreen: React.FC<{ t: Tokens; onNav: Nav; onLogout: () => vo
               onPress={() => setEditEmail(true)}
               style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 }}
             >
-              <Text
-                style={{ fontSize: 12.5, color: t.textSec }}
-                numberOfLines={1}
-              >
+              <Text style={{ fontSize: 12.5, color: t.textSec }} numberOfLines={1}>
                 {s.profile.email}
               </Text>
               <Icon name="settings" size={11} color={t.textTer} stroke={2} />
@@ -263,8 +251,20 @@ export const ProfileScreen: React.FC<{ t: Tokens; onNav: Nav; onLogout: () => vo
       <SectionHeader t={t} title={tStr(lang, 'account')} />
       <View style={{ paddingHorizontal: 20, paddingBottom: 16 }}>
         <Card t={t}>
-          <NavRow t={t} icon="wallet" color="#EC4899" label={tStr(lang, 'wallets')} onPress={() => onNav('wallets')} />
-          <NavRow t={t} icon="chart" color="#10B981" label={tStr(lang, 'budgets')} onPress={() => onNav('budgets')} />
+          <NavRow
+            t={t}
+            icon="wallet"
+            color="#EC4899"
+            label={tStr(lang, 'wallets')}
+            onPress={() => onNav('wallets')}
+          />
+          <NavRow
+            t={t}
+            icon="chart"
+            color="#10B981"
+            label={tStr(lang, 'budgets')}
+            onPress={() => onNav('budgets')}
+          />
           <NavRow
             t={t}
             icon="calendar"
@@ -272,10 +272,35 @@ export const ProfileScreen: React.FC<{ t: Tokens; onNav: Nav; onLogout: () => vo
             label={lang === 'uz' ? 'Takrorlanuvchi' : 'Recurring'}
             onPress={() => onNav('recurring')}
           />
-          <NavRow t={t} icon="calendar" color="#F97316" label={tStr(lang, 'calendar')} onPress={() => onNav('calendar')} />
-          <NavRow t={t} icon="bell" color="#EC4899" label={tStr(lang, 'notifications')} onPress={() => onNav('notifications')} />
-          <NavRow t={t} icon="lock" color="#8B5CF6" label={tStr(lang, 'security')} onPress={() => onNav('security')} />
-          <NavRow t={t} icon="download" color="#0EA5E9" label={tStr(lang, 'reports')} onPress={() => onNav('reports')} last />
+          <NavRow
+            t={t}
+            icon="calendar"
+            color="#F97316"
+            label={tStr(lang, 'calendar')}
+            onPress={() => onNav('calendar')}
+          />
+          <NavRow
+            t={t}
+            icon="bell"
+            color="#EC4899"
+            label={tStr(lang, 'notifications')}
+            onPress={() => onNav('notifications')}
+          />
+          <NavRow
+            t={t}
+            icon="lock"
+            color="#8B5CF6"
+            label={tStr(lang, 'security')}
+            onPress={() => onNav('security')}
+          />
+          <NavRow
+            t={t}
+            icon="download"
+            color="#0EA5E9"
+            label={tStr(lang, 'reports')}
+            onPress={() => onNav('reports')}
+            last
+          />
         </Card>
       </View>
 
@@ -283,24 +308,11 @@ export const ProfileScreen: React.FC<{ t: Tokens; onNav: Nav; onLogout: () => vo
         <Card t={t}>
           <NavRow
             t={t}
-            icon="settings"
-            color="#71717A"
-            label={tStr(lang, 'resetData')}
-            onPress={() => {
-              Alert.alert(tStr(lang, 'resetData') + '?', '', [
-                { text: tStr(lang, 'cancel'), style: 'cancel' },
-                {
-                  text: tStr(lang, 'delete'),
-                  style: 'destructive',
-                  onPress: () => {
-                    store.reset();
-                    toast('Reset');
-                  },
-                },
-              ]);
-            }}
+            icon="arrow-up-right"
+            color={t.expense}
+            label={tStr(lang, 'signOut')}
+            onPress={onLogout}
           />
-          <NavRow t={t} icon="arrow-up-right" color={t.expense} label={tStr(lang, 'signOut')} onPress={onLogout} />
           <NavRow
             t={t}
             icon="close"

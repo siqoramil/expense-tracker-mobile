@@ -1,12 +1,5 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { BackHandler } from 'react-native';
-import Animated, {
-  Easing,
-  useAnimatedStyle,
-  useSharedValue,
-  withSpring,
-  withTiming,
-} from 'react-native-reanimated';
+import React, { useCallback, useEffect, useState } from 'react';
+import { BackHandler, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AddSheet, type AddMode } from '../components/AddSheet';
 import { LoginScreen } from '../components/LoginScreen';
@@ -23,11 +16,7 @@ import { NotificationsScreen } from '../components/screens/NotificationsScreen';
 import { ProfileScreen } from '../components/screens/ProfileScreen';
 import { RecurringScreen } from '../components/screens/RecurringScreen';
 import { ReportsScreen } from '../components/screens/ReportsScreen';
-import {
-  CurrencyScreen,
-  LanguageScreen,
-  SecurityScreen,
-} from '../components/screens/SettingsSubs';
+import { CurrencyScreen, LanguageScreen, SecurityScreen } from '../components/screens/SettingsSubs';
 import { StatsScreen } from '../components/screens/StatsScreen';
 import { TxDetail } from '../components/screens/TxDetail';
 import { WalletsScreen } from '../components/screens/WalletsScreen';
@@ -62,36 +51,6 @@ export default function AppRoot() {
   const [navStack, setNavStack] = useState<StackEntry[]>([]);
   const [add, setAdd] = useState<AddState>(null);
   const [toastMsg, setToastMsg] = useState<string | null>(null);
-
-  const fadeOpacity = useSharedValue(0);
-  const contentScale = useSharedValue(1);
-  const prevBg = useRef(t.bg);
-  const [overlayBg, setOverlayBg] = useState(t.bg);
-
-  useEffect(() => {
-    if (prevBg.current !== t.bg) {
-      setOverlayBg(prevBg.current);
-      fadeOpacity.value = 1;
-      fadeOpacity.value = withTiming(0, {
-        duration: 420,
-        easing: Easing.out(Easing.cubic),
-      });
-      contentScale.value = 0.985;
-      contentScale.value = withSpring(1, {
-        damping: 18,
-        stiffness: 160,
-        mass: 0.8,
-      });
-      prevBg.current = t.bg;
-    }
-  }, [t.bg, fadeOpacity, contentScale]);
-
-  const overlayStyle = useAnimatedStyle(() => ({
-    opacity: fadeOpacity.value,
-  }));
-  const contentStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: contentScale.value }],
-  }));
 
   useEffect(() => {
     setToastFn((msg) => {
@@ -201,7 +160,11 @@ export default function AppRoot() {
         break;
       case 'debtors':
         rootContent = (
-          <DebtorsScreen t={t} onOpen={(d) => push({ screen: 'debtor', data: d })} onAdd={() => setAdd({ mode: 'debt' })} />
+          <DebtorsScreen
+            t={t}
+            onOpen={(d) => push({ screen: 'debtor', data: d })}
+            onAdd={() => setAdd({ mode: 'debt' })}
+          />
         );
         break;
       case 'profile':
@@ -223,7 +186,7 @@ export default function AppRoot() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: t.bg }} edges={['top']}>
-      <Animated.View style={[{ flex: 1, backgroundColor: t.bg }, contentStyle]}>
+      <View style={{ flex: 1, backgroundColor: t.bg }}>
         {rootContent}
         {showChrome && navStack.length === 0 ? (
           <TabBar
@@ -242,21 +205,7 @@ export default function AppRoot() {
           editTx={editTx}
           onClose={() => setAdd(null)}
         />
-      </Animated.View>
-      <Animated.View
-        pointerEvents="none"
-        style={[
-          {
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: overlayBg,
-          },
-          overlayStyle,
-        ]}
-      />
+      </View>
     </SafeAreaView>
   );
 }

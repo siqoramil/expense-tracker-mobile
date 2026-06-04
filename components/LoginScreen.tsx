@@ -97,6 +97,13 @@ export const LoginScreen: React.FC<{ t: Tokens; onDone: () => void }> = ({ t, on
       return;
     }
     setErr(null);
+    // TEMP DEBUG: surface the redirect URI so it can be registered in Google
+    // Cloud Console (fixes Error 400: redirect_uri_mismatch). Remove after.
+    const DEBUG_SHOW_REDIRECT = true;
+    if (DEBUG_SHOW_REDIRECT) {
+      setErr(`REDIRECT URI:\n${googleRequest.redirectUri}`);
+      return;
+    }
     try {
       const result = await googlePrompt();
       if (result?.type === 'error') {
@@ -106,9 +113,7 @@ export const LoginScreen: React.FC<{ t: Tokens; onDone: () => void }> = ({ t, on
       const msg = e instanceof Error ? e.message.toLowerCase() : '';
       if (/cancel|dismiss|user.?closed|aborted/.test(msg)) return;
       setErr(
-        lang === 'uz'
-          ? `Google: ${msg || "kirib bo'lmadi"}`
-          : `Google: ${msg || 'sign-in failed'}`,
+        lang === 'uz' ? `Google: ${msg || "kirib bo'lmadi"}` : `Google: ${msg || 'sign-in failed'}`,
       );
     }
   };
@@ -329,9 +334,7 @@ export const LoginScreen: React.FC<{ t: Tokens; onDone: () => void }> = ({ t, on
           }}
         >
           <Icon name="info" size={16} color={t.expense} />
-          <Text style={{ color: t.expense, fontSize: 13, fontWeight: '500', flex: 1 }}>
-            {err}
-          </Text>
+          <Text style={{ color: t.expense, fontSize: 13, fontWeight: '500', flex: 1 }}>{err}</Text>
         </View>
       ) : null}
 
@@ -419,7 +422,7 @@ export const LoginScreen: React.FC<{ t: Tokens; onDone: () => void }> = ({ t, on
           {mode === 'signin'
             ? tStr(lang, 'noAccount')
             : lang === 'uz'
-              ? "Hisobingiz bormi?"
+              ? 'Hisobingiz bormi?'
               : 'Already have an account?'}{' '}
         </Text>
         <Pressable
