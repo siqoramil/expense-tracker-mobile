@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { AppTextInput } from './AppTextInput';
 import { CURRENCIES, daysFromNow, isoDate, today } from '../lib/format';
 import { tStr, type Lang } from '../lib/i18n';
 import { actions, catLabel, useStore, walletName, type Debt, type Transaction } from '../lib/store';
@@ -238,7 +239,7 @@ export const AddSheet: React.FC<Props> = ({ t, visible, mode, editTx, editDebt, 
                       justifyContent: 'center',
                     }}
                   >
-                    <TextInput
+                    <AppTextInput
                       value={formatAmountInput(amount)}
                       onChangeText={(v) => setAmount(v.replace(/[^0-9.]/g, ''))}
                       placeholder="0"
@@ -481,7 +482,7 @@ const Input: React.FC<{
   onChangeText: (v: string) => void;
   placeholder?: string;
 }> = ({ t, value, onChangeText, placeholder }) => (
-  <TextInput
+  <AppTextInput
     value={value}
     onChangeText={onChangeText}
     placeholder={placeholder}

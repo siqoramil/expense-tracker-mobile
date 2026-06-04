@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { AppTextInput } from '../AppTextInput';
 import { fmtDate, fmtMoney } from '../../lib/format';
 import { tStr } from '../../lib/i18n';
 import { actions, useStore, type Debt } from '../../lib/store';
@@ -233,7 +234,7 @@ export const DebtorDetail: React.FC<Props> = ({ t, debtor, onBack }) => {
             <Text style={{ fontSize: 18, fontWeight: '700', color: t.text, marginBottom: 16 }}>
               {tStr(lang, 'addPayment')}
             </Text>
-            <TextInput
+            <AppTextInput
               autoFocus
               keyboardType="numeric"
               value={payAmt}

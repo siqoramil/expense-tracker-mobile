@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
-import { ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { AppTextInput } from '../AppTextInput';
 import { fmtDate } from '../../lib/format';
 import { tStr } from '../../lib/i18n';
 import { catLabel, useStore, type Transaction } from '../../lib/store';
@@ -66,7 +67,7 @@ export const AllTxScreen: React.FC<{
           >
             <Icon name="search" size={18} color={t.textSec} stroke={2} />
           </View>
-          <TextInput
+          <AppTextInput
             value={q}
             onChangeText={setQ}
             placeholder={tStr(lang, 'searchPlaceholder')}

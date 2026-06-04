@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { AppTextInput } from '../AppTextInput';
 import { fmtDate, fmtMoney, today, unitOf, type Currency } from '../../lib/format';
 import { tStr } from '../../lib/i18n';
 import { useStore, type Debt } from '../../lib/store';
@@ -168,7 +169,7 @@ export const DebtorsScreen: React.FC<Props> = ({ t, onOpen, onAdd }) => {
           >
             <Icon name="search" size={18} color={t.textSec} stroke={2} />
           </View>
-          <TextInput
+          <AppTextInput
             value={q}
             onChangeText={setQ}
             placeholder={lang === 'uz' ? 'Ism bo‘yicha qidirish…' : 'Search name...'}

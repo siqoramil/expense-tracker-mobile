@@ -7,9 +7,9 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   View,
 } from 'react-native';
+import { AppTextInput } from './AppTextInput';
 import { errorMessage } from '../lib/errors';
 import { isGoogleAuthAvailable, useGoogleIdTokenAuthRequest } from '../lib/googleAuth';
 import { tStr, type Lang } from '../lib/i18n';
@@ -200,7 +200,7 @@ export const EditNameSheet: React.FC<SheetProps> = ({ t, visible, onClose }) => 
       title={lang === 'uz' ? 'Ismni tahrirlash' : 'Edit name'}
     >
       {fieldLabel(t, tStr(lang, 'name'))}
-      <TextInput
+      <AppTextInput
         value={name}
         onChangeText={setName}
         autoFocus
@@ -284,7 +284,7 @@ export const EditEmailSheet: React.FC<SheetProps> = ({ t, visible, onClose }) =>
               : 'Enter the new email. A 6-digit code will be sent to it.'}
           </Text>
           {fieldLabel(t, lang === 'uz' ? 'Yangi email' : 'New email')}
-          <TextInput
+          <AppTextInput
             value={newEmail}
             onChangeText={setNewEmail}
             autoFocus
@@ -313,7 +313,7 @@ export const EditEmailSheet: React.FC<SheetProps> = ({ t, visible, onClose }) =>
               : `Enter the 6-digit code sent to ${newEmail}.`}
           </Text>
           {fieldLabel(t, lang === 'uz' ? 'Tasdiqlash kodi' : 'Verification code')}
-          <TextInput
+          <AppTextInput
             value={code}
             onChangeText={(v) => setCode(v.replace(/\D/g, '').slice(0, 6))}
             autoFocus
@@ -458,7 +458,7 @@ export const ForgotPasswordSheet: React.FC<SheetProps> = ({ t, visible, onClose 
               : "Enter your email and we'll send you a 6-digit code."}
           </Text>
           {fieldLabel(t, tStr(lang, 'email'))}
-          <TextInput
+          <AppTextInput
             value={email}
             onChangeText={setEmail}
             autoFocus
@@ -488,7 +488,7 @@ export const ForgotPasswordSheet: React.FC<SheetProps> = ({ t, visible, onClose 
               : `Enter the 6-digit code sent to ${email}.`}
           </Text>
           {fieldLabel(t, lang === 'uz' ? 'Tasdiqlash kodi' : 'Verification code')}
-          <TextInput
+          <AppTextInput
             value={code}
             onChangeText={(v) => setCode(v.replace(/\D/g, '').slice(0, 6))}
             autoFocus
@@ -527,7 +527,7 @@ export const ForgotPasswordSheet: React.FC<SheetProps> = ({ t, visible, onClose 
               : 'Enter and confirm your new password.'}
           </Text>
           {fieldLabel(t, lang === 'uz' ? 'Yangi parol' : 'New password')}
-          <TextInput
+          <AppTextInput
             value={newPassword}
             onChangeText={setNewPassword}
             autoFocus
@@ -541,7 +541,7 @@ export const ForgotPasswordSheet: React.FC<SheetProps> = ({ t, visible, onClose 
           />
           <View style={{ height: 14 }} />
           {fieldLabel(t, lang === 'uz' ? 'Parolni takrorlang' : 'Confirm password')}
-          <TextInput
+          <AppTextInput
             value={confirmPassword}
             onChangeText={setConfirmPassword}
             secureTextEntry
@@ -735,7 +735,7 @@ export const DeleteAccountSheet: React.FC<SheetProps & { onDeleted: () => void }
               : `Enter the 6-digit code sent to ${email}. Confirming will permanently delete your account and all data.`}
           </Text>
           {fieldLabel(t, lang === 'uz' ? 'Tasdiqlash kodi' : 'Verification code')}
-          <TextInput
+          <AppTextInput
             value={code}
             onChangeText={(v) => setCode(v.replace(/\D/g, '').slice(0, 6))}
             autoFocus
@@ -764,7 +764,7 @@ export const DeleteAccountSheet: React.FC<SheetProps & { onDeleted: () => void }
           ) : (
             <View style={{ marginTop: 14 }}>
               {fieldLabel(t, lang === 'uz' ? 'Joriy parol' : 'Current password')}
-              <TextInput
+              <AppTextInput
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry
