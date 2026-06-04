@@ -1,4 +1,3 @@
-import Constants from 'expo-constants';
 import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
@@ -11,7 +10,7 @@ import {
 } from 'react-native';
 import { AppTextInput } from './AppTextInput';
 import { errorMessage } from '../lib/errors';
-import { isGoogleAuthAvailable, useGoogleIdTokenAuthRequest } from '../lib/googleAuth';
+import { isGoogleAuthAvailable, signInWithGoogle } from '../lib/googleAuth';
 import { tStr, type Lang } from '../lib/i18n';
 import { actions, useStore } from '../lib/store';
 import { toast } from '../lib/toast';
@@ -19,13 +18,6 @@ import type { Tokens } from '../lib/tokens';
 import { ModalBackdrop } from './Glass';
 import { Icon } from './Icon';
 import { KeyboardAvoider } from './KeyboardAvoider';
-
-type GoogleConfig = {
-  googleWebClientId?: string;
-  googleIosClientId?: string;
-  googleAndroidClientId?: string;
-};
-const googleCfg = (Constants.expoConfig?.extra ?? {}) as GoogleConfig;
 
 type SheetProps = { t: Tokens; visible: boolean; onClose: () => void };
 
@@ -579,22 +571,8 @@ export const DeleteAccountSheet: React.FC<SheetProps & { onDeleted: () => void }
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
-  // Google flow is only mounted for Google-only accounts to avoid extra
-  // network setup for password users. The hook returns no-ops if the
-  // expo-auth-session module isn't available.
-  const googleEnabled =
-    isGoogleOnly &&
-    isGoogleAuthAvailable() &&
-    !!(
-      googleCfg.googleWebClientId ||
-      googleCfg.googleIosClientId ||
-      googleCfg.googleAndroidClientId
-    );
-  const [googleRequest, googleResponse, googlePrompt] = useGoogleIdTokenAuthRequest({
-    webClientId: googleCfg.googleWebClientId,
-    iosClientId: googleCfg.googleIosClientId,
-    androidClientId: googleCfg.googleAndroidClientId,
-  });
+  // Native Google re-auth is only offered for Google-only accounts.
+  const googleEnabled = isGoogleOnly && isGoogleAuthAvailable();
 
   useEffect(() => {
     if (visible) {
@@ -619,17 +597,6 @@ export const DeleteAccountSheet: React.FC<SheetProps & { onDeleted: () => void }
     }
   };
 
-  // Pick up the idToken once the Google sheet returns successfully and
-  // forward it to the delete endpoint.
-  useEffect(() => {
-    if (!isGoogleOnly) return;
-    if (googleResponse?.type !== 'success') return;
-    const idToken = googleResponse.params?.id_token;
-    if (!idToken) return;
-    void finishConfirm({ idToken });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [googleResponse]);
-
   const requestCode = async () => {
     setErr(null);
     setBusy(true);
@@ -651,13 +618,22 @@ export const DeleteAccountSheet: React.FC<SheetProps & { onDeleted: () => void }
       return;
     }
     if (isGoogleOnly) {
-      if (!googleEnabled || !googleRequest) {
+      if (!googleEnabled) {
         setErr(lang === 'uz' ? 'Google sozlanmagan' : 'Google sign-in not configured');
         return;
       }
       setBusy(true);
-      // Result is consumed by the useEffect above.
-      void googlePrompt();
+      const res = await signInWithGoogle();
+      if (res.type === 'cancel') {
+        setBusy(false);
+        return;
+      }
+      if (res.type === 'error') {
+        setErr(`Google: ${res.message}`);
+        setBusy(false);
+        return;
+      }
+      void finishConfirm({ idToken: res.idToken });
       return;
     }
     if (!password) {

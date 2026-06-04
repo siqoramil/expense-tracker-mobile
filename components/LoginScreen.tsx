@@ -1,5 +1,4 @@
-import Constants from 'expo-constants';
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import {
   ActivityIndicator,
   Image,
@@ -13,7 +12,7 @@ import Svg, { Path } from 'react-native-svg';
 import { AppTextInput } from './AppTextInput';
 import { authApi } from '../lib/api';
 import { errorMessage } from '../lib/errors';
-import { isGoogleAuthAvailable, useGoogleIdTokenAuthRequest } from '../lib/googleAuth';
+import { isGoogleAuthAvailable, signInWithGoogle } from '../lib/googleAuth';
 import { tStr } from '../lib/i18n';
 import { actions, store } from '../lib/store';
 import type { Tokens } from '../lib/tokens';
@@ -21,13 +20,6 @@ import { ForgotPasswordSheet } from './AccountSheets';
 import { Icon } from './Icon';
 import { KeyboardSpacer } from './KeyboardAvoider';
 import { Card } from './ui';
-
-type GoogleConfig = {
-  googleWebClientId?: string;
-  googleIosClientId?: string;
-  googleAndroidClientId?: string;
-};
-const gx = (Constants.expoConfig?.extra ?? {}) as GoogleConfig;
 
 export const LoginScreen: React.FC<{ t: Tokens; onDone: () => void }> = ({ t, onDone }) => {
   const [mode, setMode] = useState<'signin' | 'signup'>('signin');
@@ -40,74 +32,33 @@ export const LoginScreen: React.FC<{ t: Tokens; onDone: () => void }> = ({ t, on
   const [err, setErr] = useState<string | null>(null);
   const lang = store.get().prefs.lang;
 
-  const googleEnabled =
-    isGoogleAuthAvailable() &&
-    !!(gx.googleWebClientId || gx.googleIosClientId || gx.googleAndroidClientId);
-  const [googleRequest, googleResponse, googlePrompt] = useGoogleIdTokenAuthRequest({
-    webClientId: gx.googleWebClientId,
-    iosClientId: gx.googleIosClientId,
-    androidClientId: gx.googleAndroidClientId,
-  });
-
-  useEffect(() => {
-    if (googleResponse?.type !== 'success') return;
-    const idToken = googleResponse.params?.id_token;
-    if (!idToken) return;
-    let cancelled = false;
-    (async () => {
-      setErr(null);
-      setBusy(true);
-      try {
-        const { token, user } = await authApi.google({ idToken });
-        if (cancelled) return;
-        await actions.setAuth(token, user);
-        onDone();
-      } catch (e) {
-        if (cancelled) return;
-        setErr(errorMessage(lang, e));
-      } finally {
-        if (!cancelled) setBusy(false);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [googleResponse]);
+  const googleEnabled = isGoogleAuthAvailable();
 
   const handleGooglePress = async () => {
-    if (!isGoogleAuthAvailable()) {
-      setErr(
-        lang === 'uz'
-          ? 'Dev client eski — qayta build qiling: npx expo run:android'
-          : 'Old dev client — rebuild required: npx expo run:android',
-      );
-      return;
-    }
-    if (!googleRequest) {
-      setErr(
-        lang === 'uz'
-          ? "Google so'rov hali tayyor emas, biroz kuting"
-          : 'Google request not ready, please wait',
-      );
-      return;
-    }
     if (!googleEnabled) {
-      setErr(lang === 'uz' ? 'Google sozlanmagan' : 'Google sign-in not configured');
+      setErr(
+        lang === 'uz'
+          ? 'Google mavjud emas — ilovani qayta build qiling'
+          : 'Google unavailable — rebuild the app',
+      );
       return;
     }
     setErr(null);
+    setBusy(true);
     try {
-      const result = await googlePrompt();
-      if (result?.type === 'error') {
-        setErr(lang === 'uz' ? "Google bilan kirib bo'lmadi" : 'Google sign-in failed');
+      const res = await signInWithGoogle();
+      if (res.type === 'cancel') return;
+      if (res.type === 'error') {
+        setErr(`Google: ${res.message}`);
+        return;
       }
+      const { token, user } = await authApi.google({ idToken: res.idToken });
+      await actions.setAuth(token, user);
+      onDone();
     } catch (e) {
-      const msg = e instanceof Error ? e.message.toLowerCase() : '';
-      if (/cancel|dismiss|user.?closed|aborted/.test(msg)) return;
-      setErr(
-        lang === 'uz' ? `Google: ${msg || "kirib bo'lmadi"}` : `Google: ${msg || 'sign-in failed'}`,
-      );
+      setErr(errorMessage(lang, e));
+    } finally {
+      setBusy(false);
     }
   };
 

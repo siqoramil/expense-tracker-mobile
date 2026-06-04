@@ -1,46 +1,65 @@
-import type * as GoogleProvider from 'expo-auth-session/providers/google';
+import Constants from 'expo-constants';
 
-type GoogleModule = typeof GoogleProvider;
+type GoogleConfig = {
+  googleWebClientId?: string;
+  googleIosClientId?: string;
+  googleAndroidClientId?: string;
+};
 
-// Try to load expo-auth-session at module-eval time. If the underlying
-// native modules (e.g. ExpoApplication) are missing — typically because the
-// dev client was built before they were added — fall back to a no-op stub
-// so the app still loads. The Google button will simply report
-// "unavailable" until a fresh build is installed.
-let googleModule: GoogleModule | null = null;
+const cfg = (Constants.expoConfig?.extra ?? {}) as GoogleConfig;
+
+type GoogleSigninModule = typeof import('@react-native-google-signin/google-signin');
+
+// Lazy-require the native module so the app still loads if it is missing — e.g.
+// an old dev client built before it was added. The Google button reports
+// "unavailable" until a fresh build with the native module is installed.
+let mod: GoogleSigninModule | null = null;
 try {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
-  googleModule = require('expo-auth-session/providers/google');
+  mod = require('@react-native-google-signin/google-signin');
 } catch {
-  googleModule = null;
+  mod = null;
 }
 
-let webBrowserCompleted = false;
-const ensureWebBrowserCompleted = () => {
-  if (webBrowserCompleted) return;
+let configured = false;
+const ensureConfigured = (m: GoogleSigninModule) => {
+  if (configured) return;
+  m.GoogleSignin.configure({
+    webClientId: cfg.googleWebClientId,
+    iosClientId: cfg.googleIosClientId,
+    offlineAccess: false,
+  });
+  configured = true;
+};
+
+export const isGoogleAuthAvailable = () =>
+  mod !== null && !!(cfg.googleWebClientId || cfg.googleIosClientId || cfg.googleAndroidClientId);
+
+export type GoogleSignInResult =
+  | { type: 'success'; idToken: string }
+  | { type: 'cancel' }
+  | { type: 'error'; message: string };
+
+// Native Google Sign-In (no browser, no redirect URI). The Android OAuth client
+// is matched by package name + SHA-1; the returned id token is signed for the
+// web client id, which the server verifies.
+export const signInWithGoogle = async (): Promise<GoogleSignInResult> => {
+  if (!mod) return { type: 'error', message: 'unavailable' };
+  const m = mod;
+  ensureConfigured(m);
   try {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const wb = require('expo-web-browser');
-    wb.maybeCompleteAuthSession?.();
-  } catch {
-    // ignore — already failed to load above
+    await m.GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
+    const response = await m.GoogleSignin.signIn();
+    if (m.isSuccessResponse(response)) {
+      const idToken = response.data.idToken;
+      if (!idToken) return { type: 'error', message: 'no_id_token' };
+      return { type: 'success', idToken };
+    }
+    return { type: 'cancel' };
+  } catch (e) {
+    if (m.isErrorWithCode(e) && e.code === m.statusCodes.SIGN_IN_CANCELLED) {
+      return { type: 'cancel' };
+    }
+    return { type: 'error', message: e instanceof Error ? e.message : 'sign_in_failed' };
   }
-  webBrowserCompleted = true;
 };
-ensureWebBrowserCompleted();
-
-export const isGoogleAuthAvailable = () => googleModule !== null;
-
-type AuthSessionResult = {
-  type: 'success' | 'cancel' | 'dismiss' | 'opened' | 'locked' | 'error';
-  params?: { id_token?: string };
-};
-
-const noopAsync = async (): Promise<AuthSessionResult> => ({ type: 'dismiss' });
-
-const noopHook = (
-  _config: Parameters<GoogleModule['useIdTokenAuthRequest']>[0],
-): readonly [null, AuthSessionResult | null, typeof noopAsync] => [null, null, noopAsync];
-
-export const useGoogleIdTokenAuthRequest = (googleModule?.useIdTokenAuthRequest ??
-  noopHook) as GoogleModule['useIdTokenAuthRequest'];
