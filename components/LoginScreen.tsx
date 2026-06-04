@@ -7,10 +7,10 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   View,
 } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
+import { AppTextInput } from './AppTextInput';
 import { authApi } from '../lib/api';
 import { errorMessage } from '../lib/errors';
 import { isGoogleAuthAvailable, useGoogleIdTokenAuthRequest } from '../lib/googleAuth';
@@ -97,13 +97,6 @@ export const LoginScreen: React.FC<{ t: Tokens; onDone: () => void }> = ({ t, on
       return;
     }
     setErr(null);
-    // TEMP DEBUG: surface the redirect URI so it can be registered in Google
-    // Cloud Console (fixes Error 400: redirect_uri_mismatch). Remove after.
-    const DEBUG_SHOW_REDIRECT = true;
-    if (DEBUG_SHOW_REDIRECT) {
-      setErr(`REDIRECT URI:\n${googleRequest.redirectUri}`);
-      return;
-    }
     try {
       const result = await googlePrompt();
       if (result?.type === 'error') {
@@ -201,9 +194,9 @@ export const LoginScreen: React.FC<{ t: Tokens; onDone: () => void }> = ({ t, on
       <View style={{ alignItems: 'center', marginBottom: 32 }}>
         <View
           style={{
-            width: 168,
-            height: 168,
-            borderRadius: 38,
+            width: 136,
+            height: 136,
+            borderRadius: 31,
             overflow: 'hidden',
             shadowColor: t.accent,
             shadowOpacity: 0.32,
@@ -215,7 +208,7 @@ export const LoginScreen: React.FC<{ t: Tokens; onDone: () => void }> = ({ t, on
         >
           <Image
             source={require('../assets/images/icon.png')}
-            style={{ width: 168, height: 168 }}
+            style={{ width: 136, height: 136 }}
             resizeMode="cover"
           />
         </View>
@@ -253,11 +246,14 @@ export const LoginScreen: React.FC<{ t: Tokens; onDone: () => void }> = ({ t, on
       {mode === 'signup' ? (
         <View style={{ marginBottom: 14 }}>
           <Label>{tStr(lang, 'name').toUpperCase()}</Label>
-          <Card t={t} style={{ paddingHorizontal: 16, paddingVertical: 14 }}>
-            <TextInput
+          <Card t={t} style={{ borderRadius: 8, paddingHorizontal: 16, paddingVertical: 14 }}>
+            <AppTextInput
               value={name}
               onChangeText={setName}
               autoCapitalize="words"
+              autoComplete="off"
+              importantForAutofill="no"
+              textContentType="none"
               placeholder="John Doe"
               maxLength={80}
               style={inputStyle}
@@ -268,11 +264,14 @@ export const LoginScreen: React.FC<{ t: Tokens; onDone: () => void }> = ({ t, on
       ) : null}
       <View style={{ marginBottom: 14 }}>
         <Label>{tStr(lang, 'email').toUpperCase()}</Label>
-        <Card t={t} style={{ paddingHorizontal: 16, paddingVertical: 14 }}>
-          <TextInput
+        <Card t={t} style={{ borderRadius: 8, paddingHorizontal: 16, paddingVertical: 14 }}>
+          <AppTextInput
             value={email}
             onChangeText={setEmail}
             autoCapitalize="none"
+            autoComplete="off"
+            importantForAutofill="no"
+            textContentType="none"
             keyboardType="email-address"
             placeholder="email@gmail.com"
             maxLength={200}
@@ -283,19 +282,22 @@ export const LoginScreen: React.FC<{ t: Tokens; onDone: () => void }> = ({ t, on
       </View>
       <View style={{ marginBottom: 14 }}>
         <Label>{tStr(lang, 'password').toUpperCase()}</Label>
-        <Card t={t} style={{ paddingHorizontal: 16, paddingVertical: 14 }}>
+        <Card t={t} style={{ borderRadius: 8, paddingHorizontal: 16, paddingVertical: 14 }}>
           <View
             style={{
               flexDirection: 'row',
               alignItems: 'center',
             }}
           >
-            <TextInput
+            <AppTextInput
               value={pw}
               onChangeText={setPw}
               secureTextEntry={!showPw}
               autoCapitalize="none"
               autoCorrect={false}
+              autoComplete="off"
+              importantForAutofill="no"
+              textContentType="none"
               placeholder="••••••••"
               maxLength={128}
               style={[inputStyle, { flex: 1 }]}
@@ -343,7 +345,7 @@ export const LoginScreen: React.FC<{ t: Tokens; onDone: () => void }> = ({ t, on
         style={({ pressed }) => [
           {
             height: 54,
-            borderRadius: 16,
+            borderRadius: 8,
             backgroundColor: t.accent,
             alignItems: 'center',
             justifyContent: 'center',
@@ -380,7 +382,7 @@ export const LoginScreen: React.FC<{ t: Tokens; onDone: () => void }> = ({ t, on
         style={({ pressed }) => [
           {
             height: 54,
-            borderRadius: 16,
+            borderRadius: 8,
             backgroundColor: t.surface,
             borderWidth: StyleSheet.hairlineWidth,
             borderColor: t.border,
