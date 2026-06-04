@@ -25,6 +25,8 @@ export const AllTxScreen: React.FC<{
       map[c.id] = c;
     });
     return map;
+    // s.categories is the only dependency that should trigger a rebuild
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [s.categories]);
 
   const { filtered, groups, sortedDates } = useMemo(() => {
@@ -121,7 +123,13 @@ export const AllTxScreen: React.FC<{
               </Text>
               <Card t={t} style={{ paddingHorizontal: 16, paddingVertical: 4 }}>
                 {groups[date].map((tx, i, arr) => (
-                  <TxRow key={tx.id} tx={tx} t={t} last={i === arr.length - 1} onPress={() => onOpenTx(tx)} />
+                  <TxRow
+                    key={tx.id}
+                    tx={tx}
+                    t={t}
+                    last={i === arr.length - 1}
+                    onPress={() => onOpenTx(tx)}
+                  />
                 ))}
               </Card>
             </View>

@@ -1,13 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import {
-  Animated,
-  Dimensions,
-  Easing,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import { Animated, Dimensions, Easing, Pressable, StyleSheet, Text, View } from 'react-native';
 import Svg, {
   Circle,
   Defs,
@@ -40,8 +32,7 @@ const slidesFor = (lang: string): SlideMeta[] =>
           key: 'track',
           title: 'Pulingiz qayerga',
           accent: 'ketmoqda',
-          subtitle:
-            "Har bir xarajatni avtomatik kategoriyalang va kunlik tendensiyani kuzating.",
+          subtitle: 'Har bir xarajatni avtomatik kategoriyalang va kunlik tendensiyani kuzating.',
           hueA: '#8B5CF6',
           hueB: '#EC4899',
         },
@@ -49,8 +40,7 @@ const slidesFor = (lang: string): SlideMeta[] =>
           key: 'debtors',
           title: 'Kim qarz olgan,',
           accent: 'unutmaydi',
-          subtitle:
-            "Qarzlar va kreditlarni bir joyda saqlang — sanalar va eslatmalar bilan.",
+          subtitle: 'Qarzlar va kreditlarni bir joyda saqlang — sanalar va eslatmalar bilan.',
           hueA: '#06B6D4',
           hueB: '#3B82F6',
         },
@@ -58,8 +48,7 @@ const slidesFor = (lang: string): SlideMeta[] =>
           key: 'savings',
           title: "Jamg'armangiz",
           accent: "o'sib boradi",
-          subtitle:
-            'Aqlli byudjet va maqsadlar bilan har oy yanada tejaymiz.',
+          subtitle: 'Aqlli byudjet va maqsadlar bilan har oy yanada tejaymiz.',
           hueA: '#10B981',
           hueB: '#F59E0B',
         },
@@ -69,8 +58,7 @@ const slidesFor = (lang: string): SlideMeta[] =>
           key: 'track',
           title: 'See where every',
           accent: 'dollar goes',
-          subtitle:
-            'Auto-categorize each transaction and watch your spending patterns evolve.',
+          subtitle: 'Auto-categorize each transaction and watch your spending patterns evolve.',
           hueA: '#8B5CF6',
           hueB: '#EC4899',
         },
@@ -149,9 +137,7 @@ export const Onboarding: React.FC<{ t: Tokens; onDone: () => void }> = ({ t, onD
         </View>
         {!isLast ? (
           <Pressable hitSlop={14} onPress={skip} style={styles.skipBtn}>
-            <Text style={[styles.skipText, { color: t.textSec }]}>
-              {tStr(lang, 'skip')}
-            </Text>
+            <Text style={[styles.skipText, { color: t.textSec }]}>{tStr(lang, 'skip')}</Text>
           </Pressable>
         ) : (
           <View style={{ width: 1 }} />
@@ -170,18 +156,12 @@ export const Onboarding: React.FC<{ t: Tokens; onDone: () => void }> = ({ t, onD
       </View>
 
       <Animated.View
-        style={[
-          styles.textBlock,
-          { opacity: fade, transform: [{ translateY: slideX }] },
-        ]}
+        style={[styles.textBlock, { opacity: fade, transform: [{ translateY: slideX }] }]}
       >
         <Text style={[styles.title, { color: t.text }]}>
-          {cur.title}{' '}
-          <GradientWord text={cur.accent} hueA={cur.hueA} hueB={cur.hueB} />
+          {cur.title} <GradientWord text={cur.accent} hueA={cur.hueA} hueB={cur.hueB} />
         </Text>
-        <Text style={[styles.subtitle, { color: t.textSec }]}>
-          {cur.subtitle}
-        </Text>
+        <Text style={[styles.subtitle, { color: t.textSec }]}>{cur.subtitle}</Text>
       </Animated.View>
 
       <Pressable
@@ -214,11 +194,7 @@ export const Onboarding: React.FC<{ t: Tokens; onDone: () => void }> = ({ t, onD
 
 // ─── Mesh gradient background ──────────────────────────────────────────────
 
-const MeshBackground: React.FC<{ t: Tokens; hueA: string; hueB: string }> = ({
-  t,
-  hueA,
-  hueB,
-}) => {
+const MeshBackground: React.FC<{ t: Tokens; hueA: string; hueB: string }> = ({ t, hueA, hueB }) => {
   const isDark = t.bg.startsWith('#0') || t.bg === '#0B0B0F';
   const baseOp = isDark ? 0.55 : 0.32;
   return (
@@ -340,12 +316,7 @@ const SlideHero: React.FC<{ slide: SlideMeta; t: Tokens }> = ({ slide, t }) => {
   return (
     <View style={styles.heroBox}>
       {/* main glass card */}
-      <View
-        style={[
-          styles.glassCard,
-          { backgroundColor: glassFill, borderColor: glassBorder },
-        ]}
-      >
+      <View style={[styles.glassCard, { backgroundColor: glassFill, borderColor: glassBorder }]}>
         {slide.key === 'track' ? (
           <TrackPreview hueA={slide.hueA} hueB={slide.hueB} text={innerText} sub={innerSub} />
         ) : slide.key === 'debtors' ? (
@@ -513,10 +484,7 @@ const SavingsPreview: React.FC<{
 
 // ─── Gradient title word ───────────────────────────────────────────────────
 
-const GradientWord: React.FC<{ text: string; hueA: string; hueB: string }> = ({
-  text,
-  hueA,
-}) => {
+const GradientWord: React.FC<{ text: string; hueA: string; hueB: string }> = ({ text, hueA }) => {
   // Simple, reliable approach: use the first hue as the colored text.
   // (SVG text masking is fragile across RN versions; solid color stays crisp.)
   return <Text style={{ color: hueA, fontWeight: '800' }}>{text}</Text>;

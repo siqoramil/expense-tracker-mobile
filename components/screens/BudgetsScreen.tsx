@@ -25,7 +25,11 @@ export const BudgetsScreen: React.FC<{ t: Tokens; onBack: () => void }> = ({ t, 
       <View style={{ paddingHorizontal: 20, gap: 10 }}>
         {s.budgets.length === 0 ? (
           <Card t={t}>
-            <EmptyState icon="chart" title={lang === 'uz' ? 'Byudjetlar yo‘q' : 'No budgets'} t={t} />
+            <EmptyState
+              icon="chart"
+              title={lang === 'uz' ? 'Byudjetlar yo‘q' : 'No budgets'}
+              t={t}
+            />
           </Card>
         ) : (
           s.budgets.map((b) => {
@@ -35,7 +39,9 @@ export const BudgetsScreen: React.FC<{ t: Tokens; onBack: () => void }> = ({ t, 
             const over = spent > b.limit;
             return (
               <Card key={b.id} t={t} style={{ padding: 16 }}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+                <View
+                  style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 10 }}
+                >
                   <CatIcon cat={b.cat} size={36} />
                   <View style={{ flex: 1 }}>
                     <Text style={{ fontSize: 14, fontWeight: '600', color: t.text }}>

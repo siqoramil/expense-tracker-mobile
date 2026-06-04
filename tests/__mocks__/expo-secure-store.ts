@@ -25,9 +25,6 @@ export const getItemAsync = async (
   _opts?: SecureStoreOptions,
 ): Promise<string | null> => memory.get(key) ?? null;
 
-export const deleteItemAsync = async (
-  key: string,
-  _opts?: SecureStoreOptions,
-): Promise<void> => {
+export const deleteItemAsync = async (key: string, _opts?: SecureStoreOptions): Promise<void> => {
   memory.delete(key);
 };

@@ -1,13 +1,7 @@
 import React from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { tStr, type Lang } from '../../lib/i18n';
-import {
-  actions,
-  catLabel,
-  useStore,
-  type Category,
-  type CategoryKind,
-} from '../../lib/store';
+import { actions, catLabel, useStore, type Category, type CategoryKind } from '../../lib/store';
 import type { Tokens } from '../../lib/tokens';
 import { Icon } from '../Icon';
 import { Card, CatIcon, ScreenHeader } from '../ui';
@@ -55,11 +49,7 @@ const Row: React.FC<{
         justifyContent: 'center',
       }}
     >
-      <Icon
-        name={hidden ? 'plus' : 'close'}
-        size={16}
-        color={hidden ? t.accent : t.textTer}
-      />
+      <Icon name={hidden ? 'plus' : 'close'} size={16} color={hidden ? t.accent : t.textTer} />
     </View>
   </Pressable>
 );

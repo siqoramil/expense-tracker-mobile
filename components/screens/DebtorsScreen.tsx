@@ -43,6 +43,8 @@ export const DebtorsScreen: React.FC<Props> = ({ t, onOpen, onAdd }) => {
       else if (dueMs - tdyMs < 7 * 86_400_000) dueIds.add(d.id);
     });
     return { overdueIds, dueIds, overdueCount: overdueIds.size, dueCount: dueIds.size };
+    // active is derived from s.debts — listing s.debts is sufficient
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [s.debts, tdyMs]);
 
   const filtered = active.filter((d) => {
@@ -336,7 +338,11 @@ const BalanceCol: React.FC<{
   );
 };
 
-const DebtorCard: React.FC<{ debtor: Debt; t: Tokens; onPress: () => void }> = ({ debtor, t, onPress }) => {
+const DebtorCard: React.FC<{ debtor: Debt; t: Tokens; onPress: () => void }> = ({
+  debtor,
+  t,
+  onPress,
+}) => {
   const s = useStore();
   const lang = s.prefs.lang;
   const overdue = new Date(debtor.due).getTime() < today().getTime() && debtor.paid < debtor.amount;

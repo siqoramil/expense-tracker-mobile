@@ -197,9 +197,9 @@ describe('unauthorized handler integration', () => {
     });
     mockFetch({ error: 'invalid_credentials' }, { status: 401, ok: false });
 
-    await expect(
-      api.authApi.login({ email: 'x@y.z', password: 'wrong' }),
-    ).rejects.toMatchObject({ message: 'invalid_credentials' });
+    await expect(api.authApi.login({ email: 'x@y.z', password: 'wrong' })).rejects.toMatchObject({
+      message: 'invalid_credentials',
+    });
 
     expect(handlerCalled).toBe(0);
   });

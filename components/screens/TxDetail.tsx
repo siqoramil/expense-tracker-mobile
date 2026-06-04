@@ -2,13 +2,7 @@ import React from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { fmtDate, fmtMoney, unitOf } from '../../lib/format';
 import { tStr } from '../../lib/i18n';
-import {
-  actions,
-  catLabel,
-  useStore,
-  walletName,
-  type Transaction,
-} from '../../lib/store';
+import { actions, catLabel, useStore, walletName, type Transaction } from '../../lib/store';
 import { toast } from '../../lib/toast';
 import type { Tokens } from '../../lib/tokens';
 import { Icon } from '../Icon';
@@ -87,7 +81,9 @@ export const TxDetail: React.FC<Props> = ({ t, tx, onBack, onEdit }) => {
           }}
         >
           <Icon name="settings" size={14} color={t.text} />
-          <Text style={{ color: t.text, fontSize: 15, fontWeight: '600' }}>{tStr(lang, 'edit')}</Text>
+          <Text style={{ color: t.text, fontSize: 15, fontWeight: '600' }}>
+            {tStr(lang, 'edit')}
+          </Text>
         </Pressable>
         <Pressable
           onPress={() => {

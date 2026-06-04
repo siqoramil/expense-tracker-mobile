@@ -23,8 +23,18 @@ export const ReportsScreen: React.FC<{ t: Tokens; onBack: () => void }> = ({ t, 
     <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 120 }}>
       <ScreenHeader t={t} title={tStr(lang, 'reports')} onBack={onBack} />
       <View style={{ paddingHorizontal: 20, paddingBottom: 16, flexDirection: 'row', gap: 10 }}>
-        <SumCard t={t} label={lang === 'uz' ? '6 oy kirim' : '6mo Income'} amount={totalInc} kind="income" />
-        <SumCard t={t} label={lang === 'uz' ? '6 oy chiqim' : '6mo Expenses'} amount={totalExp} kind="expense" />
+        <SumCard
+          t={t}
+          label={lang === 'uz' ? '6 oy kirim' : '6mo Income'}
+          amount={totalInc}
+          kind="income"
+        />
+        <SumCard
+          t={t}
+          label={lang === 'uz' ? '6 oy chiqim' : '6mo Expenses'}
+          amount={totalExp}
+          kind="expense"
+        />
       </View>
       <View style={{ paddingHorizontal: 20 }}>
         <Card
@@ -59,12 +69,12 @@ export const ReportsScreen: React.FC<{ t: Tokens; onBack: () => void }> = ({ t, 
   );
 };
 
-const SumCard: React.FC<{ label: string; amount: number; kind: 'income' | 'expense'; t: Tokens }> = ({
-  label,
-  amount,
-  kind,
-  t,
-}) => {
+const SumCard: React.FC<{
+  label: string;
+  amount: number;
+  kind: 'income' | 'expense';
+  t: Tokens;
+}> = ({ label, amount, kind, t }) => {
   const s = useStore();
   const up = kind === 'income';
   const color = up ? t.income : t.expense;
@@ -91,7 +101,12 @@ const SumCard: React.FC<{ label: string; amount: number; kind: 'income' | 'expen
             justifyContent: 'center',
           }}
         >
-          <Icon name={up ? 'arrow-down-left' : 'arrow-up-right'} size={12} color={color} stroke={2.5} />
+          <Icon
+            name={up ? 'arrow-down-left' : 'arrow-up-right'}
+            size={12}
+            color={color}
+            stroke={2.5}
+          />
         </View>
         <Text style={{ fontSize: 12, color: t.textSec, fontWeight: '500' }}>{label}</Text>
       </View>

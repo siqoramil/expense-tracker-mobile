@@ -76,10 +76,20 @@ export const NotificationsScreen: React.FC<{ t: Tokens; onBack: () => void }> = 
                   <Text style={{ fontSize: 12.5, color: t.textSec, marginTop: 3 }}>
                     {n.body[lang] || n.body.en}
                   </Text>
-                  <Text style={{ fontSize: 11, color: t.textTer, marginTop: 4 }}>{fmtDate(n.date, lang)}</Text>
+                  <Text style={{ fontSize: 11, color: t.textTer, marginTop: 4 }}>
+                    {fmtDate(n.date, lang)}
+                  </Text>
                 </View>
                 {!n.read ? (
-                  <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: t.accent, marginTop: 6 }} />
+                  <View
+                    style={{
+                      width: 8,
+                      height: 8,
+                      borderRadius: 4,
+                      backgroundColor: t.accent,
+                      marginTop: 6,
+                    }}
+                  />
                 ) : null}
               </Card>
             );

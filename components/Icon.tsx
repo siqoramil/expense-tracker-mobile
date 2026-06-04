@@ -74,7 +74,10 @@ export const Icon: React.FC<Props> = ({ name, size = 22, color = '#000', stroke 
     case 'home-fill':
       return (
         <Svg width={size} height={size} viewBox={vb}>
-          <Path fill={color} d="M3 11.2L12 4l9 7.2V20a1 1 0 01-1 1h-5v-6h-6v6H4a1 1 0 01-1-1v-8.8z" />
+          <Path
+            fill={color}
+            d="M3 11.2L12 4l9 7.2V20a1 1 0 01-1 1h-5v-6h-6v6H4a1 1 0 01-1-1v-8.8z"
+          />
         </Svg>
       );
     case 'chart':
@@ -111,13 +114,19 @@ export const Icon: React.FC<Props> = ({ name, size = 22, color = '#000', stroke 
     case 'user':
       return (
         <Svg width={size} height={size} viewBox={vb}>
-          <Path {...common} d="M12 12a4 4 0 100-8 4 4 0 000 8zM4 21v-1a6 6 0 016-6h4a6 6 0 016 6v1" />
+          <Path
+            {...common}
+            d="M12 12a4 4 0 100-8 4 4 0 000 8zM4 21v-1a6 6 0 016-6h4a6 6 0 016 6v1"
+          />
         </Svg>
       );
     case 'user-fill':
       return (
         <Svg width={size} height={size} viewBox={vb}>
-          <Path fill={color} d="M12 12a4 4 0 100-8 4 4 0 000 8zM4 21v-1a6 6 0 016-6h4a6 6 0 016 6v1H4z" />
+          <Path
+            fill={color}
+            d="M12 12a4 4 0 100-8 4 4 0 000 8zM4 21v-1a6 6 0 016-6h4a6 6 0 016 6v1H4z"
+          />
         </Svg>
       );
     case 'plus':
@@ -204,7 +213,10 @@ export const Icon: React.FC<Props> = ({ name, size = 22, color = '#000', stroke 
       return (
         <Svg width={size} height={size} viewBox={vb}>
           <Circle {...common} cx={12} cy={12} r={4} />
-          <Path {...common} d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" />
+          <Path
+            {...common}
+            d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"
+          />
         </Svg>
       );
     case 'settings':
@@ -220,13 +232,19 @@ export const Icon: React.FC<Props> = ({ name, size = 22, color = '#000', stroke 
     case 'bell':
       return (
         <Svg width={size} height={size} viewBox={vb}>
-          <Path {...common} d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 01-3.4 0" />
+          <Path
+            {...common}
+            d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 01-3.4 0"
+          />
         </Svg>
       );
     case 'wallet':
       return (
         <Svg width={size} height={size} viewBox={vb}>
-          <Path {...common} d="M20 12V7a2 2 0 00-2-2H5a2 2 0 000 4h15a1 1 0 011 1v3M20 12v5a2 2 0 01-2 2H5a2 2 0 01-2-2V7" />
+          <Path
+            {...common}
+            d="M20 12V7a2 2 0 00-2-2H5a2 2 0 000 4h15a1 1 0 011 1v3M20 12v5a2 2 0 01-2 2H5a2 2 0 01-2-2V7"
+          />
           <Circle fill={color} cx={17} cy={14} r={1.3} />
         </Svg>
       );
@@ -240,7 +258,10 @@ export const Icon: React.FC<Props> = ({ name, size = 22, color = '#000', stroke 
     case 'tag':
       return (
         <Svg width={size} height={size} viewBox={vb}>
-          <Path {...common} d="M20.6 13.4L13 21a2 2 0 01-2.8 0l-7-7A2 2 0 012.5 12V5a2 2 0 012-2H12a2 2 0 011.4.6l7.2 7.2a2 2 0 010 2.6z" />
+          <Path
+            {...common}
+            d="M20.6 13.4L13 21a2 2 0 01-2.8 0l-7-7A2 2 0 012.5 12V5a2 2 0 012-2H12a2 2 0 011.4.6l7.2 7.2a2 2 0 010 2.6z"
+          />
           <Circle {...common} cx={7.5} cy={7.5} r={1.2} />
         </Svg>
       );
@@ -295,7 +316,10 @@ export const Icon: React.FC<Props> = ({ name, size = 22, color = '#000', stroke 
     case 'car':
       return (
         <Svg width={size} height={size} viewBox={vb}>
-          <Path {...common} d="M5 17h14l-1.5-6a2 2 0 00-2-1.5H8.5A2 2 0 006.5 11L5 17zM3 17h18v3H3zM7.5 17v2M16.5 17v2" />
+          <Path
+            {...common}
+            d="M5 17h14l-1.5-6a2 2 0 00-2-1.5H8.5A2 2 0 006.5 11L5 17zM3 17h18v3H3zM7.5 17v2M16.5 17v2"
+          />
         </Svg>
       );
     case 'home-icon':
@@ -370,10 +394,7 @@ export const Icon: React.FC<Props> = ({ name, size = 22, color = '#000', stroke 
       return (
         <Svg width={size} height={size} viewBox={vb}>
           <Path {...common} d="M12 20h9" />
-          <Path
-            {...common}
-            d="M16.5 3.5a2.121 2.121 0 1 1 3 3L7 19l-4 1 1-4 12.5-12.5z"
-          />
+          <Path {...common} d="M16.5 3.5a2.121 2.121 0 1 1 3 3L7 19l-4 1 1-4 12.5-12.5z" />
         </Svg>
       );
     default:

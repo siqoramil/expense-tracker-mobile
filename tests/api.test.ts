@@ -10,10 +10,7 @@ import {
 
 type FetchMock = ReturnType<typeof vi.fn> & typeof fetch;
 
-const mockFetch = (
-  body: unknown,
-  init: { status?: number; ok?: boolean } = {},
-): FetchMock => {
+const mockFetch = (body: unknown, init: { status?: number; ok?: boolean } = {}): FetchMock => {
   const status = init.status ?? 200;
   const ok = init.ok ?? (status >= 200 && status < 300);
   const fn = vi.fn(async () => ({
@@ -177,9 +174,10 @@ describe('authApi.confirmAccountDelete', () => {
     const onUnauthorized = vi.fn();
     setUnauthorizedHandler(onUnauthorized);
     mockFetch({ error: 'password_required' }, { status: 400, ok: false });
-    await expect(
-      authApi.confirmAccountDelete({ code: '123456' }),
-    ).rejects.toMatchObject({ message: 'password_required', status: 400 });
+    await expect(authApi.confirmAccountDelete({ code: '123456' })).rejects.toMatchObject({
+      message: 'password_required',
+      status: 400,
+    });
     expect(onUnauthorized).not.toHaveBeenCalled();
   });
 });

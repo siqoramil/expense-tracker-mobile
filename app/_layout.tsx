@@ -21,7 +21,12 @@ export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <StatusBar style={s.prefs.dark ? 'light' : 'dark'} />
-      <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: s.prefs.dark ? '#0B0B0F' : '#F4F4F5' } }} />
+      <Stack
+        screenOptions={{
+          headerShown: false,
+          contentStyle: { backgroundColor: s.prefs.dark ? '#0B0B0F' : '#F4F4F5' },
+        }}
+      />
       <ServerUnreachable t={tokens} lang={lang} />
     </SafeAreaProvider>
   );

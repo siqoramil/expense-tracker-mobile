@@ -189,8 +189,7 @@ export const walletsApi = {
     apiRequest<{ item: WalletDTO }>('/wallets', { method: 'POST', body }),
   update: (id: string, body: UpdateWalletInput) =>
     apiRequest<{ item: WalletDTO }>(`/wallets/${id}`, { method: 'PATCH', body }),
-  remove: (id: string) =>
-    apiRequest<{ ok: true }>(`/wallets/${id}`, { method: 'DELETE' }),
+  remove: (id: string) => apiRequest<{ ok: true }>(`/wallets/${id}`, { method: 'DELETE' }),
 };
 
 export const transactionsApi = {
@@ -205,10 +204,8 @@ export const transactionsApi = {
     apiRequest<{ item: TransactionDTO }>('/tx', { method: 'POST', body }),
   update: (id: string, body: UpdateTransactionInput) =>
     apiRequest<{ item: TransactionDTO }>(`/tx/${id}`, { method: 'PATCH', body }),
-  remove: (id: string) =>
-    apiRequest<{ ok: true }>(`/tx/${id}`, { method: 'DELETE' }),
-  stats: (month: string) =>
-    apiRequest<TransactionStats>(`/tx/stats/${month}`),
+  remove: (id: string) => apiRequest<{ ok: true }>(`/tx/${id}`, { method: 'DELETE' }),
+  stats: (month: string) => apiRequest<TransactionStats>(`/tx/stats/${month}`),
 };
 
 export const budgetsApi = {
@@ -217,8 +214,7 @@ export const budgetsApi = {
     apiRequest<{ item: BudgetDTO }>('/budgets', { method: 'POST', body }),
   update: (id: string, body: UpdateBudgetInput) =>
     apiRequest<{ item: BudgetDTO }>(`/budgets/${id}`, { method: 'PATCH', body }),
-  remove: (id: string) =>
-    apiRequest<{ ok: true }>(`/budgets/${id}`, { method: 'DELETE' }),
+  remove: (id: string) => apiRequest<{ ok: true }>(`/budgets/${id}`, { method: 'DELETE' }),
 };
 
 export const debtsApi = {
@@ -230,8 +226,7 @@ export const debtsApi = {
     apiRequest<{ item: DebtDTO }>('/debts', { method: 'POST', body }),
   update: (id: string, body: UpdateDebtInput) =>
     apiRequest<{ item: DebtDTO }>(`/debts/${id}`, { method: 'PATCH', body }),
-  remove: (id: string) =>
-    apiRequest<{ ok: true }>(`/debts/${id}`, { method: 'DELETE' }),
+  remove: (id: string) => apiRequest<{ ok: true }>(`/debts/${id}`, { method: 'DELETE' }),
   addPayment: (id: string, body: DebtPaymentInput) =>
     apiRequest<{ item: DebtDTO }>(`/debts/${id}/payments`, { method: 'POST', body }),
   archive: (id: string) =>
@@ -244,8 +239,7 @@ export const categoriesApi = {
     apiRequest<{ item: CategoryDTO }>('/categories', { method: 'POST', body }),
   update: (id: string, body: UpdateCategoryInput) =>
     apiRequest<{ item: CategoryDTO }>(`/categories/${id}`, { method: 'PATCH', body }),
-  remove: (id: string) =>
-    apiRequest<{ ok: true }>(`/categories/${id}`, { method: 'DELETE' }),
+  remove: (id: string) => apiRequest<{ ok: true }>(`/categories/${id}`, { method: 'DELETE' }),
 };
 
 export const recurringApi = {
@@ -254,16 +248,13 @@ export const recurringApi = {
     apiRequest<{ item: RecurringDTO }>('/recurring', { method: 'POST', body }),
   update: (id: string, body: UpdateRecurringInput) =>
     apiRequest<{ item: RecurringDTO }>(`/recurring/${id}`, { method: 'PATCH', body }),
-  remove: (id: string) =>
-    apiRequest<{ ok: true }>(`/recurring/${id}`, { method: 'DELETE' }),
+  remove: (id: string) => apiRequest<{ ok: true }>(`/recurring/${id}`, { method: 'DELETE' }),
 };
 
 export const notificationsApi = {
   list: () => apiRequest<{ items: NotificationDTO[] }>('/notifs'),
   markRead: (id: string) =>
     apiRequest<{ item: NotificationDTO }>(`/notifs/${id}/read`, { method: 'POST' }),
-  markAllRead: () =>
-    apiRequest<{ ok: true }>('/notifs/read-all', { method: 'POST' }),
-  remove: (id: string) =>
-    apiRequest<{ ok: true }>(`/notifs/${id}`, { method: 'DELETE' }),
+  markAllRead: () => apiRequest<{ ok: true }>('/notifs/read-all', { method: 'POST' }),
+  remove: (id: string) => apiRequest<{ ok: true }>(`/notifs/${id}`, { method: 'DELETE' }),
 };

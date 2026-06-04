@@ -1,23 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import {
-  Modal,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from 'react-native';
+import { Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { CURRENCIES, daysFromNow, isoDate, today } from '../lib/format';
 import { tStr, type Lang } from '../lib/i18n';
-import {
-  actions,
-  catLabel,
-  useStore,
-  walletName,
-  type Debt,
-  type Transaction,
-} from '../lib/store';
+import { actions, catLabel, useStore, walletName, type Debt, type Transaction } from '../lib/store';
 import { toast } from '../lib/toast';
 import type { Tokens } from '../lib/tokens';
 import { ModalBackdrop } from './Glass';
@@ -83,7 +68,7 @@ export const AddSheet: React.FC<Props> = ({ t, visible, mode, editTx, editDebt, 
 
   const cats = useMemo(
     () => s.categories.filter((c) => !c.hidden && matchKind(c.kind, kind)),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
     [s.categories, kind],
   );
 
@@ -99,10 +84,10 @@ export const AddSheet: React.FC<Props> = ({ t, visible, mode, editTx, editDebt, 
         ? 'Edit debt'
         : tStr(lang, 'newDebt')
       : editTx
-      ? `${lang === 'uz' ? 'Tahrirlash' : 'Edit'} ${tStr(lang, kind + '_s').toLowerCase()}`
-      : kind === 'income'
-      ? tStr(lang, 'addIncome')
-      : tStr(lang, 'addExpense');
+        ? `${lang === 'uz' ? 'Tahrirlash' : 'Edit'} ${tStr(lang, kind + '_s').toLowerCase()}`
+        : kind === 'income'
+          ? tStr(lang, 'addIncome')
+          : tStr(lang, 'addExpense');
 
   const submit = () => {
     const amt = Number(amount) || 0;
@@ -141,8 +126,8 @@ export const AddSheet: React.FC<Props> = ({ t, visible, mode, editTx, editDebt, 
     ? kind === 'income'
       ? t.income
       : kind === 'debt'
-      ? t.accent
-      : t.expense
+        ? t.accent
+        : t.expense
     : t.textTer;
 
   const accentTint =
@@ -152,309 +137,316 @@ export const AddSheet: React.FC<Props> = ({ t, visible, mode, editTx, editDebt, 
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <ModalBackdrop>
         <KeyboardAvoider>
-        <Pressable
-          onPress={onClose}
-          style={{ flex: 1, justifyContent: 'flex-end' }}
-        >
-        <Pressable
-          onPress={() => {}}
-          style={{
-            backgroundColor: t.sheetBg,
-            borderTopLeftRadius: 32,
-            borderTopRightRadius: 32,
-            paddingTop: 8,
-            maxHeight: '94%',
-            overflow: 'hidden',
-          }}
-        >
-          <View
-            style={{
-              width: 40,
-              height: 4,
-              borderRadius: 2,
-              backgroundColor: t.borderStrong,
-              alignSelf: 'center',
-              marginBottom: 14,
-            }}
-          />
-
-          <View
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              paddingHorizontal: 22,
-              marginBottom: 18,
-            }}
-          >
-            <Text style={{ fontSize: 22, fontWeight: '700', color: t.text, letterSpacing: -0.5 }}>
-              {title}
-            </Text>
+          <Pressable onPress={onClose} style={{ flex: 1, justifyContent: 'flex-end' }}>
             <Pressable
-              onPress={onClose}
+              onPress={() => {}}
               style={{
-                width: 34,
-                height: 34,
-                borderRadius: 17,
-                backgroundColor: t.surfaceAlt,
-                alignItems: 'center',
-                justifyContent: 'center',
+                backgroundColor: t.sheetBg,
+                borderTopLeftRadius: 32,
+                borderTopRightRadius: 32,
+                paddingTop: 8,
+                maxHeight: '94%',
+                overflow: 'hidden',
               }}
             >
-              <Icon name="close" size={16} color={t.textSec} stroke={2.2} />
-            </Pressable>
-          </View>
-
-          <ScrollView
-            keyboardShouldPersistTaps="handled"
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 20 }}
-          >
-            {!editTx && !editDebt ? (
-              <View style={{ marginBottom: 18 }}>
-                <SegmentedControl
-                  t={t}
-                  value={kind}
-                  onChange={setKind}
-                  options={[
-                    { k: 'expense' as const, label: tStr(lang, 'expense_s') },
-                    { k: 'income' as const, label: tStr(lang, 'income_s') },
-                    { k: 'debt' as const, label: lang === 'uz' ? 'Qarz' : 'Debt' },
-                  ]}
-                />
-              </View>
-            ) : null}
-
-            <View
-              style={{
-                paddingVertical: 22,
-                paddingHorizontal: 20,
-                alignItems: 'center',
-                borderRadius: 22,
-                backgroundColor: accentTint,
-                marginBottom: 18,
-              }}
-            >
-              <Text
+              <View
                 style={{
-                  fontSize: 11,
-                  color: t.textSec,
-                  fontWeight: '700',
-                  letterSpacing: 0.8,
-                  marginBottom: 10,
+                  width: 40,
+                  height: 4,
+                  borderRadius: 2,
+                  backgroundColor: t.borderStrong,
+                  alignSelf: 'center',
+                  marginBottom: 14,
                 }}
-              >
-                {tStr(lang, 'amount').toUpperCase()}
-              </Text>
+              />
+
               <View
                 style={{
                   flexDirection: 'row',
-                  alignItems: 'baseline',
-                  gap: 8,
-                  justifyContent: 'center',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  paddingHorizontal: 22,
+                  marginBottom: 18,
                 }}
               >
-                <TextInput
-                  value={formatAmountInput(amount)}
-                  onChangeText={(v) => setAmount(v.replace(/[^0-9.]/g, ''))}
-                  placeholder="0"
-                  placeholderTextColor={t.textTer}
-                  keyboardType="decimal-pad"
-                  style={{
-                    fontSize: 44,
-                    fontWeight: '800',
-                    color: amtColor,
-                    letterSpacing: -1.6,
-                    textAlign: 'center',
-                    minWidth: 100,
-                    padding: 0,
-                  }}
-                />
-                <Text style={{ fontSize: 16, color: t.textSec, fontWeight: '600' }}>
-                  {CURRENCIES[s.prefs.currency].suffix ?? CURRENCIES[s.prefs.currency].symbol}
-                </Text>
-              </View>
-            </View>
-
-            {kind === 'debt' ? (
-              <View style={{ gap: 10, marginBottom: 14 }}>
-                <SegmentedControl
-                  t={t}
-                  value={direction}
-                  onChange={setDirection}
-                  options={[
-                    { k: 'owe_me' as const, label: tStr(lang, 'oweMe') },
-                    { k: 'i_owe' as const, label: tStr(lang, 'iOwe') },
-                  ]}
-                />
-                <Field t={t} label={tStr(lang, 'person')}>
-                  <Input t={t} value={name} onChangeText={setName} placeholder="John Doe" />
-                </Field>
-                <Field t={t} label={tStr(lang, 'dueDate')}>
-                  <DateField t={t} value={due} onChange={setDue} />
-                </Field>
-                <Field t={t} label={tStr(lang, 'note')}>
-                  <Input
-                    t={t}
-                    value={note}
-                    onChangeText={setNote}
-                    placeholder={lang === 'uz' ? 'Nima uchun?' : 'What for?'}
-                  />
-                </Field>
-              </View>
-            ) : (
-              <>
                 <Text
+                  style={{ fontSize: 22, fontWeight: '700', color: t.text, letterSpacing: -0.5 }}
+                >
+                  {title}
+                </Text>
+                <Pressable
+                  onPress={onClose}
                   style={{
-                    fontSize: 12,
-                    fontWeight: '600',
-                    color: t.textSec,
-                    marginBottom: 8,
-                    letterSpacing: 0.2,
+                    width: 34,
+                    height: 34,
+                    borderRadius: 17,
+                    backgroundColor: t.surfaceAlt,
+                    alignItems: 'center',
+                    justifyContent: 'center',
                   }}
                 >
-                  {tStr(lang, 'category').toUpperCase()}
-                </Text>
-                <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginBottom: 14 }}>
-                  {cats.map((c) => {
-                    const on = cat === c.id;
-                    return (
-                      <Pressable
-                        key={c.id}
-                        onPress={() => setCat(c.id)}
-                        style={{
-                          width: '20%',
-                          padding: 4,
-                        }}
-                      >
-                        <View
-                          style={{
-                            paddingVertical: 10,
-                            paddingHorizontal: 4,
-                            borderRadius: 14,
-                            backgroundColor: on ? c.color + '22' : t.surfaceAlt,
-                            borderWidth: 1.5,
-                            borderColor: on ? c.color : 'transparent',
-                            alignItems: 'center',
-                            gap: 5,
-                          }}
-                        >
-                          <Icon name={c.icon as IconName} size={19} color={c.color} stroke={2} />
-                          <Text style={{ fontSize: 10, fontWeight: '600', color: t.text }}>
-                            {catLabel(c, lang as Lang)}
-                          </Text>
-                        </View>
-                      </Pressable>
-                    );
-                  })}
+                  <Icon name="close" size={16} color={t.textSec} stroke={2.2} />
+                </Pressable>
+              </View>
+
+              <ScrollView
+                keyboardShouldPersistTaps="handled"
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 20 }}
+              >
+                {!editTx && !editDebt ? (
+                  <View style={{ marginBottom: 18 }}>
+                    <SegmentedControl
+                      t={t}
+                      value={kind}
+                      onChange={setKind}
+                      options={[
+                        { k: 'expense' as const, label: tStr(lang, 'expense_s') },
+                        { k: 'income' as const, label: tStr(lang, 'income_s') },
+                        { k: 'debt' as const, label: lang === 'uz' ? 'Qarz' : 'Debt' },
+                      ]}
+                    />
+                  </View>
+                ) : null}
+
+                <View
+                  style={{
+                    paddingVertical: 22,
+                    paddingHorizontal: 20,
+                    alignItems: 'center',
+                    borderRadius: 22,
+                    backgroundColor: accentTint,
+                    marginBottom: 18,
+                  }}
+                >
+                  <Text
+                    style={{
+                      fontSize: 11,
+                      color: t.textSec,
+                      fontWeight: '700',
+                      letterSpacing: 0.8,
+                      marginBottom: 10,
+                    }}
+                  >
+                    {tStr(lang, 'amount').toUpperCase()}
+                  </Text>
+                  <View
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'baseline',
+                      gap: 8,
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <TextInput
+                      value={formatAmountInput(amount)}
+                      onChangeText={(v) => setAmount(v.replace(/[^0-9.]/g, ''))}
+                      placeholder="0"
+                      placeholderTextColor={t.textTer}
+                      keyboardType="decimal-pad"
+                      style={{
+                        fontSize: 44,
+                        fontWeight: '800',
+                        color: amtColor,
+                        letterSpacing: -1.6,
+                        textAlign: 'center',
+                        minWidth: 100,
+                        padding: 0,
+                      }}
+                    />
+                    <Text style={{ fontSize: 16, color: t.textSec, fontWeight: '600' }}>
+                      {CURRENCIES[s.prefs.currency].suffix ?? CURRENCIES[s.prefs.currency].symbol}
+                    </Text>
+                  </View>
                 </View>
 
-                <Field t={t} label={tStr(lang, 'wallet')}>
-                  <View style={{ flexDirection: 'row', gap: 6 }}>
-                    {s.wallets.filter((w) => !w.hidden).map((w) => {
-                      const on = wallet === w.id;
-                      return (
-                        <Pressable
-                          key={w.id}
-                          onPress={() => setWallet(w.id)}
-                          style={{
-                            flex: 1,
-                            padding: 10,
-                            borderRadius: 10,
-                            backgroundColor: on ? w.color + '22' : t.surfaceAlt,
-                            borderWidth: 1.5,
-                            borderColor: on ? w.color : 'transparent',
-                            flexDirection: 'row',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            gap: 6,
-                          }}
-                        >
-                          <Icon name={w.icon as IconName} size={14} color={w.color} />
-                          <Text style={{ fontSize: 12, fontWeight: '600', color: t.text }}>
-                            {walletName(w, lang)}
-                          </Text>
-                        </Pressable>
-                      );
-                    })}
+                {kind === 'debt' ? (
+                  <View style={{ gap: 10, marginBottom: 14 }}>
+                    <SegmentedControl
+                      t={t}
+                      value={direction}
+                      onChange={setDirection}
+                      options={[
+                        { k: 'owe_me' as const, label: tStr(lang, 'oweMe') },
+                        { k: 'i_owe' as const, label: tStr(lang, 'iOwe') },
+                      ]}
+                    />
+                    <Field t={t} label={tStr(lang, 'person')}>
+                      <Input t={t} value={name} onChangeText={setName} placeholder="John Doe" />
+                    </Field>
+                    <Field t={t} label={tStr(lang, 'dueDate')}>
+                      <DateField t={t} value={due} onChange={setDue} />
+                    </Field>
+                    <Field t={t} label={tStr(lang, 'note')}>
+                      <Input
+                        t={t}
+                        value={note}
+                        onChangeText={setNote}
+                        placeholder={lang === 'uz' ? 'Nima uchun?' : 'What for?'}
+                      />
+                    </Field>
                   </View>
-                </Field>
+                ) : (
+                  <>
+                    <Text
+                      style={{
+                        fontSize: 12,
+                        fontWeight: '600',
+                        color: t.textSec,
+                        marginBottom: 8,
+                        letterSpacing: 0.2,
+                      }}
+                    >
+                      {tStr(lang, 'category').toUpperCase()}
+                    </Text>
+                    <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginBottom: 14 }}>
+                      {cats.map((c) => {
+                        const on = cat === c.id;
+                        return (
+                          <Pressable
+                            key={c.id}
+                            onPress={() => setCat(c.id)}
+                            style={{
+                              width: '20%',
+                              padding: 4,
+                            }}
+                          >
+                            <View
+                              style={{
+                                paddingVertical: 10,
+                                paddingHorizontal: 4,
+                                borderRadius: 14,
+                                backgroundColor: on ? c.color + '22' : t.surfaceAlt,
+                                borderWidth: 1.5,
+                                borderColor: on ? c.color : 'transparent',
+                                alignItems: 'center',
+                                gap: 5,
+                              }}
+                            >
+                              <Icon
+                                name={c.icon as IconName}
+                                size={19}
+                                color={c.color}
+                                stroke={2}
+                              />
+                              <Text style={{ fontSize: 10, fontWeight: '600', color: t.text }}>
+                                {catLabel(c, lang as Lang)}
+                              </Text>
+                            </View>
+                          </Pressable>
+                        );
+                      })}
+                    </View>
 
-                <Field t={t} label={tStr(lang, 'note')} mt={10}>
-                  <Input
-                    t={t}
-                    value={note}
-                    onChangeText={setNote}
-                    placeholder={lang === 'uz' ? 'Izoh (ixtiyoriy)' : 'Add a note (optional)'}
-                  />
-                </Field>
+                    <Field t={t} label={tStr(lang, 'wallet')}>
+                      <View style={{ flexDirection: 'row', gap: 6 }}>
+                        {s.wallets
+                          .filter((w) => !w.hidden)
+                          .map((w) => {
+                            const on = wallet === w.id;
+                            return (
+                              <Pressable
+                                key={w.id}
+                                onPress={() => setWallet(w.id)}
+                                style={{
+                                  flex: 1,
+                                  padding: 10,
+                                  borderRadius: 10,
+                                  backgroundColor: on ? w.color + '22' : t.surfaceAlt,
+                                  borderWidth: 1.5,
+                                  borderColor: on ? w.color : 'transparent',
+                                  flexDirection: 'row',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  gap: 6,
+                                }}
+                              >
+                                <Icon name={w.icon as IconName} size={14} color={w.color} />
+                                <Text style={{ fontSize: 12, fontWeight: '600', color: t.text }}>
+                                  {walletName(w, lang)}
+                                </Text>
+                              </Pressable>
+                            );
+                          })}
+                      </View>
+                    </Field>
 
-                <Field t={t} label={tStr(lang, 'date')} mt={10}>
-                  <DateTimeField
-                    t={t}
-                    date={date}
-                    time={time}
-                    onChangeDate={setDate}
-                    onChangeTime={setTime}
-                  />
-                </Field>
-              </>
-            )}
+                    <Field t={t} label={tStr(lang, 'note')} mt={10}>
+                      <Input
+                        t={t}
+                        value={note}
+                        onChangeText={setNote}
+                        placeholder={lang === 'uz' ? 'Izoh (ixtiyoriy)' : 'Add a note (optional)'}
+                      />
+                    </Field>
 
-          </ScrollView>
+                    <Field t={t} label={tStr(lang, 'date')} mt={10}>
+                      <DateTimeField
+                        t={t}
+                        date={date}
+                        time={time}
+                        onChangeDate={setDate}
+                        onChangeTime={setTime}
+                      />
+                    </Field>
+                  </>
+                )}
+              </ScrollView>
 
-          <View
-            style={{
-              flexDirection: 'row',
-              gap: 10,
-              paddingHorizontal: 20,
-              paddingTop: 14,
-              paddingBottom: 30,
-              borderTopWidth: StyleSheet.hairlineWidth,
-              borderTopColor: t.divider,
-            }}
-          >
-            {editTx || editDebt ? (
-              <Pressable
-                onPress={handleDelete}
+              <View
                 style={{
-                  width: 54,
-                  height: 54,
-                  borderRadius: 16,
-                  backgroundColor: t.expenseSoft,
-                  alignItems: 'center',
-                  justifyContent: 'center',
+                  flexDirection: 'row',
+                  gap: 10,
+                  paddingHorizontal: 20,
+                  paddingTop: 14,
+                  paddingBottom: 30,
+                  borderTopWidth: StyleSheet.hairlineWidth,
+                  borderTopColor: t.divider,
                 }}
               >
-                <Icon name="close" size={20} color={t.expense} stroke={2.5} />
-              </Pressable>
-            ) : null}
-            <Pressable
-              onPress={submit}
-              style={({ pressed }) => [
-                {
-                  flex: 1,
-                  height: 54,
-                  borderRadius: 16,
-                  backgroundColor: t.accent,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  shadowColor: t.accent,
-                  shadowOpacity: 0.35,
-                  shadowRadius: 16,
-                  shadowOffset: { width: 0, height: 6 },
-                  elevation: 6,
-                },
-                pressed && { transform: [{ scale: 0.98 }], shadowOpacity: 0.2 },
-              ]}
-            >
-              <Text style={{ color: '#fff', fontSize: 16, fontWeight: '700', letterSpacing: 0.2 }}>
-                {tStr(lang, 'save')}
-              </Text>
+                {editTx || editDebt ? (
+                  <Pressable
+                    onPress={handleDelete}
+                    style={{
+                      width: 54,
+                      height: 54,
+                      borderRadius: 16,
+                      backgroundColor: t.expenseSoft,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <Icon name="close" size={20} color={t.expense} stroke={2.5} />
+                  </Pressable>
+                ) : null}
+                <Pressable
+                  onPress={submit}
+                  style={({ pressed }) => [
+                    {
+                      flex: 1,
+                      height: 54,
+                      borderRadius: 16,
+                      backgroundColor: t.accent,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      shadowColor: t.accent,
+                      shadowOpacity: 0.35,
+                      shadowRadius: 16,
+                      shadowOffset: { width: 0, height: 6 },
+                      elevation: 6,
+                    },
+                    pressed && { transform: [{ scale: 0.98 }], shadowOpacity: 0.2 },
+                  ]}
+                >
+                  <Text
+                    style={{ color: '#fff', fontSize: 16, fontWeight: '700', letterSpacing: 0.2 }}
+                  >
+                    {tStr(lang, 'save')}
+                  </Text>
+                </Pressable>
+              </View>
             </Pressable>
-          </View>
-        </Pressable>
-        </Pressable>
+          </Pressable>
         </KeyboardAvoider>
       </ModalBackdrop>
     </Modal>
@@ -515,14 +507,37 @@ const parseIsoDate = (iso: string): Date => {
 
 const fmtPickerDate = (iso: string): string => {
   const d = parseIsoDate(iso);
-  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const months = [
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
+  ];
   return `${months[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
 };
 
 const WEEK_DAYS = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'];
 const MONTH_NAMES = [
-  'January', 'February', 'March', 'April', 'May', 'June',
-  'July', 'August', 'September', 'October', 'November', 'December',
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
 ];
 
 const sameDay = (a: Date, b: Date) =>
@@ -651,13 +666,7 @@ const Calendar: React.FC<{
                   style={{
                     fontSize: 14,
                     fontWeight: isSel || isToday ? '700' : '500',
-                    color: isSel
-                      ? '#fff'
-                      : !cell.inMonth
-                      ? t.textTer
-                      : isToday
-                      ? t.accent
-                      : t.text,
+                    color: isSel ? '#fff' : !cell.inMonth ? t.textTer : isToday ? t.accent : t.text,
                   }}
                 >
                   {cell.day}
@@ -865,12 +874,7 @@ const TimePicker: React.FC<{
         alignItems: 'center',
       }}
     >
-      <Stepper
-        label="HOUR"
-        value={h}
-        max={23}
-        onChange={(v) => onChange(formatTime(v, m))}
-      />
+      <Stepper label="HOUR" value={h} max={23} onChange={(v) => onChange(formatTime(v, m))} />
       <Text
         style={{
           fontSize: 22,
@@ -881,12 +885,7 @@ const TimePicker: React.FC<{
       >
         :
       </Text>
-      <Stepper
-        label="MINUTE"
-        value={m}
-        max={59}
-        onChange={(v) => onChange(formatTime(h, v))}
-      />
+      <Stepper label="MINUTE" value={m} max={59} onChange={(v) => onChange(formatTime(h, v))} />
     </View>
   );
 };
@@ -944,67 +943,67 @@ const DateTimeField: React.FC<{
 
       <Modal visible={show} transparent animationType="fade" onRequestClose={() => setShow(false)}>
         <ModalBackdrop>
-        <Pressable
-          onPress={() => setShow(false)}
-          style={{
-            flex: 1,
-            justifyContent: 'center',
-            alignItems: 'center',
-            padding: 20,
-          }}
-        >
           <Pressable
-            onPress={() => {}}
+            onPress={() => setShow(false)}
             style={{
-              backgroundColor: t.sheetBg,
-              borderRadius: 24,
-              padding: 18,
-              width: '100%',
-              maxWidth: 360,
-              shadowColor: '#000',
-              shadowOpacity: 0.25,
-              shadowRadius: 30,
-              shadowOffset: { width: 0, height: 12 },
-              elevation: 20,
+              flex: 1,
+              justifyContent: 'center',
+              alignItems: 'center',
+              padding: 20,
             }}
           >
-            <Calendar t={t} value={draftDate} onSelect={setDraftDate} />
+            <Pressable
+              onPress={() => {}}
+              style={{
+                backgroundColor: t.sheetBg,
+                borderRadius: 24,
+                padding: 18,
+                width: '100%',
+                maxWidth: 360,
+                shadowColor: '#000',
+                shadowOpacity: 0.25,
+                shadowRadius: 30,
+                shadowOffset: { width: 0, height: 12 },
+                elevation: 20,
+              }}
+            >
+              <Calendar t={t} value={draftDate} onSelect={setDraftDate} />
 
-            <TimePicker t={t} value={draftTime} onChange={setDraftTime} />
+              <TimePicker t={t} value={draftTime} onChange={setDraftTime} />
 
-            <View style={{ flexDirection: 'row', gap: 10, marginTop: 16 }}>
-              <Pressable
-                onPress={setNow}
-                style={{
-                  flex: 1,
-                  paddingVertical: 13,
-                  borderRadius: 12,
-                  backgroundColor: t.surfaceAlt,
-                  alignItems: 'center',
-                }}
-              >
-                <Text style={{ color: t.text, fontSize: 14, fontWeight: '600' }}>Now</Text>
-              </Pressable>
-              <Pressable
-                onPress={confirm}
-                style={{
-                  flex: 1,
-                  paddingVertical: 13,
-                  borderRadius: 12,
-                  backgroundColor: t.accent,
-                  alignItems: 'center',
-                  shadowColor: t.accent,
-                  shadowOpacity: 0.3,
-                  shadowRadius: 12,
-                  shadowOffset: { width: 0, height: 4 },
-                  elevation: 4,
-                }}
-              >
-                <Text style={{ color: '#fff', fontSize: 14, fontWeight: '700' }}>Done</Text>
-              </Pressable>
-            </View>
+              <View style={{ flexDirection: 'row', gap: 10, marginTop: 16 }}>
+                <Pressable
+                  onPress={setNow}
+                  style={{
+                    flex: 1,
+                    paddingVertical: 13,
+                    borderRadius: 12,
+                    backgroundColor: t.surfaceAlt,
+                    alignItems: 'center',
+                  }}
+                >
+                  <Text style={{ color: t.text, fontSize: 14, fontWeight: '600' }}>Now</Text>
+                </Pressable>
+                <Pressable
+                  onPress={confirm}
+                  style={{
+                    flex: 1,
+                    paddingVertical: 13,
+                    borderRadius: 12,
+                    backgroundColor: t.accent,
+                    alignItems: 'center',
+                    shadowColor: t.accent,
+                    shadowOpacity: 0.3,
+                    shadowRadius: 12,
+                    shadowOffset: { width: 0, height: 4 },
+                    elevation: 4,
+                  }}
+                >
+                  <Text style={{ color: '#fff', fontSize: 14, fontWeight: '700' }}>Done</Text>
+                </Pressable>
+              </View>
+            </Pressable>
           </Pressable>
-        </Pressable>
         </ModalBackdrop>
       </Modal>
     </>

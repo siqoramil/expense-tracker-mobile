@@ -1,13 +1,5 @@
 import React, { useEffect } from 'react';
-import {
-  Pressable,
-  StyleProp,
-  StyleSheet,
-  Text,
-  TextStyle,
-  View,
-  ViewStyle,
-} from 'react-native';
+import { Pressable, StyleProp, StyleSheet, Text, TextStyle, View, ViewStyle } from 'react-native';
 import Animated, {
   interpolateColor,
   useAnimatedStyle,
@@ -72,10 +64,7 @@ export const SectionHeader: React.FC<{
       {title}
     </Text>
     {action ? (
-      <Text
-        onPress={onAction}
-        style={{ fontSize: 13, color: t.accent, fontWeight: '500' }}
-      >
+      <Text onPress={onAction} style={{ fontSize: 13, color: t.accent, fontWeight: '500' }}>
         {action}
       </Text>
     ) : null}
@@ -152,10 +141,7 @@ export const TxRow: React.FC<{
     >
       <CatIcon cat={tx.cat} size={38} />
       <View style={{ flex: 1, minWidth: 0 }}>
-        <Text
-          numberOfLines={1}
-          style={{ fontSize: 15, fontWeight: '500', color: t.text }}
-        >
+        <Text numberOfLines={1} style={{ fontSize: 15, fontWeight: '500', color: t.text }}>
           {tx.note || catLabel(cat, lang)}
         </Text>
         <Text style={{ fontSize: 12.5, color: t.textSec, marginTop: 2 }}>
@@ -379,16 +365,8 @@ export const Switch: React.FC<{ on: boolean; onChange: (v: boolean) => void; t: 
   }, [on, progress]);
 
   const trackStyle = useAnimatedStyle(() => ({
-    backgroundColor: interpolateColor(
-      progress.value,
-      [0, 1],
-      [t.surfaceAlt, t.accent],
-    ),
-    borderColor: interpolateColor(
-      progress.value,
-      [0, 1],
-      [t.borderStrong, t.accent],
-    ),
+    backgroundColor: interpolateColor(progress.value, [0, 1], [t.surfaceAlt, t.accent]),
+    borderColor: interpolateColor(progress.value, [0, 1], [t.borderStrong, t.accent]),
   }));
 
   const thumbStyle = useAnimatedStyle(() => ({

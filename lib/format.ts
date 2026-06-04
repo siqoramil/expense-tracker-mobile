@@ -35,10 +35,10 @@ export const fmtMoney = (n: number, currency: Currency, hidden = false): string 
   const abs = Math.abs(v);
   const num =
     c.decimals > 0
-      ? abs
-          .toFixed(c.decimals)
-          .replace(/\B(?=(\d{3})+(?=\.))/g, ' ')
-      : Math.round(abs).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+      ? abs.toFixed(c.decimals).replace(/\B(?=(\d{3})+(?=\.))/g, ' ')
+      : Math.round(abs)
+          .toString()
+          .replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
   const sign = v < 0 ? '−' : '';
   const out = c.symbol ? sign + c.symbol + num : sign + num;
   return hidden ? maskAmount(out) : out;

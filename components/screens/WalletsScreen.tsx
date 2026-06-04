@@ -8,12 +8,11 @@ import { Icon, type IconName } from '../Icon';
 import { ScreenHeader } from '../ui';
 
 const ActiveCard: React.FC<{
-  t: Tokens;
   w: Wallet;
   currency: Currency;
   langName: string;
   onHide: () => void;
-}> = ({ t, w, currency, langName, onHide }) => (
+}> = ({ w, currency, langName, onHide }) => (
   <View
     style={{
       padding: 18,
@@ -53,9 +52,7 @@ const ActiveCard: React.FC<{
       >
         <Icon name={w.icon as IconName} size={18} color="#fff" />
       </View>
-      <Text style={{ flex: 1, fontSize: 14, fontWeight: '600', color: '#fff' }}>
-        {langName}
-      </Text>
+      <Text style={{ flex: 1, fontSize: 14, fontWeight: '600', color: '#fff' }}>{langName}</Text>
       <Pressable
         onPress={onHide}
         hitSlop={10}
@@ -158,7 +155,6 @@ export const WalletsScreen: React.FC<{ t: Tokens; onBack: () => void }> = ({ t, 
         {active.map((w) => (
           <ActiveCard
             key={w.id}
-            t={t}
             w={w}
             currency={s.prefs.currency}
             langName={walletName(w, lang)}

@@ -45,65 +45,59 @@ const SheetContainer: React.FC<{
   >
     <ModalBackdrop>
       <KeyboardAvoider>
-      <Pressable
-        onPress={onClose}
-        style={{ flex: 1, justifyContent: 'flex-end' }}
-      >
-        <Pressable
-          onPress={() => {}}
-          style={{
-            backgroundColor: t.sheetBg,
-            borderTopLeftRadius: 28,
-            borderTopRightRadius: 28,
-            paddingHorizontal: 22,
-            paddingTop: 12,
-            paddingBottom: 34,
-            maxHeight: '90%',
-          }}
-        >
-          <View
+        <Pressable onPress={onClose} style={{ flex: 1, justifyContent: 'flex-end' }}>
+          <Pressable
+            onPress={() => {}}
             style={{
-              width: 40,
-              height: 4,
-              borderRadius: 2,
-              backgroundColor: t.borderStrong,
-              alignSelf: 'center',
-              marginBottom: 14,
-            }}
-          />
-          <View
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              marginBottom: 18,
+              backgroundColor: t.sheetBg,
+              borderTopLeftRadius: 28,
+              borderTopRightRadius: 28,
+              paddingHorizontal: 22,
+              paddingTop: 12,
+              paddingBottom: 34,
+              maxHeight: '90%',
             }}
           >
-            <Text style={{ fontSize: 20, fontWeight: '700', color: t.text, letterSpacing: -0.4 }}>
-              {title}
-            </Text>
-            <Pressable
-              onPress={onClose}
+            <View
               style={{
-                width: 34,
-                height: 34,
-                borderRadius: 17,
-                backgroundColor: t.surfaceAlt,
+                width: 40,
+                height: 4,
+                borderRadius: 2,
+                backgroundColor: t.borderStrong,
+                alignSelf: 'center',
+                marginBottom: 14,
+              }}
+            />
+            <View
+              style={{
+                flexDirection: 'row',
                 alignItems: 'center',
-                justifyContent: 'center',
+                justifyContent: 'space-between',
+                marginBottom: 18,
               }}
             >
-              <Icon name="close" size={16} color={t.textSec} stroke={2.2} />
-            </Pressable>
-          </View>
-          <ScrollView
-            keyboardShouldPersistTaps="handled"
-            showsVerticalScrollIndicator={false}
-          >
-            {children}
-          </ScrollView>
+              <Text style={{ fontSize: 20, fontWeight: '700', color: t.text, letterSpacing: -0.4 }}>
+                {title}
+              </Text>
+              <Pressable
+                onPress={onClose}
+                style={{
+                  width: 34,
+                  height: 34,
+                  borderRadius: 17,
+                  backgroundColor: t.surfaceAlt,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <Icon name="close" size={16} color={t.textSec} stroke={2.2} />
+              </Pressable>
+            </View>
+            <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+              {children}
+            </ScrollView>
+          </Pressable>
         </Pressable>
-      </Pressable>
       </KeyboardAvoider>
     </ModalBackdrop>
   </Modal>
@@ -286,7 +280,7 @@ export const EditEmailSheet: React.FC<SheetProps> = ({ t, visible, onClose }) =>
             }}
           >
             {lang === 'uz'
-              ? "Yangi email kiriting. Unga 6 xonali kod yuboriladi."
+              ? 'Yangi email kiriting. Unga 6 xonali kod yuboriladi.'
               : 'Enter the new email. A 6-digit code will be sent to it.'}
           </Text>
           {fieldLabel(t, lang === 'uz' ? 'Yangi email' : 'New email')}
@@ -333,12 +327,7 @@ export const EditEmailSheet: React.FC<SheetProps> = ({ t, visible, onClose }) =>
             ]}
           />
           {errorText(t, err)}
-          {primaryBtn(
-            t,
-            lang === 'uz' ? 'Tasdiqlash' : 'Verify',
-            verify,
-            busy,
-          )}
+          {primaryBtn(t, lang === 'uz' ? 'Tasdiqlash' : 'Verify', verify, busy)}
           <Pressable onPress={() => setStep(1)} style={{ alignItems: 'center', marginTop: 12 }}>
             <Text style={{ color: t.accent, fontSize: 14, fontWeight: '600' }}>
               {lang === 'uz' ? 'Boshqa email' : 'Use different email'}
@@ -422,7 +411,7 @@ export const ForgotPasswordSheet: React.FC<SheetProps> = ({ t, visible, onClose 
       return;
     }
     if (newPassword !== confirmPassword) {
-      setErr(lang === 'uz' ? "Parollar mos kelmadi" : 'Passwords do not match');
+      setErr(lang === 'uz' ? 'Parollar mos kelmadi' : 'Passwords do not match');
       return;
     }
     setBusy(true);
@@ -465,7 +454,7 @@ export const ForgotPasswordSheet: React.FC<SheetProps> = ({ t, visible, onClose 
             }}
           >
             {lang === 'uz'
-              ? "Email manzilingizni kiriting, 6 xonali kod yuboriladi."
+              ? 'Email manzilingizni kiriting, 6 xonali kod yuboriladi.'
               : "Enter your email and we'll send you a 6-digit code."}
           </Text>
           {fieldLabel(t, tStr(lang, 'email'))}
@@ -596,7 +585,11 @@ export const DeleteAccountSheet: React.FC<SheetProps & { onDeleted: () => void }
   const googleEnabled =
     isGoogleOnly &&
     isGoogleAuthAvailable() &&
-    !!(googleCfg.googleWebClientId || googleCfg.googleIosClientId || googleCfg.googleAndroidClientId);
+    !!(
+      googleCfg.googleWebClientId ||
+      googleCfg.googleIosClientId ||
+      googleCfg.googleAndroidClientId
+    );
   const [googleRequest, googleResponse, googlePrompt] = useGoogleIdTokenAuthRequest({
     webClientId: googleCfg.googleWebClientId,
     iosClientId: googleCfg.googleIosClientId,
@@ -699,12 +692,7 @@ export const DeleteAccountSheet: React.FC<SheetProps & { onDeleted: () => void }
   );
 
   return (
-    <SheetContainer
-      t={t}
-      visible={visible}
-      onClose={onClose}
-      title={tStr(lang, 'deleteAccount')}
-    >
+    <SheetContainer t={t} visible={visible} onClose={onClose} title={tStr(lang, 'deleteAccount')}>
       {step === 1 ? (
         <>
           <Text

@@ -17,7 +17,11 @@ export const RecurringScreen: React.FC<{ t: Tokens; onBack: () => void }> = ({ t
           const d = new Date(r.nextDate);
           const days = Math.round((d.getTime() - today().getTime()) / 86_400_000);
           return (
-            <Card key={r.id} t={t} style={{ padding: 16, flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+            <Card
+              key={r.id}
+              t={t}
+              style={{ padding: 16, flexDirection: 'row', alignItems: 'center', gap: 12 }}
+            >
               <CatIcon cat={r.cat} size={38} />
               <View style={{ flex: 1 }}>
                 <Text style={{ fontSize: 14, fontWeight: '600', color: t.text }}>{r.note}</Text>

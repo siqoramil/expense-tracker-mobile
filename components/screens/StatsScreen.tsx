@@ -37,8 +37,18 @@ export const StatsScreen: React.FC<{ t: Tokens }> = ({ t }) => {
       <ScreenHeader t={t} title={tStr(lang, 'statistics')} subtitle="Last 6 months" />
 
       <View style={{ paddingHorizontal: 20, paddingBottom: 14, flexDirection: 'row', gap: 10 }}>
-        <SumCard t={t} label={lang === 'uz' ? 'Jami kirim' : 'Total Income'} amount={totalInc} kind="income" />
-        <SumCard t={t} label={lang === 'uz' ? 'Jami chiqim' : 'Total Expenses'} amount={totalExp} kind="expense" />
+        <SumCard
+          t={t}
+          label={lang === 'uz' ? 'Jami kirim' : 'Total Income'}
+          amount={totalInc}
+          kind="income"
+        />
+        <SumCard
+          t={t}
+          label={lang === 'uz' ? 'Jami chiqim' : 'Total Expenses'}
+          amount={totalExp}
+          kind="expense"
+        />
       </View>
 
       <View style={{ paddingHorizontal: 20, paddingBottom: 20 }}>
@@ -83,7 +93,9 @@ export const StatsScreen: React.FC<{ t: Tokens }> = ({ t }) => {
                     borderBottomColor: t.divider,
                   }}
                 >
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 7 }}>
+                  <View
+                    style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 7 }}
+                  >
                     <CatIcon cat={row.cat} size={30} />
                     <Text style={{ flex: 1, fontSize: 14, fontWeight: '500', color: t.text }}>
                       {catLabel(c, lang)}
@@ -119,19 +131,23 @@ export const StatsScreen: React.FC<{ t: Tokens }> = ({ t }) => {
   );
 };
 
-const LegendDot: React.FC<{ color: string; label: string; color2: string }> = ({ color, label, color2 }) => (
+const LegendDot: React.FC<{ color: string; label: string; color2: string }> = ({
+  color,
+  label,
+  color2,
+}) => (
   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
     <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: color }} />
     <Text style={{ fontSize: 11, color: color2, fontWeight: '500' }}>{label}</Text>
   </View>
 );
 
-const SumCard: React.FC<{ label: string; amount: number; kind: 'income' | 'expense'; t: Tokens }> = ({
-  label,
-  amount,
-  kind,
-  t,
-}) => {
+const SumCard: React.FC<{
+  label: string;
+  amount: number;
+  kind: 'income' | 'expense';
+  t: Tokens;
+}> = ({ label, amount, kind, t }) => {
   const s = useStore();
   const up = kind === 'income';
   const color = up ? t.income : t.expense;
@@ -158,7 +174,12 @@ const SumCard: React.FC<{ label: string; amount: number; kind: 'income' | 'expen
             justifyContent: 'center',
           }}
         >
-          <Icon name={up ? 'arrow-down-left' : 'arrow-up-right'} size={12} color={color} stroke={2.5} />
+          <Icon
+            name={up ? 'arrow-down-left' : 'arrow-up-right'}
+            size={12}
+            color={color}
+            stroke={2.5}
+          />
         </View>
         <Text style={{ fontSize: 12, color: t.textSec, fontWeight: '500' }}>{label}</Text>
       </View>
@@ -169,11 +190,11 @@ const SumCard: React.FC<{ label: string; amount: number; kind: 'income' | 'expen
   );
 };
 
-const BarChart: React.FC<{ data: { m: string; income: number; expense: number }[]; max: number; t: Tokens }> = ({
-  data,
-  max,
-  t,
-}) => {
+const BarChart: React.FC<{
+  data: { m: string; income: number; expense: number }[];
+  max: number;
+  t: Tokens;
+}> = ({ data, max, t }) => {
   const H = 150;
   const barW = 11;
   return (

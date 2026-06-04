@@ -24,12 +24,9 @@ try {
   glassEffect = null;
 }
 
-const HAS_LIQUID_GLASS = Boolean(
-  glassEffect?.GlassView && glassEffect.isLiquidGlassAvailable?.(),
-);
+const HAS_LIQUID_GLASS = Boolean(glassEffect?.GlassView && glassEffect.isLiquidGlassAvailable?.());
 
-const HAS_NATIVE_BLUR =
-  Platform.OS === 'ios' && !!requireOptionalNativeModule('ExpoBlurView');
+const HAS_NATIVE_BLUR = Platform.OS === 'ios' && !!requireOptionalNativeModule('ExpoBlurView');
 
 let LazyBlurView: React.ComponentType<{
   intensity?: number;
@@ -74,9 +71,5 @@ export const ModalBackdrop: React.FC<ModalBackdropProps> = ({
       </LazyBlurView>
     );
   }
-  return (
-    <View style={[{ backgroundColor: 'rgba(0,0,0,0.28)', flex: 1 }, style]}>
-      {children}
-    </View>
-  );
+  return <View style={[{ backgroundColor: 'rgba(0,0,0,0.28)', flex: 1 }, style]}>{children}</View>;
 };

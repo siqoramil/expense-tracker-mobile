@@ -1,13 +1,5 @@
 import React, { useState } from 'react';
-import {
-  Modal,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from 'react-native';
+import { Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { fmtDate, fmtMoney } from '../../lib/format';
 import { tStr } from '../../lib/i18n';
 import { actions, useStore, type Debt } from '../../lib/store';
@@ -208,7 +200,12 @@ export const DebtorDetail: React.FC<Props> = ({ t, debtor, onBack }) => {
         </Card>
       </View>
 
-      <Modal visible={payOpen} transparent animationType="slide" onRequestClose={() => setPayOpen(false)}>
+      <Modal
+        visible={payOpen}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setPayOpen(false)}
+      >
         <Pressable
           onPress={() => setPayOpen(false)}
           style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end' }}

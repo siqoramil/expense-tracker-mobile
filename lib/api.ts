@@ -95,7 +95,7 @@ export const apiRequest = async <T>(path: string, opts: RequestOptions = {}): Pr
       body: opts.body ? JSON.stringify(opts.body) : undefined,
       signal: controller.signal,
     });
-  } catch (err) {
+  } catch {
     clearTimeout(timeoutId);
     if (controller.signal.aborted && !opts.signal?.aborted) {
       throw new TimeoutError();

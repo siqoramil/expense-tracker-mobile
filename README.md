@@ -47,14 +47,14 @@ For physical devices on the local network, set `apiUrl` to your machine's LAN IP
 
 ## Scripts
 
-| Command | Description |
-|---|---|
-| `yarn start` | Start Metro bundler |
-| `yarn android` | `expo run:android` (requires Android SDK + dev client build) |
-| `yarn ios` | `expo run:ios` (requires Xcode + dev client build) |
-| `yarn web` | Run as a web app |
-| `yarn test` | Run the Vitest unit suite (`tests/`) |
-| `yarn test:watch` | Vitest in watch mode |
+| Command           | Description                                                  |
+| ----------------- | ------------------------------------------------------------ |
+| `yarn start`      | Start Metro bundler                                          |
+| `yarn android`    | `expo run:android` (requires Android SDK + dev client build) |
+| `yarn ios`        | `expo run:ios` (requires Xcode + dev client build)           |
+| `yarn web`        | Run as a web app                                             |
+| `yarn test`       | Run the Vitest unit suite (`tests/`)                         |
+| `yarn test:watch` | Vitest in watch mode                                         |
 
 ## Tests
 
@@ -85,11 +85,11 @@ Scan the QR with the Expo Go app.
 
 `eas.json` defines three profiles:
 
-| Profile | Distribution | Android output |
-|---|---|---|
-| `development` | internal (dev client) | — |
-| `preview` | internal | `apk` |
-| `production` | store / sideload | `apk` (auto-incremented version code) |
+| Profile       | Distribution          | Android output                        |
+| ------------- | --------------------- | ------------------------------------- |
+| `development` | internal (dev client) | —                                     |
+| `preview`     | internal              | `apk`                                 |
+| `production`  | store / sideload      | `apk` (auto-incremented version code) |
 
 Common flow:
 
@@ -188,7 +188,7 @@ Tokens are produced by `makeTokens(dark)` in `lib/tokens.ts` and threaded throug
 ## Troubleshooting
 
 - **Production APK login fails with "Cannot reach the server"** — verify the device has internet, then check `Constants.expoConfig.extra.apiUrl` was bundled correctly. The API URL is read from `app.json` at build time; changing it requires a new build.
-- **Google sign-in "Error 400: invalid_request" in production** — see *Google sign-in in production builds* above. Most common cause: production keystore SHA-1 not registered in Google Cloud Console.
+- **Google sign-in "Error 400: invalid_request" in production** — see _Google sign-in in production builds_ above. Most common cause: production keystore SHA-1 not registered in Google Cloud Console.
 - **`account_link_required` after Google sign-in** — the email already has a password account on the server. Sign in with the password instead, then link Google from the profile.
 - **User keeps being kicked back to login** — the JWT is being rejected (`401 token_revoked`). Usually means the password was reset elsewhere; sign in again to get a fresh token.
 - **`Old dev client — rebuild required`** — a native module was added since the dev client was built. Run `npx expo prebuild --clean && yarn ios` (or `yarn android`).
