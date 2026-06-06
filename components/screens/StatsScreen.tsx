@@ -11,13 +11,18 @@ export const StatsScreen: React.FC<{ t: Tokens }> = ({ t }) => {
   const s = useStore();
   const lang = s.prefs.lang;
   const months = useMemo(() => last6Months(), []);
-  const data = months.map((m) => {
-    const md = selectMonth(s, m.key);
-    return { m: m.label, income: md.income, expense: md.expense };
-  });
-  const maxVal = Math.max(...data.flatMap((d) => [d.income, d.expense]), 1);
-  const totalInc = data.reduce((a, d) => a + d.income, 0);
-  const totalExp = data.reduce((a, d) => a + d.expense, 0);
+  const { data, maxVal, totalInc, totalExp } = useMemo(() => {
+    const d = months.map((m) => {
+      const md = selectMonth(s, m.key);
+      return { m: m.label, income: md.income, expense: md.expense };
+    });
+    return {
+      data: d,
+      maxVal: Math.max(...d.flatMap((row) => [row.income, row.expense]), 1),
+      totalInc: d.reduce((a, row) => a + row.income, 0),
+      totalExp: d.reduce((a, row) => a + row.expense, 0),
+    };
+  }, [s.tx, months]);
 
   const catBreakdown = useMemo(() => {
     const curMo = months[months.length - 1].key;
@@ -39,13 +44,13 @@ export const StatsScreen: React.FC<{ t: Tokens }> = ({ t }) => {
       <View style={{ paddingHorizontal: 20, paddingBottom: 14, flexDirection: 'row', gap: 10 }}>
         <SumCard
           t={t}
-          label={lang === 'uz' ? 'Jami kirim' : 'Total Income'}
+          label={tStr(lang, 'totalIncome')}
           amount={totalInc}
           kind="income"
         />
         <SumCard
           t={t}
-          label={lang === 'uz' ? 'Jami chiqim' : 'Total Expenses'}
+          label={tStr(lang, 'totalExpenses')}
           amount={totalExp}
           kind="expense"
         />
@@ -62,7 +67,7 @@ export const StatsScreen: React.FC<{ t: Tokens }> = ({ t }) => {
             }}
           >
             <Text style={{ fontSize: 15, fontWeight: '600', color: t.text }}>
-              {lang === 'uz' ? 'Kirim va chiqim' : 'Income vs Expenses'}
+              {tStr(lang, 'incomeVsExpenses')}
             </Text>
             <View style={{ flexDirection: 'row', gap: 12 }}>
               <LegendDot color={t.income} label={tStr(lang, 'income')} color2={t.textSec} />
@@ -73,7 +78,7 @@ export const StatsScreen: React.FC<{ t: Tokens }> = ({ t }) => {
         </Card>
       </View>
 
-      <SectionHeader t={t} title={lang === 'uz' ? 'Eng ko‘p toifalar' : 'Top categories'} />
+      <SectionHeader t={t} title={tStr(lang, 'topCategories')} />
       <View style={{ paddingHorizontal: 20 }}>
         {catBreakdown.length === 0 ? (
           <Card t={t}>

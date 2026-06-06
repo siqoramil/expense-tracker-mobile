@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
-import { fmtMoney, isoDate, last6Months, today, unitOf } from '../../lib/format';
+import { fmtMoney, isoDate, last6Months, today, unitOf, type Currency } from '../../lib/format';
 import { tStr } from '../../lib/i18n';
 import { actions, selectMonth, useStore, walletName, type Transaction } from '../../lib/store';
 import type { Tokens } from '../../lib/tokens';
@@ -27,12 +27,12 @@ export const HomeScreen: React.FC<Props> = ({ t, onNav, onAdd, onOpenTx }) => {
   const hideBalance = s.hideBalance;
   const [variant, setVariant] = useState<'net' | 'balance'>('net');
 
-  const greet = () => {
+  const greeting = useMemo(() => {
     const h = new Date().getHours();
     if (h < 12) return tStr(lang, 'goodMorning');
     if (h < 18) return tStr(lang, 'goodAfternoon');
     return tStr(lang, 'goodEvening');
-  };
+  }, [lang]);
 
   const net = monthData.net;
   const income = monthData.income;
@@ -44,16 +44,16 @@ export const HomeScreen: React.FC<Props> = ({ t, onNav, onAdd, onOpenTx }) => {
   );
 
   const spark = useMemo(() => {
+    const byDate: Record<string, number> = {};
+    s.tx.forEach((x) => {
+      if (x.kind === 'expense') byDate[x.date] = (byDate[x.date] || 0) + x.amount;
+    });
     const days: number[] = [];
     const tdy = today();
     for (let i = 13; i >= 0; i--) {
       const d = new Date(tdy);
       d.setDate(tdy.getDate() - i);
-      const iso = isoDate(d);
-      const v = s.tx
-        .filter((x) => x.date === iso && x.kind === 'expense')
-        .reduce((a, x) => a + x.amount, 0);
-      days.push(v);
+      days.push(byDate[isoDate(d)] || 0);
     }
     return days;
   }, [s.tx]);
@@ -163,7 +163,7 @@ export const HomeScreen: React.FC<Props> = ({ t, onNav, onAdd, onOpenTx }) => {
           >
             {tStr(lang, 'netThisMonth')}
           </Text>
-          {pctSaved >= 0 ? (
+          {pctSaved > 0 ? (
             <View
               style={{
                 flexDirection: 'row',
@@ -193,8 +193,8 @@ export const HomeScreen: React.FC<Props> = ({ t, onNav, onAdd, onOpenTx }) => {
         </Text>
 
         <View style={{ flexDirection: 'row', gap: 12, marginTop: 22 }}>
-          <MiniStat label={tStr(lang, 'income')} amount={income} kind="income" t={t} />
-          <MiniStat label={tStr(lang, 'expenses')} amount={expense} kind="expense" t={t} />
+          <MiniStat label={tStr(lang, 'income')} amount={income} kind="income" t={t} currency={s.prefs.currency} />
+          <MiniStat label={tStr(lang, 'expenses')} amount={expense} kind="expense" t={t} currency={s.prefs.currency} />
         </View>
 
         <View style={{ marginTop: 18 }}>
@@ -234,7 +234,7 @@ export const HomeScreen: React.FC<Props> = ({ t, onNav, onAdd, onOpenTx }) => {
       >
         <View>
           <Text style={{ fontSize: 13, color: t.textSec, fontWeight: '500', marginBottom: 4 }}>
-            {greet()},
+            {greeting},
           </Text>
           <Text
             style={{
@@ -549,7 +549,7 @@ export const HomeScreen: React.FC<Props> = ({ t, onNav, onAdd, onOpenTx }) => {
   );
 };
 
-const HIDDEN_MASK = '✵✵✵✵✵✵✵';
+const HIDDEN_MASK = '✵✵✵✵✵';
 
 const BlurMoney: React.FC<{ value: string; hidden: boolean; color: string }> = ({
   value,
@@ -560,13 +560,14 @@ const BlurMoney: React.FC<{ value: string; hidden: boolean; color: string }> = (
     fontSize: 38,
     fontWeight: '700' as const,
     letterSpacing: -1.4,
+    lineHeight: 46,
     color,
   };
   if (hidden) {
     return (
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-        <Text style={{ ...base, letterSpacing: 4, textAlign: 'center' }}>{HIDDEN_MASK}</Text>
-      </View>
+      <Text style={{ ...base, fontSize: 20, letterSpacing: 2 }}>
+        {HIDDEN_MASK}
+      </Text>
     );
   }
   return <Text style={base}>{value}</Text>;
@@ -577,10 +578,10 @@ const MiniStat: React.FC<{
   amount: number;
   kind: 'income' | 'expense';
   t: Tokens;
-}> = ({ label, amount, kind, t }) => {
+  currency: Currency;
+}> = ({ label, amount, kind, t, currency }) => {
   const up = kind === 'income';
   const color = up ? t.income : t.expense;
-  const s = useStore();
   return (
     <View style={{ flex: 1 }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 }}>
@@ -604,7 +605,7 @@ const MiniStat: React.FC<{
         <Text style={{ fontSize: 12.5, color: t.textSec, fontWeight: '500' }}>{label}</Text>
       </View>
       <Text style={{ fontSize: 17, fontWeight: '600', color: t.text, letterSpacing: -0.3 }}>
-        {fmtMoney(amount, s.prefs.currency)}
+        {fmtMoney(amount, currency)}
       </Text>
     </View>
   );

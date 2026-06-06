@@ -46,7 +46,7 @@ export const fmtMoney = (n: number, currency: Currency, hidden = false): string 
 
 export const unitOf = (currency: Currency): string => CURRENCIES[currency].suffix ?? '';
 
-export const today = () => new Date(2026, 3, 17);
+export const today = () => new Date();
 
 export const isoDate = (d: Date) =>
   `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;

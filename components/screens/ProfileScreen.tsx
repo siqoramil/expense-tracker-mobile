@@ -11,7 +11,7 @@ import {
   View,
 } from 'react-native';
 import { errorMessage } from '../../lib/errors';
-import { tStr } from '../../lib/i18n';
+import { LANGUAGES, tStr } from '../../lib/i18n';
 import { actions, isImageAvatar, useStore } from '../../lib/store';
 import { toast } from '../../lib/toast';
 import type { Tokens } from '../../lib/tokens';
@@ -225,7 +225,7 @@ export const ProfileScreen: React.FC<{ t: Tokens; onNav: Nav; onLogout: () => vo
             icon="globe"
             color="#06B6D4"
             label={tStr(lang, 'language')}
-            detail={lang === 'en' ? 'English' : 'O‘zbekcha'}
+            detail={LANGUAGES.find(l => l.code === lang)?.native ?? lang}
             onPress={() => onNav('language')}
           />
           <NavRow

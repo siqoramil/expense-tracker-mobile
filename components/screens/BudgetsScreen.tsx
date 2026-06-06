@@ -9,7 +9,7 @@ import { Card, CatIcon, EmptyState, ScreenHeader } from '../ui';
 export const BudgetsScreen: React.FC<{ t: Tokens; onBack: () => void }> = ({ t, onBack }) => {
   const s = useStore();
   const lang = s.prefs.lang;
-  const curMo = last6Months().slice(-1)[0].key;
+  const curMo = useMemo(() => last6Months().slice(-1)[0].key, []);
   const spentByCat = useMemo(() => {
     const map: Record<string, number> = {};
     s.tx.forEach((x) => {
@@ -27,7 +27,7 @@ export const BudgetsScreen: React.FC<{ t: Tokens; onBack: () => void }> = ({ t, 
           <Card t={t}>
             <EmptyState
               icon="chart"
-              title={lang === 'uz' ? 'Byudjetlar yo‘q' : 'No budgets'}
+              title={tStr(lang, 'noBudgets')}
               t={t}
             />
           </Card>

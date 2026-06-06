@@ -33,7 +33,7 @@ const ensureConfigured = (m: GoogleSigninModule) => {
 };
 
 export const isGoogleAuthAvailable = () =>
-  mod !== null && !!(cfg.googleWebClientId || cfg.googleIosClientId || cfg.googleAndroidClientId);
+  mod !== null && !!(cfg.googleWebClientId || cfg.googleIosClientId);
 
 export type GoogleSignInResult =
   | { type: 'success'; idToken: string }

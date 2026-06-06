@@ -10,11 +10,13 @@ let authToken: string | null = null;
 
 export const setApiToken = (token: string | null) => {
   authToken = token;
+  if (token !== null) unauthorizedFired = false;
 };
 
 export const getApiToken = () => authToken;
 
 let onUnauthorized: (() => void) | null = null;
+let unauthorizedFired = false;
 export const setUnauthorizedHandler = (fn: (() => void) | null) => {
   onUnauthorized = fn;
 };
@@ -23,6 +25,8 @@ type ServerStatus = 'ok' | 'unreachable';
 type ServerStatusListener = (status: ServerStatus) => void;
 const serverStatusListeners = new Set<ServerStatusListener>();
 let currentServerStatus: ServerStatus = 'ok';
+let consecutiveNetworkFailures = 0;
+const UNREACHABLE_THRESHOLD = 2;
 
 export const getServerStatus = (): ServerStatus => currentServerStatus;
 
@@ -98,32 +102,61 @@ export const apiRequest = async <T>(path: string, opts: RequestOptions = {}): Pr
   } catch {
     clearTimeout(timeoutId);
     if (controller.signal.aborted && !opts.signal?.aborted) {
+      consecutiveNetworkFailures += 1;
+      if (consecutiveNetworkFailures >= UNREACHABLE_THRESHOLD) {
+        setServerStatus('unreachable');
+      }
       throw new TimeoutError();
     }
-    // fetch rejects with TypeError on DNS/network failure. Surface this as
-    // an unreachable signal so the global ServerUnreachable overlay can show.
-    setServerStatus('unreachable');
+    // fetch rejects with TypeError on DNS/network failure. Use a consecutive
+    // failure counter so a single transient failure does not show the overlay.
+    consecutiveNetworkFailures += 1;
+    if (consecutiveNetworkFailures >= UNREACHABLE_THRESHOLD) {
+      setServerStatus('unreachable');
+    }
     throw new NetworkError();
   }
   clearTimeout(timeoutId);
 
   // 5xx (excluding 501 which is "not implemented" by a working server) means
-  // the server is reachable but failing. Treat 502/503/504 as unreachable so
+  // the server is reachable but failing. Treat 502/504 as unreachable so
   // the global overlay surfaces — proxies emit these when upstream is dead.
-  if (res.status === 502 || res.status === 503 || res.status === 504) {
-    setServerStatus('unreachable');
+  // For 503, parse the body first: a known application-level error code means
+  // the server is up and intentionally returning 503 (e.g. google_auth_disabled).
+  if (res.status === 502 || res.status === 504) {
+    consecutiveNetworkFailures += 1;
+    if (consecutiveNetworkFailures >= UNREACHABLE_THRESHOLD) {
+      setServerStatus('unreachable');
+    }
+  } else if (res.status === 503) {
+    let bodyError: string | undefined;
+    try {
+      const data = await res.clone().json() as { error?: string };
+      bodyError = data?.error;
+    } catch {}
+    const isAppLevel503 = typeof bodyError === 'string' && bodyError.length > 0;
+    if (!isAppLevel503) {
+      consecutiveNetworkFailures += 1;
+      if (consecutiveNetworkFailures >= UNREACHABLE_THRESHOLD) {
+        setServerStatus('unreachable');
+      }
+    }
   } else {
+    consecutiveNetworkFailures = 0;
     setServerStatus('ok');
   }
 
   if (!res.ok) {
     let msg = `HTTP ${res.status}`;
     try {
-      const data = await res.json();
+      const data = await res.json() as { error?: string };
       if (data?.error) msg = String(data.error);
     } catch {}
     if (res.status === 401 && authToken && !opts.skipAuthRefresh) {
-      onUnauthorized?.();
+      if (!unauthorizedFired) {
+        unauthorizedFired = true;
+        onUnauthorized?.();
+      }
     }
     throw new ApiError(msg, res.status);
   }
@@ -196,7 +229,7 @@ export const authApi = {
       skipAuthRefresh: true,
     }),
   linkGoogle: (body: { idToken: string }) =>
-    apiRequest<{ user: UserDTO }>('/auth/google/link', { method: 'POST', body }),
+    apiRequest<{ user: UserDTO }>('/auth/google/link', { method: 'POST', body, skipAuthRefresh: true }),
   // Lightweight reachability check used by the ServerUnreachable retry button.
   ping: () => apiRequest<unknown>('/auth/me', { timeoutMs: 6_000 }),
 };

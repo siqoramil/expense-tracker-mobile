@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import { AppTextInput } from './AppTextInput';
-import { authApi } from '../lib/api';
+import { authApi, NetworkError } from '../lib/api';
 import { errorMessage } from '../lib/errors';
 import { isGoogleAuthAvailable, signInWithGoogle } from '../lib/googleAuth';
 import { tStr } from '../lib/i18n';
@@ -30,17 +30,24 @@ export const LoginScreen: React.FC<{ t: Tokens; onDone: () => void }> = ({ t, on
   const [forgot, setForgot] = useState(false);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const [fieldErr, setFieldErr] = useState<{ name?: string; email?: string; password?: string }>(
+    {},
+  );
   const lang = store.get().prefs.lang;
+
+  const clearField = (k: 'name' | 'email' | 'password') =>
+    setFieldErr((prev) => (prev[k] ? { ...prev, [k]: undefined } : prev));
+
+  const clearFieldAndErr = (k: 'name' | 'email' | 'password') => {
+    clearField(k);
+    setErr(null);
+  };
 
   const googleEnabled = isGoogleAuthAvailable();
 
   const handleGooglePress = async () => {
     if (!googleEnabled) {
-      setErr(
-        lang === 'uz'
-          ? 'Google mavjud emas — ilovani qayta build qiling'
-          : 'Google unavailable — rebuild the app',
-      );
+      setErr(tStr(lang, 'err_google_unavailable'));
       return;
     }
     setErr(null);
@@ -49,14 +56,14 @@ export const LoginScreen: React.FC<{ t: Tokens; onDone: () => void }> = ({ t, on
       const res = await signInWithGoogle();
       if (res.type === 'cancel') return;
       if (res.type === 'error') {
-        setErr(`Google: ${res.message}`);
+        setErr(tStr(lang, 'err_google_sign_in_failed'));
         return;
       }
       const { token, user } = await authApi.google({ idToken: res.idToken });
       await actions.setAuth(token, user);
       onDone();
     } catch (e) {
-      setErr(errorMessage(lang, e));
+      if (!(e instanceof NetworkError)) setErr(errorMessage(lang, e));
     } finally {
       setBusy(false);
     }
@@ -65,31 +72,33 @@ export const LoginScreen: React.FC<{ t: Tokens; onDone: () => void }> = ({ t, on
   const submit = async () => {
     setErr(null);
     const emailTrim = email.trim().toLowerCase();
-    if (!emailTrim || !pw) {
-      setErr(lang === 'uz' ? "Email va parolni to'ldiring" : 'Fill in email and password');
-      return;
-    }
+    const fe: { name?: string; email?: string; password?: string } = {};
+
     if (mode === 'signup' && !name.trim()) {
-      setErr(lang === 'uz' ? 'Ismni kiriting' : 'Enter your name');
+      fe.name = tStr(lang, 'val_name_required');
+    }
+
+    if (!emailTrim) {
+      fe.email = tStr(lang, 'val_email_required');
+    } else if (!/^[^\s@.][^\s@]*@[^\s@]+\.[^\s@]{2,}$/.test(emailTrim)) {
+      fe.email = tStr(lang, 'val_email_invalid');
+    }
+
+    if (!pw.trim()) {
+      fe.password = tStr(lang, 'val_password_required');
+    } else if (mode === 'signup' && !/^(?=.*[A-Za-z])(?=.*\d).{8,128}$/.test(pw)) {
+      // Only enforce strength on sign-up — existing accounts may pre-date the
+      // current rule. Mirrors the server's PASSWORD_PATTERN
+      // (^(?=.*[A-Za-z])(?=.*\d).{8,128}$) so the client doesn't ship a
+      // request the server will reject.
+      fe.password = tStr(lang, 'val_password_weak');
+    }
+
+    if (fe.name || fe.email || fe.password) {
+      setFieldErr(fe);
       return;
     }
-    // Only enforce strength on sign-up — existing accounts may pre-date the
-    // current rule. Mirrors the server's PASSWORD_PATTERN
-    // (^(?=.*[A-Za-z])(?=.*\d).{8,128}$) so the client doesn't ship a
-    // request the server will reject.
-    if (mode === 'signup') {
-      const strong = /^(?=.*[A-Za-z])(?=.*\d).{8,128}$/.test(pw);
-      if (!strong) {
-        setErr(
-          lang === 'uz'
-            ? "Parol kamida 8 belgi, harf va raqamdan iborat bo'lsin"
-            : 'Password must be at least 8 characters with a letter and a digit',
-        );
-        return;
-      }
-    } else if (pw.length < 1) {
-      return;
-    }
+    setFieldErr({});
 
     setBusy(true);
     try {
@@ -97,10 +106,10 @@ export const LoginScreen: React.FC<{ t: Tokens; onDone: () => void }> = ({ t, on
         mode === 'signin'
           ? await authApi.login({ email: emailTrim, password: pw })
           : await authApi.register({ email: emailTrim, password: pw, name: name.trim() });
-      actions.setAuth(token, user);
+      await actions.setAuth(token, user);
       onDone();
     } catch (e) {
-      setErr(errorMessage(lang, e));
+      if (!(e instanceof NetworkError)) setErr(errorMessage(lang, e));
     } finally {
       setBusy(false);
     }
@@ -129,6 +138,24 @@ export const LoginScreen: React.FC<{ t: Tokens; onDone: () => void }> = ({ t, on
     padding: 0,
     margin: 0,
   };
+
+  const cardStyle = (hasError: boolean) => ({
+    borderRadius: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderWidth: 1,
+    borderColor: hasError ? t.expense : 'transparent',
+  });
+
+  const FieldError: React.FC<{ msg?: string }> = ({ msg }) =>
+    msg ? (
+      <Text
+        accessibilityLiveRegion="polite"
+        style={{ color: t.expense, fontSize: 12, fontWeight: '500', marginTop: 6, marginLeft: 4 }}
+      >
+        {msg}
+      </Text>
+    ) : null;
 
   return (
     <ScrollView
@@ -184,23 +211,20 @@ export const LoginScreen: React.FC<{ t: Tokens; onDone: () => void }> = ({ t, on
             paddingHorizontal: 12,
           }}
         >
-          {mode === 'signin'
-            ? lang === 'uz'
-              ? 'Hisobingizga kiring'
-              : 'Sign in to continue'
-            : lang === 'uz'
-              ? 'Yangi hisob yarating'
-              : 'Create your account'}
+          {mode === 'signin' ? tStr(lang, 'login_subtitle') : tStr(lang, 'signup_subtitle')}
         </Text>
       </View>
 
       {mode === 'signup' ? (
         <View style={{ marginBottom: 14 }}>
           <Label>{tStr(lang, 'name').toUpperCase()}</Label>
-          <Card t={t} style={{ borderRadius: 8, paddingHorizontal: 16, paddingVertical: 14 }}>
+          <Card t={t} style={cardStyle(!!fieldErr.name)}>
             <AppTextInput
               value={name}
-              onChangeText={setName}
+              onChangeText={(v) => {
+                setName(v);
+                clearFieldAndErr('name');
+              }}
               autoCapitalize="words"
               autoComplete="off"
               importantForAutofill="no"
@@ -211,14 +235,18 @@ export const LoginScreen: React.FC<{ t: Tokens; onDone: () => void }> = ({ t, on
               placeholderTextColor={t.textTer}
             />
           </Card>
+          <FieldError msg={fieldErr.name} />
         </View>
       ) : null}
       <View style={{ marginBottom: 14 }}>
         <Label>{tStr(lang, 'email').toUpperCase()}</Label>
-        <Card t={t} style={{ borderRadius: 8, paddingHorizontal: 16, paddingVertical: 14 }}>
+        <Card t={t} style={cardStyle(!!fieldErr.email)}>
           <AppTextInput
             value={email}
-            onChangeText={setEmail}
+            onChangeText={(v) => {
+              setEmail(v);
+              clearFieldAndErr('email');
+            }}
             autoCapitalize="none"
             autoComplete="off"
             importantForAutofill="no"
@@ -230,10 +258,11 @@ export const LoginScreen: React.FC<{ t: Tokens; onDone: () => void }> = ({ t, on
             placeholderTextColor={t.textTer}
           />
         </Card>
+        <FieldError msg={fieldErr.email} />
       </View>
       <View style={{ marginBottom: 14 }}>
         <Label>{tStr(lang, 'password').toUpperCase()}</Label>
-        <Card t={t} style={{ borderRadius: 8, paddingHorizontal: 16, paddingVertical: 14 }}>
+        <Card t={t} style={cardStyle(!!fieldErr.password)}>
           <View
             style={{
               flexDirection: 'row',
@@ -242,7 +271,10 @@ export const LoginScreen: React.FC<{ t: Tokens; onDone: () => void }> = ({ t, on
           >
             <AppTextInput
               value={pw}
-              onChangeText={setPw}
+              onChangeText={(v) => {
+                setPw(v);
+                clearFieldAndErr('password');
+              }}
               secureTextEntry={!showPw}
               autoCapitalize="none"
               autoCorrect={false}
@@ -259,6 +291,7 @@ export const LoginScreen: React.FC<{ t: Tokens; onDone: () => void }> = ({ t, on
             </Pressable>
           </View>
         </Card>
+        <FieldError msg={fieldErr.password} />
       </View>
 
       {mode === 'signin' ? (
@@ -268,7 +301,7 @@ export const LoginScreen: React.FC<{ t: Tokens; onDone: () => void }> = ({ t, on
           hitSlop={8}
         >
           <Text style={{ color: t.accent, fontSize: 13, fontWeight: '600' }}>
-            {lang === 'uz' ? 'Parolni unutdingizmi?' : 'Forgot password?'}
+            {tStr(lang, 'forgotPassword')}
           </Text>
         </Pressable>
       ) : null}
@@ -366,21 +399,21 @@ export const LoginScreen: React.FC<{ t: Tokens; onDone: () => void }> = ({ t, on
           />
         </Svg>
         <Text style={{ color: t.text, fontSize: 15, fontWeight: '600' }}>
-          {lang === 'uz' ? 'Google bilan davom eting' : 'Continue with Google'}
+          {tStr(lang, 'continueWithGoogle')}
         </Text>
       </Pressable>
 
       <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }}>
         <Text style={{ fontSize: 13.5, color: t.textSec }}>
-          {mode === 'signin'
-            ? tStr(lang, 'noAccount')
-            : lang === 'uz'
-              ? 'Hisobingiz bormi?'
-              : 'Already have an account?'}{' '}
+          {mode === 'signin' ? tStr(lang, 'noAccount') : tStr(lang, 'haveAccount')}{' '}
         </Text>
         <Pressable
           onPress={() => {
             setErr(null);
+            setFieldErr({});
+            setName('');
+            setPw('');
+            setShowPw(false);
             setMode(mode === 'signin' ? 'signup' : 'signin');
           }}
           hitSlop={6}

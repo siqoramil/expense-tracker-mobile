@@ -22,6 +22,7 @@ const SERVER_CODE_KEYS = new Set<string>([
   'mail_send_failed',
   'wallet_not_found',
   'invalid_amount',
+  'email_not_verified',
 ]);
 
 const statusKey = (status: number): string => {
@@ -44,4 +45,6 @@ export const errorMessage = (lang: Lang, err: unknown): string => {
 };
 
 export const isNetworkError = (err: unknown): boolean =>
-  err instanceof NetworkError || err instanceof TypeError;
+  err instanceof NetworkError || err instanceof TimeoutError || err instanceof TypeError;
+
+export const isReachabilityError = isNetworkError;

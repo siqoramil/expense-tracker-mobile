@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { SectionList, StyleSheet, Text, View } from 'react-native';
 import { AppTextInput } from '../AppTextInput';
 import { fmtDate } from '../../lib/format';
 import { tStr } from '../../lib/i18n';
@@ -30,7 +30,7 @@ export const AllTxScreen: React.FC<{
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [s.categories]);
 
-  const { filtered, groups, sortedDates } = useMemo(() => {
+  const { groups, sortedDates } = useMemo(() => {
     const ql = q.toLowerCase();
     const filtered = s.tx.filter((x) => {
       if (filter !== 'all' && x.kind !== filter) return false;
@@ -45,13 +45,17 @@ export const AllTxScreen: React.FC<{
       (groups[x.date] = groups[x.date] || []).push(x);
     });
     const sortedDates = Object.keys(groups).sort((a, b) => b.localeCompare(a));
-    return { filtered, groups, sortedDates };
+    return { groups, sortedDates };
   }, [s.tx, catById, lang, q, filter]);
 
-  return (
-    <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 120 }}>
-      <ScreenHeader t={t} title={tStr(lang, 'allTransactions')} onBack={onBack} />
+  const sections = useMemo(
+    () => sortedDates.map((date) => ({ title: date, data: groups[date] })),
+    [sortedDates, groups],
+  );
 
+  const listHeader = (
+    <>
+      <ScreenHeader t={t} title={tStr(lang, 'allTransactions')} onBack={onBack} />
       <View style={{ paddingHorizontal: 20, paddingBottom: 12 }}>
         <View style={{ position: 'relative', marginBottom: 10 }}>
           <View
@@ -96,9 +100,18 @@ export const AllTxScreen: React.FC<{
           ]}
         />
       </View>
+    </>
+  );
 
-      <View style={{ paddingHorizontal: 20 }}>
-        {filtered.length === 0 ? (
+  return (
+    <SectionList
+      showsVerticalScrollIndicator={false}
+      contentContainerStyle={{ paddingBottom: 120 }}
+      sections={sections}
+      keyExtractor={(tx) => tx.id}
+      ListHeaderComponent={listHeader}
+      ListEmptyComponent={
+        <View style={{ paddingHorizontal: 20 }}>
           <Card t={t}>
             <EmptyState
               icon="wallet"
@@ -107,36 +120,55 @@ export const AllTxScreen: React.FC<{
               t={t}
             />
           </Card>
-        ) : (
-          sortedDates.map((date) => (
-            <View key={date} style={{ marginBottom: 14 }}>
-              <Text
-                style={{
-                  fontSize: 12,
-                  color: t.textSec,
-                  fontWeight: '600',
-                  marginBottom: 6,
-                  letterSpacing: 0.3,
-                  textTransform: 'uppercase',
-                }}
-              >
-                {fmtDate(date, lang)}
-              </Text>
-              <Card t={t} style={{ paddingHorizontal: 16, paddingVertical: 4 }}>
-                {groups[date].map((tx, i, arr) => (
-                  <TxRow
-                    key={tx.id}
-                    tx={tx}
-                    t={t}
-                    last={i === arr.length - 1}
-                    onPress={() => onOpenTx(tx)}
-                  />
-                ))}
-              </Card>
+        </View>
+      }
+      renderSectionHeader={({ section }) => (
+        <View style={{ paddingHorizontal: 20 }}>
+          <Text
+            style={{
+              fontSize: 12,
+              color: t.textSec,
+              fontWeight: '600',
+              marginBottom: 6,
+              letterSpacing: 0.3,
+              textTransform: 'uppercase',
+            }}
+          >
+            {fmtDate(section.title, lang)}
+          </Text>
+        </View>
+      )}
+      renderItem={({ item: tx, index: i, section }) => {
+        const isFirst = i === 0;
+        const isLast = i === section.data.length - 1;
+        return (
+          <View style={{ paddingHorizontal: 20, marginBottom: isLast ? 14 : 0 }}>
+            <View
+              style={{
+                backgroundColor: t.surface,
+                borderLeftWidth: StyleSheet.hairlineWidth,
+                borderRightWidth: StyleSheet.hairlineWidth,
+                borderTopWidth: isFirst ? StyleSheet.hairlineWidth : 0,
+                borderBottomWidth: isLast ? StyleSheet.hairlineWidth : 0,
+                borderColor: t.border,
+                borderTopLeftRadius: isFirst ? 20 : 0,
+                borderTopRightRadius: isFirst ? 20 : 0,
+                borderBottomLeftRadius: isLast ? 20 : 0,
+                borderBottomRightRadius: isLast ? 20 : 0,
+                paddingHorizontal: 16,
+                paddingVertical: 4,
+              }}
+            >
+              <TxRow
+                tx={tx}
+                t={t}
+                last={isLast}
+                onPress={() => onOpenTx(tx)}
+              />
             </View>
-          ))
-        )}
-      </View>
-    </ScrollView>
+          </View>
+        );
+      }}
+    />
   );
 };

@@ -189,7 +189,7 @@ export const EditNameSheet: React.FC<SheetProps> = ({ t, visible, onClose }) => 
       t={t}
       visible={visible}
       onClose={onClose}
-      title={lang === 'uz' ? 'Ismni tahrirlash' : 'Edit name'}
+      title={tStr(lang, 'editName')}
     >
       {fieldLabel(t, tStr(lang, 'name'))}
       <AppTextInput
@@ -231,7 +231,7 @@ export const EditEmailSheet: React.FC<SheetProps> = ({ t, visible, onClose }) =>
     setBusy(true);
     try {
       await actions.requestEmailChange(newEmail);
-      toast(lang === 'uz' ? 'Kod yuborildi' : 'Code sent');
+      toast(tStr(lang, 'codeSentToast'));
       setStep(2);
     } catch (e) {
       setErr(extractError(e, lang));
@@ -245,7 +245,7 @@ export const EditEmailSheet: React.FC<SheetProps> = ({ t, visible, onClose }) =>
     setBusy(true);
     try {
       await actions.verifyEmailChange(code);
-      toast(lang === 'uz' ? 'Email yangilandi' : 'Email updated');
+      toast(tStr(lang, 'emailUpdated'));
       onClose();
     } catch (e) {
       setErr(extractError(e, lang));
@@ -259,7 +259,7 @@ export const EditEmailSheet: React.FC<SheetProps> = ({ t, visible, onClose }) =>
       t={t}
       visible={visible}
       onClose={onClose}
-      title={lang === 'uz' ? 'Emailni tahrirlash' : 'Edit email'}
+      title={tStr(lang, 'editEmail')}
     >
       {step === 1 ? (
         <>
@@ -271,11 +271,9 @@ export const EditEmailSheet: React.FC<SheetProps> = ({ t, visible, onClose }) =>
               lineHeight: 19,
             }}
           >
-            {lang === 'uz'
-              ? 'Yangi email kiriting. Unga 6 xonali kod yuboriladi.'
-              : 'Enter the new email. A 6-digit code will be sent to it.'}
+            {tStr(lang, 'emailCodeHint')}
           </Text>
-          {fieldLabel(t, lang === 'uz' ? 'Yangi email' : 'New email')}
+          {fieldLabel(t, tStr(lang, 'newEmail'))}
           <AppTextInput
             value={newEmail}
             onChangeText={setNewEmail}
@@ -288,7 +286,7 @@ export const EditEmailSheet: React.FC<SheetProps> = ({ t, visible, onClose }) =>
             style={inputStyle(t)}
           />
           {errorText(t, err)}
-          {primaryBtn(t, lang === 'uz' ? 'Kod yuborish' : 'Send code', requestCode, busy)}
+          {primaryBtn(t, tStr(lang, 'sendCode'), requestCode, busy)}
         </>
       ) : (
         <>
@@ -300,11 +298,9 @@ export const EditEmailSheet: React.FC<SheetProps> = ({ t, visible, onClose }) =>
               lineHeight: 19,
             }}
           >
-            {lang === 'uz'
-              ? `${newEmail} ga yuborilgan 6 xonali kodni kiriting.`
-              : `Enter the 6-digit code sent to ${newEmail}.`}
+            {tStr(lang, 'codeEmailHint', { email: newEmail })}
           </Text>
-          {fieldLabel(t, lang === 'uz' ? 'Tasdiqlash kodi' : 'Verification code')}
+          {fieldLabel(t, tStr(lang, 'verificationCode'))}
           <AppTextInput
             value={code}
             onChangeText={(v) => setCode(v.replace(/\D/g, '').slice(0, 6))}
@@ -319,10 +315,10 @@ export const EditEmailSheet: React.FC<SheetProps> = ({ t, visible, onClose }) =>
             ]}
           />
           {errorText(t, err)}
-          {primaryBtn(t, lang === 'uz' ? 'Tasdiqlash' : 'Verify', verify, busy)}
+          {primaryBtn(t, tStr(lang, 'verify'), verify, busy)}
           <Pressable onPress={() => setStep(1)} style={{ alignItems: 'center', marginTop: 12 }}>
             <Text style={{ color: t.accent, fontSize: 14, fontWeight: '600' }}>
-              {lang === 'uz' ? 'Boshqa email' : 'Use different email'}
+              {tStr(lang, 'useDifferentEmail')}
             </Text>
           </Pressable>
         </>
@@ -360,13 +356,13 @@ export const ForgotPasswordSheet: React.FC<SheetProps> = ({ t, visible, onClose 
     setErr(null);
     const trimmed = email.trim();
     if (!trimmed || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
-      setErr(lang === 'uz' ? "Email noto'g'ri" : 'Invalid email');
+      setErr(tStr(lang, 'val_email_invalid_short'));
       return;
     }
     setBusy(true);
     try {
       await actions.forgotPassword(trimmed);
-      toast(lang === 'uz' ? 'Kod yuborildi' : 'Code sent');
+      toast(tStr(lang, 'codeSentToast'));
       setStep(2);
     } catch (e) {
       setErr(extractError(e, lang));
@@ -378,7 +374,7 @@ export const ForgotPasswordSheet: React.FC<SheetProps> = ({ t, visible, onClose 
   const verifyCode = async () => {
     setErr(null);
     if (code.length !== 6) {
-      setErr(lang === 'uz' ? '6 xonali kodni kiriting' : 'Enter the 6-digit code');
+      setErr(tStr(lang, 'val_code_required'));
       return;
     }
     setBusy(true);
@@ -395,21 +391,17 @@ export const ForgotPasswordSheet: React.FC<SheetProps> = ({ t, visible, onClose 
   const reset = async () => {
     setErr(null);
     if (!/^(?=.*[A-Za-z])(?=.*\d).{8,128}$/.test(newPassword)) {
-      setErr(
-        lang === 'uz'
-          ? "Parol kamida 8 belgi, harf va raqamdan iborat bo'lsin"
-          : 'Password must be at least 8 characters with a letter and a digit',
-      );
+      setErr(tStr(lang, 'val_password_weak'));
       return;
     }
     if (newPassword !== confirmPassword) {
-      setErr(lang === 'uz' ? 'Parollar mos kelmadi' : 'Passwords do not match');
+      setErr(tStr(lang, 'val_passwords_mismatch'));
       return;
     }
     setBusy(true);
     try {
       await actions.resetPassword(email, code, newPassword);
-      toast(lang === 'uz' ? 'Parol yangilandi' : 'Password reset');
+      toast(tStr(lang, 'passwordReset'));
       onClose();
     } catch (e) {
       setErr(extractError(e, lang));
@@ -420,16 +412,10 @@ export const ForgotPasswordSheet: React.FC<SheetProps> = ({ t, visible, onClose 
 
   const stepTitle =
     step === 1
-      ? lang === 'uz'
-        ? 'Parolni tiklash'
-        : 'Reset password'
+      ? tStr(lang, 'resetPassword')
       : step === 2
-        ? lang === 'uz'
-          ? 'Kodni tasdiqlash'
-          : 'Verify code'
-        : lang === 'uz'
-          ? 'Yangi parol'
-          : 'New password';
+        ? tStr(lang, 'verifyCode')
+        : tStr(lang, 'newPassword');
 
   return (
     <SheetContainer t={t} visible={visible} onClose={onClose} title={stepTitle}>
@@ -445,9 +431,7 @@ export const ForgotPasswordSheet: React.FC<SheetProps> = ({ t, visible, onClose 
               lineHeight: 19,
             }}
           >
-            {lang === 'uz'
-              ? 'Email manzilingizni kiriting, 6 xonali kod yuboriladi.'
-              : "Enter your email and we'll send you a 6-digit code."}
+            {tStr(lang, 'resetPasswordHint')}
           </Text>
           {fieldLabel(t, tStr(lang, 'email'))}
           <AppTextInput
@@ -463,7 +447,7 @@ export const ForgotPasswordSheet: React.FC<SheetProps> = ({ t, visible, onClose 
             style={inputStyle(t)}
           />
           {errorText(t, err)}
-          {primaryBtn(t, lang === 'uz' ? 'Kod yuborish' : 'Send code', sendCode, busy)}
+          {primaryBtn(t, tStr(lang, 'sendCode'), sendCode, busy)}
         </>
       ) : step === 2 ? (
         <>
@@ -475,11 +459,9 @@ export const ForgotPasswordSheet: React.FC<SheetProps> = ({ t, visible, onClose 
               lineHeight: 19,
             }}
           >
-            {lang === 'uz'
-              ? `${email} ga yuborilgan 6 xonali kodni kiriting.`
-              : `Enter the 6-digit code sent to ${email}.`}
+            {tStr(lang, 'codeEmailHint', { email })}
           </Text>
-          {fieldLabel(t, lang === 'uz' ? 'Tasdiqlash kodi' : 'Verification code')}
+          {fieldLabel(t, tStr(lang, 'verificationCode'))}
           <AppTextInput
             value={code}
             onChangeText={(v) => setCode(v.replace(/\D/g, '').slice(0, 6))}
@@ -494,13 +476,13 @@ export const ForgotPasswordSheet: React.FC<SheetProps> = ({ t, visible, onClose 
             ]}
           />
           {errorText(t, err)}
-          {primaryBtn(t, lang === 'uz' ? 'Tasdiqlash' : 'Verify', verifyCode, busy)}
+          {primaryBtn(t, tStr(lang, 'verify'), verifyCode, busy)}
           <Pressable
             onPress={() => !busy && setStep(1)}
             style={{ alignItems: 'center', marginTop: 12 }}
           >
             <Text style={{ color: t.accent, fontSize: 14, fontWeight: '600' }}>
-              {lang === 'uz' ? 'Boshqa email' : 'Use different email'}
+              {tStr(lang, 'useDifferentEmail')}
             </Text>
           </Pressable>
         </>
@@ -514,11 +496,9 @@ export const ForgotPasswordSheet: React.FC<SheetProps> = ({ t, visible, onClose 
               lineHeight: 19,
             }}
           >
-            {lang === 'uz'
-              ? 'Yangi parolni kiriting va takrorlang.'
-              : 'Enter and confirm your new password.'}
+            {tStr(lang, 'newPasswordHint')}
           </Text>
-          {fieldLabel(t, lang === 'uz' ? 'Yangi parol' : 'New password')}
+          {fieldLabel(t, tStr(lang, 'newPassword'))}
           <AppTextInput
             value={newPassword}
             onChangeText={setNewPassword}
@@ -532,7 +512,7 @@ export const ForgotPasswordSheet: React.FC<SheetProps> = ({ t, visible, onClose 
             style={inputStyle(t)}
           />
           <View style={{ height: 14 }} />
-          {fieldLabel(t, lang === 'uz' ? 'Parolni takrorlang' : 'Confirm password')}
+          {fieldLabel(t, tStr(lang, 'confirmPassword'))}
           <AppTextInput
             value={confirmPassword}
             onChangeText={setConfirmPassword}
@@ -545,7 +525,7 @@ export const ForgotPasswordSheet: React.FC<SheetProps> = ({ t, visible, onClose 
             style={inputStyle(t)}
           />
           {errorText(t, err)}
-          {primaryBtn(t, lang === 'uz' ? 'Parolni saqlash' : 'Save password', reset, busy)}
+          {primaryBtn(t, tStr(lang, 'savePassword'), reset, busy)}
         </>
       )}
     </SheetContainer>
@@ -602,7 +582,7 @@ export const DeleteAccountSheet: React.FC<SheetProps & { onDeleted: () => void }
     setBusy(true);
     try {
       await actions.requestAccountDelete();
-      toast(lang === 'uz' ? 'Kod yuborildi' : 'Code sent');
+      toast(tStr(lang, 'codeSentToast'));
       setStep(2);
     } catch (e) {
       setErr(extractError(e, lang));
@@ -614,12 +594,12 @@ export const DeleteAccountSheet: React.FC<SheetProps & { onDeleted: () => void }
   const confirm = async () => {
     setErr(null);
     if (code.length !== 6) {
-      setErr(lang === 'uz' ? '6 xonali kodni kiriting' : 'Enter the 6-digit code');
+      setErr(tStr(lang, 'val_code_required'));
       return;
     }
     if (isGoogleOnly) {
       if (!googleEnabled) {
-        setErr(lang === 'uz' ? 'Google sozlanmagan' : 'Google sign-in not configured');
+        setErr(tStr(lang, 'googleNotConfigured'));
         return;
       }
       setBusy(true);
@@ -637,7 +617,7 @@ export const DeleteAccountSheet: React.FC<SheetProps & { onDeleted: () => void }
       return;
     }
     if (!password) {
-      setErr(lang === 'uz' ? 'Parolni kiriting' : 'Enter your password');
+      setErr(tStr(lang, 'enterPassword'));
       return;
     }
     setBusy(true);
@@ -689,12 +669,10 @@ export const DeleteAccountSheet: React.FC<SheetProps & { onDeleted: () => void }
               lineHeight: 19,
             }}
           >
-            {lang === 'uz'
-              ? `Davom etish uchun ${email} manziliga 6 xonali kod yuboriladi.`
-              : `To continue, a 6-digit code will be sent to ${email}.`}
+            {tStr(lang, 'deleteCodeHint', { email })}
           </Text>
           {errorText(t, err)}
-          {dangerBtn(lang === 'uz' ? 'Kod yuborish' : 'Send code', requestCode, busy)}
+          {dangerBtn(tStr(lang, 'sendCode'), requestCode, busy)}
         </>
       ) : (
         <>
@@ -706,11 +684,9 @@ export const DeleteAccountSheet: React.FC<SheetProps & { onDeleted: () => void }
               lineHeight: 19,
             }}
           >
-            {lang === 'uz'
-              ? `${email} ga yuborilgan 6 xonali kodni kiriting. Tasdiqlasangiz, hisob va barcha ma'lumotlar butunlay o'chiriladi.`
-              : `Enter the 6-digit code sent to ${email}. Confirming will permanently delete your account and all data.`}
+            {tStr(lang, 'deleteConfirmHint', { email })}
           </Text>
-          {fieldLabel(t, lang === 'uz' ? 'Tasdiqlash kodi' : 'Verification code')}
+          {fieldLabel(t, tStr(lang, 'verificationCode'))}
           <AppTextInput
             value={code}
             onChangeText={(v) => setCode(v.replace(/\D/g, '').slice(0, 6))}
@@ -733,13 +709,11 @@ export const DeleteAccountSheet: React.FC<SheetProps & { onDeleted: () => void }
                 lineHeight: 17,
               }}
             >
-              {lang === 'uz'
-                ? 'Tasdiqlash uchun Google bilan qayta kirish so‘raladi.'
-                : "You'll be asked to sign in with Google again to confirm."}
+              {tStr(lang, 'googleReauthHint')}
             </Text>
           ) : (
             <View style={{ marginTop: 14 }}>
-              {fieldLabel(t, lang === 'uz' ? 'Joriy parol' : 'Current password')}
+              {fieldLabel(t, tStr(lang, 'currentPassword'))}
               <AppTextInput
                 value={password}
                 onChangeText={setPassword}

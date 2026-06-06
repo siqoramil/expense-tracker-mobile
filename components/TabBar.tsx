@@ -1,5 +1,5 @@
 import React from 'react';
-import { Dimensions, Pressable, StyleSheet, View } from 'react-native';
+import { Animated, Easing, Pressable, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
 import type { Lang } from '../lib/i18n';
@@ -11,13 +11,10 @@ export type TabKey = 'home' | 'stats' | 'debtors' | 'profile';
 const BAR_H = 60;
 const BAR_MARGIN_H = 16;
 const FAB_SIZE = 60;
-const FAB_LIFT = 40;
+const FAB_LIFT = 34;
 const NOTCH_R = 42;
 const NOTCH_D = 32;
 const NOTCH_EASE = 20;
-
-const SCREEN_W = Dimensions.get('window').width;
-const BAR_W = SCREEN_W - BAR_MARGIN_H * 2;
 
 const buildBarPath = (W: number, H: number) => {
   const r = H / 2;
@@ -47,13 +44,15 @@ export const TabBar: React.FC<{
   lang: Lang;
 }> = ({ active, onChange, onFab, t }) => {
   const insets = useSafeAreaInsets();
+  const { width: SCREEN_W } = useWindowDimensions();
+  const BAR_W = SCREEN_W - BAR_MARGIN_H * 2;
   const tabs: { k: TabKey; icon: IconName; iconFill: IconName }[] = [
     { k: 'home', icon: 'home', iconFill: 'home-fill' },
     { k: 'stats', icon: 'chart', iconFill: 'chart-fill' },
     { k: 'debtors', icon: 'users', iconFill: 'users-fill' },
     { k: 'profile', icon: 'user', iconFill: 'user-fill' },
   ];
-  const bottomPad = Math.max(insets.bottom, 12);
+  const bottomPad = insets.bottom;
 
   return (
     <View
@@ -81,7 +80,13 @@ export const TabBar: React.FC<{
         }}
       >
         <Svg width={BAR_W} height={BAR_H} pointerEvents="none">
-          <Path d={buildBarPath(BAR_W, BAR_H)} fill={t.tabBg} />
+          <Path
+            d={buildBarPath(BAR_W - 2, BAR_H - 2)}
+            transform="translate(1,1)"
+            fill={t.tabBg}
+            stroke={t.tabBorder}
+            strokeWidth={1}
+          />
         </Svg>
       </View>
 
@@ -124,40 +129,89 @@ export const TabBar: React.FC<{
           alignItems: 'center',
         }}
       >
-        <Pressable
-          onPress={onFab}
-          style={({ pressed }) => [
-            {
-              width: FAB_SIZE,
-              height: FAB_SIZE,
-              borderRadius: FAB_SIZE / 2,
-              backgroundColor: t.accent,
-              alignItems: 'center',
-              justifyContent: 'center',
-              shadowColor: '#0F1729',
-              shadowOpacity: 0.22,
-              shadowRadius: 14,
-              shadowOffset: { width: 0, height: 8 },
-              elevation: 14,
-              overflow: 'hidden',
-            },
-            pressed && { transform: [{ scale: 0.92 }] },
-          ]}
-        >
-          <View
-            pointerEvents="none"
-            style={[
-              StyleSheet.absoluteFill,
-              {
-                borderRadius: FAB_SIZE / 2,
-                borderTopWidth: 1,
-                borderTopColor: 'rgba(255,255,255,0.45)',
-              },
-            ]}
-          />
-          <Icon name="plus" size={26} color="#fff" stroke={2.5} />
-        </Pressable>
+        <FabButton onPress={onFab} t={t} />
       </View>
+    </View>
+  );
+};
+
+const FabButton: React.FC<{ onPress: () => void; t: Tokens }> = ({ onPress, t }) => {
+  // Continuous "water" ripple: rings keep emanating from the FAB, expanding and
+  // fading on a slow loop. Two rings, offset by half a period, overlap into a wave.
+  const w1 = React.useRef(new Animated.Value(0)).current;
+  const w2 = React.useRef(new Animated.Value(0)).current;
+
+  React.useEffect(() => {
+    const mkLoop = (v: Animated.Value) =>
+      Animated.loop(
+        Animated.timing(v, {
+          toValue: 1,
+          duration: 2800,
+          easing: Easing.out(Easing.quad),
+          useNativeDriver: true,
+        }),
+      );
+    const l1 = mkLoop(w1);
+    const l2 = mkLoop(w2);
+    l1.start();
+    const offset = setTimeout(() => l2.start(), 1400);
+    return () => {
+      clearTimeout(offset);
+      l1.stop();
+      l2.stop();
+    };
+  }, [w1, w2]);
+
+  const ring = (v: Animated.Value) => ({
+    opacity: v.interpolate({ inputRange: [0, 0.06, 0.9, 1], outputRange: [0, 0.26, 0, 0] }),
+    transform: [{ scale: v.interpolate({ inputRange: [0, 1], outputRange: [0.9, 2.1] }) }],
+  });
+
+  return (
+    <View style={{ alignItems: 'center', justifyContent: 'center' }}>
+      <Animated.View
+        pointerEvents="none"
+        style={[
+          { position: 'absolute', width: FAB_SIZE, height: FAB_SIZE, borderRadius: FAB_SIZE / 2, backgroundColor: t.accent },
+          ring(w1),
+        ]}
+      />
+      <Animated.View
+        pointerEvents="none"
+        style={[
+          { position: 'absolute', width: FAB_SIZE, height: FAB_SIZE, borderRadius: FAB_SIZE / 2, backgroundColor: t.accent },
+          ring(w2),
+        ]}
+      />
+      <Pressable
+        onPress={onPress}
+        style={({ pressed }) => [
+          {
+            width: FAB_SIZE,
+            height: FAB_SIZE,
+            borderRadius: FAB_SIZE / 2,
+            backgroundColor: t.accent,
+            alignItems: 'center',
+            justifyContent: 'center',
+            shadowColor: '#0F1729',
+            shadowOpacity: 0.22,
+            shadowRadius: 14,
+            shadowOffset: { width: 0, height: 8 },
+            elevation: 14,
+            overflow: 'hidden',
+          },
+          pressed && { transform: [{ scale: 0.92 }] },
+        ]}
+      >
+        <View
+          pointerEvents="none"
+          style={[
+            StyleSheet.absoluteFill,
+            { borderRadius: FAB_SIZE / 2, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.45)' },
+          ]}
+        />
+        <Icon name="plus" size={26} color="#fff" stroke={2.5} />
+      </Pressable>
     </View>
   );
 };
