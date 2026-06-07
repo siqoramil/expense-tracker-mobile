@@ -26,11 +26,14 @@ try {
 
 const HAS_LIQUID_GLASS = Boolean(glassEffect?.GlassView && glassEffect.isLiquidGlassAvailable?.());
 
-const HAS_NATIVE_BLUR = Platform.OS === 'ios' && !!requireOptionalNativeModule('ExpoBlurView');
+const HAS_NATIVE_BLUR =
+  (Platform.OS === 'ios' || Platform.OS === 'android') &&
+  !!requireOptionalNativeModule('ExpoBlurView');
 
 let LazyBlurView: React.ComponentType<{
   intensity?: number;
   tint?: string;
+  experimentalBlurMethod?: 'none' | 'dimezisBlurView';
   style?: StyleProp<ViewStyle>;
   children?: React.ReactNode;
 }> | null = null;
@@ -61,10 +64,14 @@ export const ModalBackdrop: React.FC<ModalBackdropProps> = ({
     );
   }
   if (HAS_NATIVE_BLUR && LazyBlurView) {
+    const isAndroid = Platform.OS === 'android';
     return (
       <LazyBlurView
-        intensity={intensity}
-        tint="systemUltraThinMaterialDark"
+        intensity={isAndroid ? Math.min(intensity + 24, 90) : intensity}
+        tint={isAndroid ? 'dark' : 'systemUltraThinMaterialDark'}
+        // Android needs the Dimezis backend to actually blur; the default
+        // method only tints. iOS ignores this prop.
+        experimentalBlurMethod={isAndroid ? 'dimezisBlurView' : undefined}
         style={[StyleSheet.absoluteFill, style]}
       >
         {children}

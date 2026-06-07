@@ -52,7 +52,10 @@ export const TabBar: React.FC<{
     { k: 'debtors', icon: 'users', iconFill: 'users-fill' },
     { k: 'profile', icon: 'user', iconFill: 'user-fill' },
   ];
-  const bottomPad = insets.bottom;
+  // With the system nav bar hidden (immersive), insets.bottom collapses toward
+  // 0 and the bar would sit flush to the screen edge — keep a floor so it stays
+  // lifted on both gesture-nav and immersive devices.
+  const bottomPad = Math.max(insets.bottom, 18);
 
   return (
     <View
@@ -137,52 +140,47 @@ export const TabBar: React.FC<{
 
 const FabButton: React.FC<{ onPress: () => void; t: Tokens }> = ({ onPress, t }) => {
   // Continuous "water" ripple: rings keep emanating from the FAB, expanding and
-  // fading on a slow loop. Two rings, offset by half a period, overlap into a wave.
-  const w1 = React.useRef(new Animated.Value(0)).current;
-  const w2 = React.useRef(new Animated.Value(0)).current;
+  // fading on a slow loop. Three rings, evenly offset by a third of the period,
+  // so multiple ripples are always expanding at once — a continuous water wave.
+  const waves = React.useRef([0, 1, 2].map(() => new Animated.Value(0))).current;
 
   React.useEffect(() => {
-    const mkLoop = (v: Animated.Value) =>
+    const DURATION = 2800;
+    const stagger = DURATION / waves.length;
+    const loops = waves.map((v) =>
       Animated.loop(
         Animated.timing(v, {
           toValue: 1,
-          duration: 2800,
+          duration: DURATION,
           easing: Easing.out(Easing.quad),
           useNativeDriver: true,
         }),
-      );
-    const l1 = mkLoop(w1);
-    const l2 = mkLoop(w2);
-    l1.start();
-    const offset = setTimeout(() => l2.start(), 1400);
+      ),
+    );
+    const timers = loops.map((l, i) => setTimeout(() => l.start(), i * stagger));
     return () => {
-      clearTimeout(offset);
-      l1.stop();
-      l2.stop();
+      timers.forEach(clearTimeout);
+      loops.forEach((l) => l.stop());
     };
-  }, [w1, w2]);
+  }, [waves]);
 
   const ring = (v: Animated.Value) => ({
     opacity: v.interpolate({ inputRange: [0, 0.06, 0.9, 1], outputRange: [0, 0.26, 0, 0] }),
-    transform: [{ scale: v.interpolate({ inputRange: [0, 1], outputRange: [0.9, 2.1] }) }],
+    transform: [{ scale: v.interpolate({ inputRange: [0, 1], outputRange: [0.9, 1.55] }) }],
   });
 
   return (
     <View style={{ alignItems: 'center', justifyContent: 'center' }}>
-      <Animated.View
-        pointerEvents="none"
-        style={[
-          { position: 'absolute', width: FAB_SIZE, height: FAB_SIZE, borderRadius: FAB_SIZE / 2, backgroundColor: t.accent },
-          ring(w1),
-        ]}
-      />
-      <Animated.View
-        pointerEvents="none"
-        style={[
-          { position: 'absolute', width: FAB_SIZE, height: FAB_SIZE, borderRadius: FAB_SIZE / 2, backgroundColor: t.accent },
-          ring(w2),
-        ]}
-      />
+      {waves.map((v, i) => (
+        <Animated.View
+          key={i}
+          pointerEvents="none"
+          style={[
+            { position: 'absolute', width: FAB_SIZE, height: FAB_SIZE, borderRadius: FAB_SIZE / 2, backgroundColor: t.accent },
+            ring(v),
+          ]}
+        />
+      ))}
       <Pressable
         onPress={onPress}
         style={({ pressed }) => [
@@ -230,7 +228,6 @@ const TabItem: React.FC<{
         height: '100%',
         alignItems: 'center',
         justifyContent: 'center',
-        gap: 4,
       },
       pressed && { opacity: 0.55 },
     ]}
@@ -240,14 +237,6 @@ const TabItem: React.FC<{
       size={22}
       color={active ? t.accent : t.textSec}
       stroke={2}
-    />
-    <View
-      style={{
-        width: 5,
-        height: 5,
-        borderRadius: 2.5,
-        backgroundColor: active ? t.accent : 'transparent',
-      }}
     />
   </Pressable>
 );

@@ -130,71 +130,103 @@ export const ProfileScreen: React.FC<{ t: Tokens; onNav: Nav; onLogout: () => vo
       <ScreenHeader t={t} title={tStr(lang, 'profile')} />
 
       <View style={{ paddingHorizontal: 20, paddingBottom: 18 }}>
-        <Card t={t} style={{ padding: 20, flexDirection: 'row', alignItems: 'center', gap: 14 }}>
-          <Pressable
-            onPress={openAvatarMenu}
-            style={{
-              width: 60,
-              height: 60,
-              borderRadius: 30,
-              backgroundColor: t.accent,
-              alignItems: 'center',
-              justifyContent: 'center',
-              overflow: 'hidden',
-              shadowColor: t.accent,
-              shadowOpacity: 0.25,
-              shadowRadius: 14,
-              shadowOffset: { width: 0, height: 4 },
-              elevation: 4,
-            }}
-          >
-            {hasImage ? (
-              <Image source={{ uri: s.profile.avatar }} style={{ width: 60, height: 60 }} />
-            ) : (
-              <Text style={{ fontSize: 20, fontWeight: '700', color: '#fff' }}>
-                {s.profile.avatar}
-              </Text>
-            )}
-          </Pressable>
-          <View style={{ flex: 1, minWidth: 0 }}>
-            <Pressable
-              onPress={() => setEditName(true)}
-              style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}
-            >
-              <Text
-                style={{ fontSize: 17, fontWeight: '700', color: t.text, letterSpacing: -0.3 }}
-                numberOfLines={1}
+        <Card t={t} style={{ padding: 18 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
+            <Pressable onPress={openAvatarMenu} style={{ width: 64, height: 64 }}>
+              <View
+                style={{
+                  width: 64,
+                  height: 64,
+                  borderRadius: 32,
+                  backgroundColor: t.accent,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  overflow: 'hidden',
+                  shadowColor: t.accent,
+                  shadowOpacity: 0.3,
+                  shadowRadius: 16,
+                  shadowOffset: { width: 0, height: 6 },
+                  elevation: 6,
+                }}
               >
-                {s.profile.name}
-              </Text>
-              <Icon name="settings" size={14} color={t.textTer} stroke={2} />
+                {hasImage ? (
+                  <Image source={{ uri: s.profile.avatar }} style={{ width: 64, height: 64 }} />
+                ) : (
+                  <Text style={{ fontSize: 23, fontWeight: '700', color: '#fff' }}>
+                    {s.profile.avatar}
+                  </Text>
+                )}
+              </View>
+              <View
+                style={{
+                  position: 'absolute',
+                  right: -2,
+                  bottom: -2,
+                  width: 25,
+                  height: 25,
+                  borderRadius: 12.5,
+                  backgroundColor: t.accent,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  borderWidth: 2.5,
+                  borderColor: t.surface,
+                }}
+              >
+                <Icon name="pen" size={11} color="#fff" stroke={2.5} />
+              </View>
             </Pressable>
-            <Pressable
-              onPress={() => setEditEmail(true)}
-              style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 }}
-            >
-              <Text style={{ fontSize: 12.5, color: t.textSec }} numberOfLines={1}>
-                {s.profile.email}
-              </Text>
-              <Icon name="settings" size={11} color={t.textTer} stroke={2} />
-            </Pressable>
-            <View
-              style={{
-                flexDirection: 'row',
-                alignSelf: 'flex-start',
-                alignItems: 'center',
-                gap: 4,
-                marginTop: 7,
-                paddingVertical: 2,
-                paddingHorizontal: 7,
-                borderRadius: 5,
-                backgroundColor: t.accentSoft,
-              }}
-            >
-              <Icon name="check" size={10} color={t.accent} stroke={3} />
-              <Text style={{ color: t.accent, fontSize: 10.5, fontWeight: '600' }}>
-                {tStr(lang, 'pro')}
-              </Text>
+            <View style={{ flex: 1, minWidth: 0 }}>
+              <Pressable
+                onPress={() => setEditName(true)}
+                hitSlop={6}
+                style={{ flexDirection: 'row', alignItems: 'center', gap: 7 }}
+              >
+                <Text
+                  style={{
+                    fontSize: 19,
+                    fontWeight: '700',
+                    color: t.text,
+                    letterSpacing: -0.4,
+                    flexShrink: 1,
+                  }}
+                  numberOfLines={1}
+                >
+                  {s.profile.name}
+                </Text>
+                <Icon name="pen" size={12.5} color={t.textTer} stroke={2} />
+              </Pressable>
+              <Pressable
+                onPress={() => setEditEmail(true)}
+                hitSlop={6}
+                style={{ flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 3 }}
+              >
+                <Text style={{ fontSize: 13, color: t.textSec, flexShrink: 1 }} numberOfLines={1}>
+                  {s.profile.email}
+                </Text>
+                <Icon name="pen" size={10.5} color={t.textTer} stroke={2} />
+              </Pressable>
+              <View
+                style={{
+                  flexDirection: 'row',
+                  alignSelf: 'flex-start',
+                  alignItems: 'center',
+                  gap: 5,
+                  marginTop: 10,
+                  paddingVertical: 4,
+                  paddingHorizontal: 10,
+                  borderRadius: 8,
+                  backgroundColor: t.accentSoft,
+                  borderWidth: StyleSheet.hairlineWidth,
+                  borderColor: t.accent + '40',
+                }}
+              >
+                <Icon name="check" size={10} color={t.accent} stroke={3} />
+                <Text
+                  style={{ color: t.accent, fontSize: 11, fontWeight: '700', letterSpacing: 0.4 }}
+                >
+                  {tStr(lang, 'pro')}
+                </Text>
+              </View>
             </View>
           </View>
         </Card>
