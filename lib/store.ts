@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as SecureStore from 'expo-secure-store';
 import { useEffect, useState } from 'react';
-import { daysAgo, daysFromNow, isoDate, today, type Currency } from './format';
+import { isoDate, today, type Currency } from './format';
 import { authApi, setApiToken, setUnauthorizedHandler, type UserDTO } from './api';
 import { setAppLanguage, type Lang, type Localized } from './i18n';
 
@@ -104,7 +104,8 @@ export type Prefs = {
 };
 
 export type State = {
-  version: 2;
+  // Persisted-schema version; bumped on shape changes so hydrate() can migrate.
+  version: number;
   onboarded: boolean;
   loggedIn: boolean;
   token: string | null;
@@ -128,7 +129,7 @@ export type State = {
   budgets: Budget[];
   recurring: Recurring[];
   notifs: Notif[];
-  goal: Goal;
+  goal: Goal | null;
 };
 
 const SEED_CATEGORIES: Category[] = [
@@ -211,319 +212,21 @@ const SEED_CATEGORIES: Category[] = [
   },
 ];
 
-const SEED_WALLETS: Wallet[] = [
-  {
-    id: 'cash',
-    name: { en: 'Cash', uz: 'Naqd' },
-    icon: 'wallet',
-    color: '#10B981',
-    balance: 1_850_000,
-  },
-  {
-    id: 'card',
-    name: { en: 'Visa Card', uz: 'Visa Karta' },
-    icon: 'credit-card',
-    color: '#6366F1',
-    balance: 4_320_000,
-  },
-  {
-    id: 'savings',
-    name: { en: 'Savings', uz: 'Jamg‘arma' },
-    icon: 'lock',
-    color: '#F59E0B',
-    balance: 12_000_000,
-  },
-];
-
-const SEED_TX = (): Transaction[] => [
-  {
-    id: 't1',
-    kind: 'income',
-    cat: 'salary',
-    wallet: 'card',
-    amount: 12000000,
-    note: 'April salary',
-    date: daysAgo(0),
-  },
-  {
-    id: 't2',
-    kind: 'expense',
-    cat: 'food',
-    wallet: 'cash',
-    amount: 85000,
-    note: 'Chaykhana Navat',
-    date: daysAgo(0),
-  },
-  {
-    id: 't3',
-    kind: 'expense',
-    cat: 'transport',
-    wallet: 'card',
-    amount: 35000,
-    note: 'Yandex Go',
-    date: daysAgo(0),
-  },
-  {
-    id: 't4',
-    kind: 'expense',
-    cat: 'shopping',
-    wallet: 'card',
-    amount: 450000,
-    note: 'Korzinka',
-    date: daysAgo(1),
-  },
-  {
-    id: 't5',
-    kind: 'expense',
-    cat: 'bills',
-    wallet: 'card',
-    amount: 220000,
-    note: 'Internet',
-    date: daysAgo(1),
-  },
-  {
-    id: 't6',
-    kind: 'income',
-    cat: 'bonus',
-    wallet: 'card',
-    amount: 800000,
-    note: 'Freelance',
-    date: daysAgo(2),
-  },
-  {
-    id: 't7',
-    kind: 'expense',
-    cat: 'food',
-    wallet: 'cash',
-    amount: 45000,
-    note: 'Evos',
-    date: daysAgo(3),
-  },
-  {
-    id: 't8',
-    kind: 'expense',
-    cat: 'rent',
-    wallet: 'card',
-    amount: 3500000,
-    note: 'April rent',
-    date: daysAgo(14),
-  },
-  {
-    id: 't9',
-    kind: 'expense',
-    cat: 'transport',
-    wallet: 'card',
-    amount: 1200000,
-    note: 'Fuel + service',
-    date: daysAgo(16),
-  },
-  {
-    id: 't10',
-    kind: 'expense',
-    cat: 'food',
-    wallet: 'cash',
-    amount: 62000,
-    note: 'Coffee shop',
-    date: daysAgo(5),
-  },
-  {
-    id: 't11',
-    kind: 'expense',
-    cat: 'shopping',
-    wallet: 'card',
-    amount: 320000,
-    note: 'Clothes',
-    date: daysAgo(7),
-  },
-  {
-    id: 't12',
-    kind: 'expense',
-    cat: 'food',
-    wallet: 'cash',
-    amount: 28000,
-    note: 'Samsa',
-    date: daysAgo(2),
-  },
-];
-
-const SEED_DEBTS = (): Debt[] => [
-  {
-    id: 'd1',
-    direction: 'owe_me',
-    name: 'Azizbek Karimov',
-    color: '#6366F1',
-    amount: 2500000,
-    paid: 0,
-    due: daysFromNow(7),
-    note: 'Rent deposit',
-    created: daysAgo(20),
-    payments: [],
-  },
-  {
-    id: 'd2',
-    direction: 'owe_me',
-    name: 'Dilnoza Rashidova',
-    color: '#EC4899',
-    amount: 750000,
-    paid: 250000,
-    due: daysFromNow(4),
-    note: 'Birthday dinner',
-    created: daysAgo(7),
-    payments: [{ id: 'p1', amount: 250000, date: daysAgo(2) }],
-  },
-  {
-    id: 'd3',
-    direction: 'owe_me',
-    name: 'Jasur Tursunov',
-    color: '#10B981',
-    amount: 1200000,
-    paid: 0,
-    due: daysFromNow(18),
-    note: 'Car repair',
-    created: daysAgo(11),
-    payments: [],
-  },
-  {
-    id: 'd4',
-    direction: 'owe_me',
-    name: 'Madina Yusupova',
-    color: '#F59E0B',
-    amount: 300000,
-    paid: 0,
-    due: daysAgo(3),
-    note: 'Groceries',
-    created: daysAgo(15),
-    payments: [],
-  },
-  {
-    id: 'd5',
-    direction: 'i_owe',
-    name: 'Uncle Bobur',
-    color: '#8B5CF6',
-    amount: 4000000,
-    paid: 1000000,
-    due: daysFromNow(30),
-    note: 'Emergency loan',
-    created: daysAgo(45),
-    payments: [{ id: 'p2', amount: 1000000, date: daysAgo(10) }],
-  },
-  {
-    id: 'd6',
-    direction: 'i_owe',
-    name: 'Shahnoza',
-    color: '#06B6D4',
-    amount: 500000,
-    paid: 0,
-    due: daysFromNow(14),
-    note: 'Lunch tab',
-    created: daysAgo(3),
-    payments: [],
-  },
-];
-
-const SEED_BUDGETS: Budget[] = [
-  { id: 'b1', cat: 'food', limit: 1500000 },
-  { id: 'b2', cat: 'transport', limit: 1500000 },
-  { id: 'b3', cat: 'shopping', limit: 1000000 },
-  { id: 'b4', cat: 'bills', limit: 500000 },
-];
-
-const SEED_RECURRING = (): Recurring[] => [
-  {
-    id: 'r1',
-    kind: 'income',
-    cat: 'salary',
-    wallet: 'card',
-    amount: 12000000,
-    note: 'Monthly salary',
-    every: 'month',
-    nextDate: daysFromNow(13),
-    enabled: true,
-  },
-  {
-    id: 'r2',
-    kind: 'expense',
-    cat: 'rent',
-    wallet: 'card',
-    amount: 3500000,
-    note: 'Rent',
-    every: 'month',
-    nextDate: daysFromNow(17),
-    enabled: true,
-  },
-  {
-    id: 'r3',
-    kind: 'expense',
-    cat: 'bills',
-    wallet: 'card',
-    amount: 220000,
-    note: 'Internet',
-    every: 'month',
-    nextDate: daysFromNow(11),
-    enabled: true,
-  },
-];
-
-const SEED_NOTIFS = (): Notif[] => [
-  {
-    id: 'n1',
-    kind: 'overdue',
-    title: { en: 'Madina’s debt is overdue', uz: 'Madina qarzi muddati o‘tdi' },
-    body: {
-      en: '300 000 so‘m was due 3 days ago.',
-      uz: '300 000 so‘m 3 kun oldin muddati tugagan.',
-    },
-    date: daysAgo(0),
-    read: false,
-  },
-  {
-    id: 'n2',
-    kind: 'budget',
-    title: { en: 'Transport budget 82%', uz: 'Transport byudjeti 82%' },
-    body: {
-      en: 'You’ve used 1 235 000 of 1 500 000 so‘m.',
-      uz: '1 500 000 so‘mdan 1 235 000 ishlatildi.',
-    },
-    date: daysAgo(1),
-    read: false,
-  },
-  {
-    id: 'n3',
-    kind: 'bill',
-    title: { en: 'Rent due soon', uz: 'Ijara to‘lovi yaqin' },
-    body: { en: 'Apartment rent — due in 17 days.', uz: 'Ijara to‘lovi — 17 kundan keyin.' },
-    date: daysAgo(2),
-    read: true,
-  },
-  {
-    id: 'n4',
-    kind: 'income',
-    title: { en: 'Freelance income added', uz: 'Frilans daromad qo‘shildi' },
-    body: { en: '+800 000 so‘m to Visa Card.', uz: 'Visa Kartaga +800 000 so‘m.' },
-    date: daysAgo(2),
-    read: true,
-  },
-];
-
-const SEED_GOAL = (): Goal => ({
-  title: { en: 'New laptop', uz: 'Yangi noutbuk' },
-  target: 15_000_000,
-  saved: 6_200_000,
-  deadline: daysFromNow(90),
-});
-
+// Fresh install state: default categories only, everything else empty so the
+// user starts with a clean slate. Bump `version` whenever this shape changes —
+// hydrate() migrates older persisted states (see the version check there).
 const SEED = (): State => ({
-  version: 2,
+  version: 3,
   onboarded: false,
   loggedIn: false,
   token: null,
   hideBalance: false,
   profile: {
-    name: 'Sardor Akmalov',
-    email: 'sardor.akmalov@gmail.com',
-    avatar: 'SA',
-    pro: true,
-    hasPassword: true,
+    name: '',
+    email: '',
+    avatar: '',
+    pro: false,
+    hasPassword: false,
     hasGoogle: false,
   },
   prefs: {
@@ -535,13 +238,13 @@ const SEED = (): State => ({
     biometric: false,
   },
   categories: SEED_CATEGORIES,
-  wallets: SEED_WALLETS,
-  tx: SEED_TX(),
-  debts: SEED_DEBTS(),
-  budgets: SEED_BUDGETS,
-  recurring: SEED_RECURRING(),
-  notifs: SEED_NOTIFS(),
-  goal: SEED_GOAL(),
+  wallets: [],
+  tx: [],
+  debts: [],
+  budgets: [],
+  recurring: [],
+  notifs: [],
+  goal: null,
 });
 
 let state: State = SEED();
@@ -579,7 +282,25 @@ export const hydrate = async () => {
     const raw = await AsyncStorage.getItem(STORAGE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw) as State;
-      if (parsed.version === 2) state = { ...parsed, token: null };
+      if (parsed.version === 3) {
+        state = { ...parsed, token: null };
+      } else if (parsed.version === 2) {
+        // Migrate demo-seed installs (v2 shipped with bundled fake data) to an
+        // empty slate: drop the seeded financial records, keep the user's prefs,
+        // profile, and any categories. Default categories are re-added below.
+        state = {
+          ...parsed,
+          version: 3,
+          token: null,
+          wallets: [],
+          tx: [],
+          debts: [],
+          budgets: [],
+          recurring: [],
+          notifs: [],
+          goal: null,
+        };
+      }
     }
   } catch {}
 
