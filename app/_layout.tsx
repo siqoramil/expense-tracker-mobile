@@ -3,6 +3,7 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
 import { AppState, Platform } from 'react-native';
+import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { ServerUnreachable } from '../components/ServerUnreachable';
 import { hydrate, useStore } from '../lib/store';
@@ -40,15 +41,17 @@ export default function RootLayout() {
   const lang = s.prefs.lang;
 
   return (
-    <SafeAreaProvider>
-      <StatusBar style={s.prefs.dark ? 'light' : 'dark'} />
-      <Stack
-        screenOptions={{
-          headerShown: false,
-          contentStyle: { backgroundColor: s.prefs.dark ? '#0B0B0F' : '#F4F4F5' },
-        }}
-      />
-      <ServerUnreachable t={tokens} lang={lang} />
-    </SafeAreaProvider>
+    <KeyboardProvider>
+      <SafeAreaProvider>
+        <StatusBar style={s.prefs.dark ? 'light' : 'dark'} />
+        <Stack
+          screenOptions={{
+            headerShown: false,
+            contentStyle: { backgroundColor: s.prefs.dark ? '#0B0B0F' : '#F4F4F5' },
+          }}
+        />
+        <ServerUnreachable t={tokens} lang={lang} />
+      </SafeAreaProvider>
+    </KeyboardProvider>
   );
 }

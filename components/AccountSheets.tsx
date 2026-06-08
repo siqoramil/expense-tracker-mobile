@@ -1,13 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import {
-  ActivityIndicator,
-  Modal,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import { ActivityIndicator, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { KeyboardAwareScrollView, KeyboardProvider } from 'react-native-keyboard-controller';
 import { AppTextInput } from './AppTextInput';
 import { errorMessage } from '../lib/errors';
 import { isGoogleAuthAvailable, signInWithGoogle } from '../lib/googleAuth';
@@ -17,7 +10,6 @@ import { toast } from '../lib/toast';
 import type { Tokens } from '../lib/tokens';
 import { ModalBackdrop } from './Glass';
 import { Icon } from './Icon';
-import { KeyboardAvoider } from './KeyboardAvoider';
 
 type SheetProps = { t: Tokens; visible: boolean; onClose: () => void };
 
@@ -35,8 +27,8 @@ const SheetContainer: React.FC<{
     statusBarTranslucent
     onRequestClose={onClose}
   >
-    <ModalBackdrop>
-      <KeyboardAvoider>
+    <KeyboardProvider statusBarTranslucent navigationBarTranslucent>
+      <ModalBackdrop>
         <Pressable onPress={onClose} style={{ flex: 1, justifyContent: 'flex-end' }}>
           <Pressable
             onPress={() => {}}
@@ -85,13 +77,17 @@ const SheetContainer: React.FC<{
                 <Icon name="close" size={16} color={t.textSec} stroke={2.2} />
               </Pressable>
             </View>
-            <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+            <KeyboardAwareScrollView
+              bottomOffset={24}
+              keyboardShouldPersistTaps="handled"
+              showsVerticalScrollIndicator={false}
+            >
               {children}
-            </ScrollView>
+            </KeyboardAwareScrollView>
           </Pressable>
         </Pressable>
-      </KeyboardAvoider>
-    </ModalBackdrop>
+      </ModalBackdrop>
+    </KeyboardProvider>
   </Modal>
 );
 

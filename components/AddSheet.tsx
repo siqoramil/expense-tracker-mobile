@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { AppTextInput } from './AppTextInput';
 import { CURRENCIES, daysFromNow, isoDate, today } from '../lib/format';
 import { tStr, type Lang } from '../lib/i18n';
@@ -8,7 +8,7 @@ import { toast } from '../lib/toast';
 import type { Tokens } from '../lib/tokens';
 import { ModalBackdrop } from './Glass';
 import { Icon, type IconName } from './Icon';
-import { KeyboardAvoider } from './KeyboardAvoider';
+import { KeyboardAwareScrollView, KeyboardProvider } from 'react-native-keyboard-controller';
 import { SegmentedControl } from './ui';
 
 export type AddMode = 'expense' | 'income' | 'debt';
@@ -135,9 +135,15 @@ export const AddSheet: React.FC<Props> = ({ t, visible, mode, editTx, editDebt, 
     kind === 'income' ? t.incomeSoft : kind === 'debt' ? t.accentSoft : t.expenseSoft;
 
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <ModalBackdrop>
-        <KeyboardAvoider>
+    <Modal
+      visible={visible}
+      transparent
+      animationType="slide"
+      statusBarTranslucent
+      onRequestClose={onClose}
+    >
+      <KeyboardProvider statusBarTranslucent navigationBarTranslucent>
+        <ModalBackdrop>
           <Pressable onPress={onClose} style={{ flex: 1, justifyContent: 'flex-end' }}>
             <Pressable
               onPress={() => {}}
@@ -190,7 +196,8 @@ export const AddSheet: React.FC<Props> = ({ t, visible, mode, editTx, editDebt, 
                 </Pressable>
               </View>
 
-              <ScrollView
+              <KeyboardAwareScrollView
+                bottomOffset={24}
                 keyboardShouldPersistTaps="handled"
                 showsVerticalScrollIndicator={false}
                 contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 20 }}
@@ -392,7 +399,7 @@ export const AddSheet: React.FC<Props> = ({ t, visible, mode, editTx, editDebt, 
                     </Field>
                   </>
                 )}
-              </ScrollView>
+              </KeyboardAwareScrollView>
 
               <View
                 style={{
@@ -448,8 +455,8 @@ export const AddSheet: React.FC<Props> = ({ t, visible, mode, editTx, editDebt, 
               </View>
             </Pressable>
           </Pressable>
-        </KeyboardAvoider>
-      </ModalBackdrop>
+        </ModalBackdrop>
+      </KeyboardProvider>
     </Modal>
   );
 };
