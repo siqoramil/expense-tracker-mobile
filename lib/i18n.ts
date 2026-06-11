@@ -8,11 +8,13 @@ import fr from './locales/fr.json';
 import ru from './locales/ru.json';
 import uz from './locales/uz.json';
 
+// 'uz' remains in the Lang union because bilingual data (categories/wallets) and
+// the server contract still carry an `uz` field, but Uzbek is no longer a
+// selectable app language.
 export type Lang = 'en' | 'uz' | 'ru' | 'de' | 'fr' | 'es';
 
 export const LANGUAGES: { code: Lang; label: string; native: string; flag: string }[] = [
   { code: 'en', label: 'English', native: 'English', flag: '🇬🇧' },
-  { code: 'uz', label: 'Uzbek', native: "O'zbekcha", flag: '🇺🇿' },
   { code: 'ru', label: 'Russian', native: 'Русский', flag: '🇷🇺' },
   { code: 'de', label: 'German', native: 'Deutsch', flag: '🇩🇪' },
   { code: 'fr', label: 'French', native: 'Français', flag: '🇫🇷' },

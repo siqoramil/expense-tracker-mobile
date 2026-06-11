@@ -4,7 +4,7 @@ import { tStr, type Lang } from '../../lib/i18n';
 import { actions, catLabel, useStore, type Category, type CategoryKind } from '../../lib/store';
 import type { Tokens } from '../../lib/tokens';
 import { Icon } from '../Icon';
-import { Card, CatIcon, ScreenHeader } from '../ui';
+import { Card, CatIcon } from '../ui';
 
 const Row: React.FC<{
   t: Tokens;
@@ -69,7 +69,7 @@ const SectionHeader: React.FC<{ t: Tokens; label: string }> = ({ t, label }) => 
   </Text>
 );
 
-export const CategoriesScreen: React.FC<{ t: Tokens; onBack: () => void }> = ({ t, onBack }) => {
+export const CategoriesScreen: React.FC<{ t: Tokens }> = ({ t }) => {
   const s = useStore();
   const lang = s.prefs.lang;
 
@@ -134,7 +134,6 @@ export const CategoriesScreen: React.FC<{ t: Tokens; onBack: () => void }> = ({ 
 
   return (
     <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 120 }}>
-      <ScreenHeader t={t} title={tStr(lang, 'categoriesLabel')} onBack={onBack} />
       <View style={{ paddingHorizontal: 20 }}>
         {(['expense', 'subscription', 'income'] as const).map(renderKind)}
       </View>

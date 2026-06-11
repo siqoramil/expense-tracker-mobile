@@ -1,8 +1,8 @@
-import React, { useMemo, useState } from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import React, { memo, useMemo, useState } from 'react';
+import { Platform, Pressable, ScrollView, Text, View } from 'react-native';
 import { fmtMoney, isoDate, last6Months, today, unitOf, type Currency } from '../../lib/format';
-import { tStr } from '../../lib/i18n';
-import { actions, selectMonth, useStore, walletName, type Transaction } from '../../lib/store';
+import { tStr, type Lang } from '../../lib/i18n';
+import { actions, selectMonth, useStore, walletName, type Transaction, type Wallet } from '../../lib/store';
 import type { Tokens } from '../../lib/tokens';
 import { Icon, type IconName } from '../Icon';
 import { Sparkline } from '../Sparkline';
@@ -69,157 +69,6 @@ export const HomeScreen: React.FC<Props> = ({ t, onNav, onAdd, onOpenTx }) => {
 
   const unreadNotifs = useMemo(() => s.notifs.filter((n) => !n.read).length, [s.notifs]);
 
-  const heroCard = () => {
-    if (variant === 'balance') {
-      return (
-        <Card t={t} style={{ padding: 24, overflow: 'hidden' }}>
-          <View
-            style={{
-              position: 'absolute',
-              top: -40,
-              right: -40,
-              width: 160,
-              height: 160,
-              borderRadius: 80,
-              backgroundColor: t.accentSoft,
-            }}
-          />
-          <Text
-            style={{
-              fontSize: 12.5,
-              color: t.textSec,
-              fontWeight: '600',
-              letterSpacing: 0.4,
-              marginBottom: 8,
-            }}
-          >
-            TOTAL BALANCE
-          </Text>
-          <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 8, marginBottom: 6 }}>
-            <BlurMoney
-              value={fmtMoney(totalBalance, s.prefs.currency)}
-              hidden={hideBalance}
-              color={t.text}
-            />
-            {!hideBalance && unitOf(s.prefs.currency) ? (
-              <Text style={{ fontSize: 14, color: t.textSec, fontWeight: '500' }}>
-                {unitOf(s.prefs.currency)}
-              </Text>
-            ) : null}
-          </View>
-          <View style={{ flexDirection: 'row', gap: 8, marginTop: 14 }}>
-            {s.wallets
-              .filter((w) => !w.hidden)
-              .map((w) => (
-                <View
-                  key={w.id}
-                  style={{
-                    flex: 1,
-                    padding: 10,
-                    borderRadius: 12,
-                    backgroundColor: w.color + '14',
-                    borderWidth: 1,
-                    borderColor: w.color + '22',
-                  }}
-                >
-                  <View
-                    style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 }}
-                  >
-                    <Icon name={w.icon as IconName} size={13} color={w.color} />
-                    <Text style={{ fontSize: 10.5, color: t.textSec, fontWeight: '600' }}>
-                      {walletName(w, lang)}
-                    </Text>
-                  </View>
-                  <Text style={{ fontSize: 13, fontWeight: '700', color: t.text }}>
-                    {fmtMoney(w.balance, s.prefs.currency)}
-                  </Text>
-                </View>
-              ))}
-          </View>
-        </Card>
-      );
-    }
-    return (
-      <Card t={t} style={{ padding: 24, overflow: 'hidden' }}>
-        <View
-          style={{
-            position: 'absolute',
-            top: -40,
-            right: -40,
-            width: 160,
-            height: 160,
-            borderRadius: 80,
-            backgroundColor: t.accentSoft,
-          }}
-        />
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-          <Text
-            style={{
-              fontSize: 12.5,
-              color: t.textSec,
-              fontWeight: '600',
-              letterSpacing: 0.4,
-            }}
-          >
-            {tStr(lang, 'netThisMonth')}
-          </Text>
-          {pctSaved > 0 ? (
-            <View
-              style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                gap: 3,
-                paddingVertical: 2,
-                paddingHorizontal: 7,
-                borderRadius: 6,
-                backgroundColor: t.incomeSoft,
-              }}
-            >
-              <Icon name="arrow-up" size={10} color={t.income} stroke={2.5} />
-              <Text style={{ color: t.income, fontSize: 11, fontWeight: '600' }}>{pctSaved}%</Text>
-            </View>
-          ) : null}
-        </View>
-        <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 8, marginBottom: 4 }}>
-          <BlurMoney value={fmtMoney(net, s.prefs.currency)} hidden={hideBalance} color={t.text} />
-          {!hideBalance && unitOf(s.prefs.currency) ? (
-            <Text style={{ fontSize: 14, color: t.textSec, fontWeight: '500' }}>
-              {unitOf(s.prefs.currency)}
-            </Text>
-          ) : null}
-        </View>
-        <Text style={{ fontSize: 13, color: t.textSec }}>
-          {tStr(lang, 'keptPct', { pct: pctSaved })}
-        </Text>
-
-        <View style={{ flexDirection: 'row', gap: 12, marginTop: 22 }}>
-          <MiniStat label={tStr(lang, 'income')} amount={income} kind="income" t={t} currency={s.prefs.currency} />
-          <MiniStat label={tStr(lang, 'expenses')} amount={expense} kind="expense" t={t} currency={s.prefs.currency} />
-        </View>
-
-        <View style={{ marginTop: 18 }}>
-          <View
-            style={{
-              height: 8,
-              borderRadius: 4,
-              backgroundColor: t.expenseSoft,
-              overflow: 'hidden',
-              flexDirection: 'row',
-            }}
-          >
-            <View
-              style={{
-                width: `${income + expense > 0 ? (income / (income + expense)) * 100 : 50}%`,
-                backgroundColor: t.income,
-                height: '100%',
-              }}
-            />
-          </View>
-        </View>
-      </Card>
-    );
-  };
-
   return (
     <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 160 }}>
       <View
@@ -259,6 +108,26 @@ export const HomeScreen: React.FC<Props> = ({ t, onNav, onAdd, onOpenTx }) => {
             t={t}
             badge={unreadNotifs}
           />
+          {Platform.OS === 'ios' ? (
+            <Pressable
+              onPress={() => onAdd('expense')}
+              style={({ pressed }) => ({
+                width: 40,
+                height: 40,
+                borderRadius: 20,
+                backgroundColor: t.accent,
+                alignItems: 'center',
+                justifyContent: 'center',
+                shadowColor: t.accent,
+                shadowOpacity: 0.3,
+                shadowRadius: 10,
+                shadowOffset: { width: 0, height: 4 },
+                transform: [{ scale: pressed ? 0.94 : 1 }],
+              })}
+            >
+              <Icon name="plus" size={20} color="#fff" stroke={2.5} />
+            </Pressable>
+          ) : null}
         </View>
       </View>
 
@@ -296,7 +165,21 @@ export const HomeScreen: React.FC<Props> = ({ t, onNav, onAdd, onOpenTx }) => {
         })}
       </ScrollView>
 
-      <View style={{ paddingHorizontal: 20, paddingBottom: 12 }}>{heroCard()}</View>
+      <View style={{ paddingHorizontal: 20, paddingBottom: 12 }}>
+        <HeroCard
+          variant={variant}
+          t={t}
+          totalBalance={totalBalance}
+          hideBalance={hideBalance}
+          currency={s.prefs.currency}
+          wallets={s.wallets}
+          lang={lang}
+          pctSaved={pctSaved}
+          net={net}
+          income={income}
+          expense={expense}
+        />
+      </View>
 
       <View
         style={{
@@ -374,9 +257,8 @@ export const HomeScreen: React.FC<Props> = ({ t, onNav, onAdd, onOpenTx }) => {
         {s.wallets
           .filter((w) => !w.hidden)
           .map((w) => (
-            <Pressable
+            <View
               key={w.id}
-              onPress={() => onNav('wallets')}
               style={{
                 width: 150,
                 padding: 14,
@@ -405,7 +287,7 @@ export const HomeScreen: React.FC<Props> = ({ t, onNav, onAdd, onOpenTx }) => {
               <Text style={{ fontSize: 15, fontWeight: '700', color: t.text, letterSpacing: -0.3 }}>
                 {fmtMoney(w.balance, s.prefs.currency)}
               </Text>
-            </Pressable>
+            </View>
           ))}
       </ScrollView>
 
@@ -533,7 +415,10 @@ export const HomeScreen: React.FC<Props> = ({ t, onNav, onAdd, onOpenTx }) => {
           </Card>
         ) : (
           <Card t={t} style={{ paddingHorizontal: 16, paddingVertical: 4 }}>
-            {monthData.tx.slice(0, 6).map((tx, i, arr) => (
+            {[...monthData.tx]
+              .sort((a, b) => b.date.localeCompare(a.date) || (b.time ?? '').localeCompare(a.time ?? ''))
+              .slice(0, 6)
+              .map((tx, i, arr) => (
               <TxRow
                 key={tx.id}
                 tx={tx}
@@ -549,7 +434,184 @@ export const HomeScreen: React.FC<Props> = ({ t, onNav, onAdd, onOpenTx }) => {
   );
 };
 
-const HIDDEN_MASK = '✵✵✵✵✵';
+type HeroCardProps = {
+  variant: 'net' | 'balance';
+  t: Tokens;
+  totalBalance: number;
+  hideBalance: boolean;
+  currency: Currency;
+  wallets: Wallet[];
+  lang: Lang;
+  pctSaved: number;
+  net: number;
+  income: number;
+  expense: number;
+};
+
+const HeroCard = memo(function HeroCard({
+  variant,
+  t,
+  totalBalance,
+  hideBalance,
+  currency,
+  wallets,
+  lang,
+  pctSaved,
+  net,
+  income,
+  expense,
+}: HeroCardProps) {
+  if (variant === 'balance') {
+    return (
+      <Card t={t} style={{ padding: 24, overflow: 'hidden' }}>
+        <View
+          style={{
+            position: 'absolute',
+            top: -40,
+            right: -40,
+            width: 160,
+            height: 160,
+            borderRadius: 80,
+            backgroundColor: t.accentSoft,
+          }}
+        />
+        <Text
+          style={{
+            fontSize: 12.5,
+            color: t.textSec,
+            fontWeight: '600',
+            letterSpacing: 0.4,
+            marginBottom: 8,
+          }}
+        >
+          TOTAL BALANCE
+        </Text>
+        <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 8, marginBottom: 6 }}>
+          <BlurMoney
+            value={fmtMoney(totalBalance, currency)}
+            hidden={hideBalance}
+            color={t.text}
+          />
+          {!hideBalance && unitOf(currency) ? (
+            <Text style={{ fontSize: 14, color: t.textSec, fontWeight: '500' }}>
+              {unitOf(currency)}
+            </Text>
+          ) : null}
+        </View>
+        <View style={{ flexDirection: 'row', gap: 8, marginTop: 14 }}>
+          {wallets
+            .filter((w) => !w.hidden)
+            .map((w) => (
+              <View
+                key={w.id}
+                style={{
+                  flex: 1,
+                  padding: 10,
+                  borderRadius: 12,
+                  backgroundColor: w.color + '14',
+                  borderWidth: 1,
+                  borderColor: w.color + '22',
+                }}
+              >
+                <View
+                  style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 }}
+                >
+                  <Icon name={w.icon as IconName} size={13} color={w.color} />
+                  <Text style={{ fontSize: 10.5, color: t.textSec, fontWeight: '600' }}>
+                    {walletName(w, lang)}
+                  </Text>
+                </View>
+                <Text style={{ fontSize: 13, fontWeight: '700', color: t.text }}>
+                  {fmtMoney(w.balance, currency)}
+                </Text>
+              </View>
+            ))}
+        </View>
+      </Card>
+    );
+  }
+  return (
+    <Card t={t} style={{ padding: 24, overflow: 'hidden' }}>
+      <View
+        style={{
+          position: 'absolute',
+          top: -40,
+          right: -40,
+          width: 160,
+          height: 160,
+          borderRadius: 80,
+          backgroundColor: t.accentSoft,
+        }}
+      />
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+        <Text
+          style={{
+            fontSize: 12.5,
+            color: t.textSec,
+            fontWeight: '600',
+            letterSpacing: 0.4,
+          }}
+        >
+          {tStr(lang, 'netThisMonth')}
+        </Text>
+        {pctSaved > 0 ? (
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 3,
+              paddingVertical: 2,
+              paddingHorizontal: 7,
+              borderRadius: 6,
+              backgroundColor: t.incomeSoft,
+            }}
+          >
+            <Icon name="arrow-up" size={10} color={t.income} stroke={2.5} />
+            <Text style={{ color: t.income, fontSize: 11, fontWeight: '600' }}>{pctSaved}%</Text>
+          </View>
+        ) : null}
+      </View>
+      <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 8, marginBottom: 4 }}>
+        <BlurMoney value={fmtMoney(net, currency)} hidden={hideBalance} color={t.text} />
+        {!hideBalance && unitOf(currency) ? (
+          <Text style={{ fontSize: 14, color: t.textSec, fontWeight: '500' }}>
+            {unitOf(currency)}
+          </Text>
+        ) : null}
+      </View>
+      <Text style={{ fontSize: 13, color: t.textSec }}>
+        {tStr(lang, 'keptPct', { pct: pctSaved })}
+      </Text>
+
+      <View style={{ flexDirection: 'row', gap: 12, marginTop: 22 }}>
+        <MiniStat label={tStr(lang, 'income')} amount={income} kind="income" t={t} currency={currency} />
+        <MiniStat label={tStr(lang, 'expenses')} amount={expense} kind="expense" t={t} currency={currency} />
+      </View>
+
+      <View style={{ marginTop: 18 }}>
+        <View
+          style={{
+            height: 8,
+            borderRadius: 4,
+            backgroundColor: t.expenseSoft,
+            overflow: 'hidden',
+            flexDirection: 'row',
+          }}
+        >
+          <View
+            style={{
+              width: `${income + expense > 0 ? (income / (income + expense)) * 100 : 50}%`,
+              backgroundColor: t.income,
+              height: '100%',
+            }}
+          />
+        </View>
+      </View>
+    </Card>
+  );
+});
+
+const HIDDEN_MASK = '*****';
 
 const BlurMoney: React.FC<{ value: string; hidden: boolean; color: string }> = ({
   value,
@@ -565,9 +627,7 @@ const BlurMoney: React.FC<{ value: string; hidden: boolean; color: string }> = (
   };
   if (hidden) {
     return (
-      <Text style={{ ...base, fontSize: 20, letterSpacing: 2 }}>
-        {HIDDEN_MASK}
-      </Text>
+      <Text style={{ ...base, fontSize: 36, letterSpacing: 3 }}>{HIDDEN_MASK}</Text>
     );
   }
   return <Text style={base}>{value}</Text>;

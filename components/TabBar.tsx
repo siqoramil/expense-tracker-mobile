@@ -1,10 +1,51 @@
-import React from 'react';
-import { Animated, Easing, Pressable, StyleSheet, View, useWindowDimensions } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import {
+  Animated,
+  Easing,
+  type LayoutChangeEvent,
+  Platform,
+  Pressable,
+  type StyleProp,
+  StyleSheet,
+  View,
+  type ViewStyle,
+  useWindowDimensions,
+} from 'react-native';
+import Reanimated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
 import type { Lang } from '../lib/i18n';
 import type { Tokens } from '../lib/tokens';
 import { Icon, type IconName } from './Icon';
+
+// Liquid Glass (iOS 26+) is optional — probe lazily so a missing native module
+// or older OS never throws. The active-tab pill renders as real Liquid Glass
+// where available and falls back to a translucent accent pill everywhere else
+// (Android, older iOS), so the sliding selection works on every platform.
+type GlassMod = {
+  GlassView: React.ComponentType<{
+    glassEffectStyle?: 'clear' | 'regular' | 'none';
+    tintColor?: string;
+    isInteractive?: boolean;
+    colorScheme?: 'auto' | 'light' | 'dark';
+    style?: StyleProp<ViewStyle>;
+    children?: React.ReactNode;
+  }>;
+  GlassContainer: React.ComponentType<{
+    spacing?: number;
+    style?: StyleProp<ViewStyle>;
+    children?: React.ReactNode;
+  }>;
+  isLiquidGlassAvailable?: () => boolean;
+};
+let glassMod: GlassMod | null = null;
+try {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  glassMod = require('expo-glass-effect') as GlassMod;
+} catch {
+  glassMod = null;
+}
+const HAS_LIQUID_GLASS = Boolean(glassMod?.GlassView && glassMod.isLiquidGlassAvailable?.());
 
 export type TabKey = 'home' | 'stats' | 'debtors' | 'profile';
 
@@ -54,8 +95,62 @@ export const TabBar: React.FC<{
   ];
   // With the system nav bar hidden (immersive), insets.bottom collapses toward
   // 0 and the bar would sit flush to the screen edge — keep a floor so it stays
-  // lifted on both gesture-nav and immersive devices.
-  const bottomPad = Math.max(insets.bottom, 18);
+  // lifted on both gesture-nav and immersive devices. On iOS the home-indicator
+  // inset lifts the bar higher than desired, so trim it to sit lower.
+  const bottomPad =
+    Platform.OS === 'ios' ? Math.max(insets.bottom - 22, 4) : Math.max(insets.bottom, 18);
+
+  // Liquid-glass selection pill: tracks the active tab's measured frame and
+  // springs between tabs for the fluid iOS morph. Positions are measured via
+  // onLayout so the FAB notch / variable tab widths never need hardcoding.
+  const PILL_H = 40;
+  const PILL_INSET = 8;
+  const layouts = useRef<Partial<Record<TabKey, { x: number; w: number }>>>({});
+  const px = useSharedValue(0);
+  const pw = useSharedValue(0);
+  const ready = useSharedValue(0);
+
+  const moveTo = (k: TabKey, animate: boolean) => {
+    const l = layouts.current[k];
+    if (!l) return;
+    const targetX = l.x + PILL_INSET;
+    const targetW = Math.max(l.w - PILL_INSET * 2, 0);
+    if (animate && ready.value === 1) {
+      const spring = { damping: 18, stiffness: 200, mass: 0.6 };
+      px.value = withSpring(targetX, spring);
+      pw.value = withSpring(targetW, spring);
+    } else {
+      px.value = targetX;
+      pw.value = targetW;
+      ready.value = 1;
+    }
+  };
+
+  const onTabLayout = (k: TabKey, e: LayoutChangeEvent) => {
+    const { x, width } = e.nativeEvent.layout;
+    layouts.current[k] = { x, w: width };
+    if (k === active) moveTo(k, false);
+  };
+
+  useEffect(() => {
+    moveTo(active, true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [active]);
+
+  const pillStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: px.value }],
+    width: pw.value,
+    opacity: ready.value,
+  }));
+
+  const pillBase: ViewStyle = {
+    position: 'absolute',
+    top: (BAR_H - PILL_H) / 2,
+    left: 0,
+    height: PILL_H,
+    borderRadius: PILL_H / 2,
+    overflow: 'hidden',
+  };
 
   return (
     <View
@@ -68,30 +163,74 @@ export const TabBar: React.FC<{
         height: BAR_H,
       }}
     >
-      <View
-        style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          height: BAR_H,
-          shadowColor: '#000',
-          shadowOpacity: t.dark ? 0.45 : 0.14,
-          shadowRadius: 22,
-          shadowOffset: { width: 0, height: 10 },
-          elevation: 12,
-        }}
-      >
-        <Svg width={BAR_W} height={BAR_H} pointerEvents="none">
-          <Path
-            d={buildBarPath(BAR_W - 2, BAR_H - 2)}
-            transform="translate(1,1)"
-            fill={t.tabBg}
-            stroke={t.tabBorder}
-            strokeWidth={1}
-          />
-        </Svg>
-      </View>
+      {HAS_LIQUID_GLASS && glassMod ? (
+        <View
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            height: BAR_H,
+            borderRadius: BAR_H / 2,
+            shadowColor: '#000',
+            shadowOpacity: t.dark ? 0.4 : 0.12,
+            shadowRadius: 16,
+            shadowOffset: { width: 0, height: 8 },
+          }}
+        >
+          <glassMod.GlassContainer
+            style={[StyleSheet.absoluteFill, { borderRadius: BAR_H / 2 }]}
+            spacing={40}
+          >
+            <glassMod.GlassView
+              style={[StyleSheet.absoluteFill, { borderRadius: BAR_H / 2 }]}
+              glassEffectStyle="regular"
+              colorScheme={t.dark ? 'dark' : 'light'}
+            />
+            <Reanimated.View pointerEvents="none" style={[pillBase, pillStyle]}>
+              <glassMod.GlassView
+                style={[StyleSheet.absoluteFill, { borderRadius: PILL_H / 2 }]}
+                glassEffectStyle="clear"
+                tintColor={t.accent}
+                isInteractive
+                colorScheme={t.dark ? 'dark' : 'light'}
+              />
+            </Reanimated.View>
+          </glassMod.GlassContainer>
+        </View>
+      ) : (
+        <>
+          <View
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              height: BAR_H,
+              shadowColor: '#000',
+              shadowOpacity: t.dark ? 0.45 : 0.14,
+              shadowRadius: 22,
+              shadowOffset: { width: 0, height: 10 },
+              elevation: 12,
+            }}
+          >
+            <Svg width={BAR_W} height={BAR_H} pointerEvents="none">
+              <Path
+                d={buildBarPath(BAR_W - 2, BAR_H - 2)}
+                transform="translate(1,1)"
+                fill={t.tabBg}
+                stroke={t.tabBorder}
+                strokeWidth={1}
+              />
+            </Svg>
+          </View>
+          <Reanimated.View pointerEvents="none" style={[pillBase, pillStyle]}>
+            <View
+              style={[StyleSheet.absoluteFill, { backgroundColor: t.accentSoft }]}
+            />
+          </Reanimated.View>
+        </>
+      )}
 
       <View
         style={{
@@ -107,6 +246,7 @@ export const TabBar: React.FC<{
             tab={tab}
             active={active === tab.k}
             onPress={() => onChange(tab.k)}
+            onLayout={(e) => onTabLayout(tab.k, e)}
             t={t}
           />
         ))}
@@ -117,6 +257,7 @@ export const TabBar: React.FC<{
             tab={tab}
             active={active === tab.k}
             onPress={() => onChange(tab.k)}
+            onLayout={(e) => onTabLayout(tab.k, e)}
             t={t}
           />
         ))}
@@ -218,10 +359,12 @@ const TabItem: React.FC<{
   tab: { k: TabKey; icon: IconName; iconFill: IconName };
   active: boolean;
   onPress: () => void;
+  onLayout: (e: LayoutChangeEvent) => void;
   t: Tokens;
-}> = ({ tab, active, onPress, t }) => (
+}> = ({ tab, active, onPress, onLayout, t }) => (
   <Pressable
     onPress={onPress}
+    onLayout={onLayout}
     style={({ pressed }) => [
       {
         flex: 1,

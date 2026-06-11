@@ -1,0 +1,17 @@
+import { Stack } from 'expo-router';
+import { CategoriesScreen } from '../components/screens/CategoriesScreen';
+import { tStr } from '../lib/i18n';
+import { useStore } from '../lib/store';
+import { makeTokens } from '../lib/tokens';
+
+export default function CategoriesRoute() {
+  const s = useStore();
+  const t = makeTokens(s.prefs.dark);
+  const lang = s.prefs.lang;
+  return (
+    <>
+      <Stack.Screen options={{ title: tStr(lang, 'categoriesLabel') }} />
+      <CategoriesScreen t={t} />
+    </>
+  );
+}

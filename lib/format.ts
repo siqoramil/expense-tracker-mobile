@@ -11,12 +11,14 @@ type CurrencyMeta = {
   decimals: 0 | 2;
 };
 
+// rate is 1 for every currency: amounts are stored as entered and the currency
+// only changes the symbol/format (no conversion).
 export const CURRENCIES: Record<Currency, CurrencyMeta> = {
   UZS: { code: 'UZS', symbol: '', suffix: "so'm", flag: '🇺🇿', rate: 1, decimals: 0 },
-  USD: { code: 'USD', symbol: '$', flag: '🇺🇸', rate: 1 / 12500, decimals: 2 },
-  EUR: { code: 'EUR', symbol: '€', flag: '🇪🇺', rate: 1 / 13500, decimals: 2 },
-  GBP: { code: 'GBP', symbol: '£', flag: '🇬🇧', rate: 1 / 15800, decimals: 2 },
-  RUB: { code: 'RUB', symbol: '', suffix: '₽', flag: '🇷🇺', rate: 1 / 130, decimals: 0 },
+  USD: { code: 'USD', symbol: '$', flag: '🇺🇸', rate: 1, decimals: 2 },
+  EUR: { code: 'EUR', symbol: '€', flag: '🇪🇺', rate: 1, decimals: 2 },
+  GBP: { code: 'GBP', symbol: '£', flag: '🇬🇧', rate: 1, decimals: 2 },
+  RUB: { code: 'RUB', symbol: '', suffix: '₽', flag: '🇷🇺', rate: 1, decimals: 0 },
 };
 
 export const CURRENCY_LIST: CurrencyMeta[] = [

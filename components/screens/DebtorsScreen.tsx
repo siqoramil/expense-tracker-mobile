@@ -2,63 +2,70 @@ import React, { useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { AppTextInput } from '../AppTextInput';
 import { fmtDate, fmtMoney, today, unitOf, type Currency } from '../../lib/format';
-import { tStr } from '../../lib/i18n';
+import { tStr, type Lang } from '../../lib/i18n';
 import { useStore, type Debt } from '../../lib/store';
 import type { Tokens } from '../../lib/tokens';
 import { Icon } from '../Icon';
-import { Card, EmptyState, Press, ScreenHeader } from '../ui';
+import { Card, EmptyState } from '../ui';
 
 type Props = {
   t: Tokens;
   onOpen: (d: Debt) => void;
-  onAdd: () => void;
 };
 
 type Filter = 'all' | 'owe_me' | 'i_owe' | 'overdue' | 'due';
 
-export const DebtorsScreen: React.FC<Props> = ({ t, onOpen, onAdd }) => {
+export const DebtorsScreen: React.FC<Props> = ({ t, onOpen }) => {
   const s = useStore();
   const lang = s.prefs.lang;
   const [q, setQ] = useState('');
   const [filter, setFilter] = useState<Filter>('all');
 
-  const tdy = today();
-  const active = s.debts.filter((d) => !d.archived);
+  const tdyMs = useMemo(() => today().getTime(), []);
 
-  const oweMeTotal = active
-    .filter((d) => d.direction === 'owe_me')
-    .reduce((a, d) => a + (d.amount - d.paid), 0);
-  const iOweTotal = active
-    .filter((d) => d.direction === 'i_owe')
-    .reduce((a, d) => a + (d.amount - d.paid), 0);
-  const net = oweMeTotal - iOweTotal;
+  const { active, oweMeTotal, iOweTotal, net, overdueIds, dueIds, overdueCount, dueCount } =
+    useMemo(() => {
+      const active = s.debts.filter((d) => !d.archived);
+      const oweMeTotal = active
+        .filter((d) => d.direction === 'owe_me')
+        .reduce((a, d) => a + (d.amount - d.paid), 0);
+      const iOweTotal = active
+        .filter((d) => d.direction === 'i_owe')
+        .reduce((a, d) => a + (d.amount - d.paid), 0);
+      const net = oweMeTotal - iOweTotal;
+      const overdueIds = new Set<string>();
+      const dueIds = new Set<string>();
+      active.forEach((d) => {
+        const dueMs = new Date(d.due).getTime();
+        if (d.paid >= d.amount) return;
+        if (dueMs < tdyMs) overdueIds.add(d.id);
+        else if (dueMs - tdyMs < 7 * 86_400_000) dueIds.add(d.id);
+      });
+      return {
+        active,
+        oweMeTotal,
+        iOweTotal,
+        net,
+        overdueIds,
+        dueIds,
+        overdueCount: overdueIds.size,
+        dueCount: dueIds.size,
+      };
+    }, [s.debts, tdyMs]);
 
-  const tdyMs = tdy.getTime();
-  const { overdueIds, dueIds, overdueCount, dueCount } = useMemo(() => {
-    const overdueIds = new Set<string>();
-    const dueIds = new Set<string>();
-    active.forEach((d) => {
-      const dueMs = new Date(d.due).getTime();
-      if (d.paid >= d.amount) return;
-      if (dueMs < tdyMs) overdueIds.add(d.id);
-      else if (dueMs - tdyMs < 7 * 86_400_000) dueIds.add(d.id);
+  const filtered = useMemo(() => {
+    return active.filter((d) => {
+      if (q && !d.name.toLowerCase().includes(q.toLowerCase())) return false;
+      if (filter === 'owe_me' && d.direction !== 'owe_me') return false;
+      if (filter === 'i_owe' && d.direction !== 'i_owe') return false;
+      if (filter === 'overdue' && !overdueIds.has(d.id)) return false;
+      if (filter === 'due' && !dueIds.has(d.id)) return false;
+      return true;
     });
-    return { overdueIds, dueIds, overdueCount: overdueIds.size, dueCount: dueIds.size };
-    // active is derived from s.debts — listing s.debts is sufficient
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [s.debts, tdyMs]);
-
-  const filtered = active.filter((d) => {
-    if (q && !d.name.toLowerCase().includes(q.toLowerCase())) return false;
-    if (filter === 'owe_me' && d.direction !== 'owe_me') return false;
-    if (filter === 'i_owe' && d.direction !== 'i_owe') return false;
-    if (filter === 'overdue' && !overdueIds.has(d.id)) return false;
-    if (filter === 'due' && !dueIds.has(d.id)) return false;
-    return true;
-  });
+  }, [active, q, filter, overdueIds, dueIds]);
 
   const filters: { k: Filter; l: string; n?: number }[] = [
-    { k: 'all', l: lang === 'uz' ? 'Hammasi' : 'All', n: active.length },
+    { k: 'all', l: tStr(lang, 'allFilter'), n: active.length },
     { k: 'owe_me', l: tStr(lang, 'oweMe') },
     { k: 'i_owe', l: tStr(lang, 'iOwe') },
     { k: 'overdue', l: tStr(lang, 'overdue'), n: overdueCount },
@@ -67,27 +74,6 @@ export const DebtorsScreen: React.FC<Props> = ({ t, onOpen, onAdd }) => {
 
   return (
     <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 160 }}>
-      <ScreenHeader
-        t={t}
-        title={tStr(lang, 'debtors')}
-        subtitle={`${filtered.length} ${lang === 'uz' ? 'yozuv' : 'records'}`}
-        trailing={
-          <Press
-            onPress={onAdd}
-            style={{
-              width: 40,
-              height: 40,
-              borderRadius: 20,
-              backgroundColor: t.accent,
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <Icon name="plus" size={18} color="#fff" stroke={2.5} />
-          </Press>
-        }
-      />
-
       <View style={{ paddingHorizontal: 20, paddingBottom: 16 }}>
         <Card t={t} style={{ padding: 0, overflow: 'hidden' }}>
           <View style={{ flexDirection: 'row' }}>
@@ -130,7 +116,7 @@ export const DebtorsScreen: React.FC<Props> = ({ t, onOpen, onAdd }) => {
             }}
           >
             <Text style={{ fontSize: 12, fontWeight: '600', color: t.textSec, letterSpacing: 0.4 }}>
-              {(lang === 'uz' ? 'SOF BALANS' : 'NET BALANCE').toUpperCase()}
+              {tStr(lang, 'netBalance').toUpperCase()}
             </Text>
             <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 4 }}>
               <Text
@@ -172,7 +158,7 @@ export const DebtorsScreen: React.FC<Props> = ({ t, onOpen, onAdd }) => {
           <AppTextInput
             value={q}
             onChangeText={setQ}
-            placeholder={lang === 'uz' ? 'Ism bo‘yicha qidirish…' : 'Search name...'}
+            placeholder={tStr(lang, 'searchByName')}
             placeholderTextColor={t.textTer}
             style={{
               paddingVertical: 12,
@@ -260,7 +246,16 @@ export const DebtorsScreen: React.FC<Props> = ({ t, onOpen, onAdd }) => {
             />
           </Card>
         ) : (
-          filtered.map((d) => <DebtorCard key={d.id} debtor={d} t={t} onPress={() => onOpen(d)} />)
+          filtered.map((d) => (
+            <DebtorCard
+              key={d.id}
+              debtor={d}
+              t={t}
+              currency={s.prefs.currency}
+              lang={lang}
+              onPress={() => onOpen(d)}
+            />
+          ))
         )}
       </View>
     </ScrollView>
@@ -339,13 +334,13 @@ const BalanceCol: React.FC<{
   );
 };
 
-const DebtorCard: React.FC<{ debtor: Debt; t: Tokens; onPress: () => void }> = ({
-  debtor,
-  t,
-  onPress,
-}) => {
-  const s = useStore();
-  const lang = s.prefs.lang;
+const DebtorCard: React.FC<{
+  debtor: Debt;
+  t: Tokens;
+  currency: Currency;
+  lang: Lang;
+  onPress: () => void;
+}> = ({ debtor, t, currency, lang, onPress }) => {
   const overdue = new Date(debtor.due).getTime() < today().getTime() && debtor.paid < debtor.amount;
   const remaining = debtor.amount - debtor.paid;
   const isOweMe = debtor.direction === 'owe_me';
@@ -431,10 +426,13 @@ const DebtorCard: React.FC<{ debtor: Debt; t: Tokens; onPress: () => void }> = (
           ) : null}
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3, marginTop: 1 }}>
             <Icon name="calendar" size={10} color={t.textTer} stroke={2} />
-            <Text style={{ fontSize: 11, color: t.textTer }}>{fmtDate(debtor.due, lang)}</Text>
+            <Text style={{ fontSize: 11, color: t.textTer }}>
+              {fmtDate(debtor.due, lang)}
+              {debtor.dueTime ? ` · ${debtor.dueTime}` : ''}
+            </Text>
             {debtor.paid > 0 ? (
               <Text style={{ fontSize: 11, color: t.income, marginLeft: 6 }}>
-                · {fmtMoney(debtor.paid, s.prefs.currency)} {tStr(lang, 'paid').toLowerCase()}
+                {'· '}{fmtMoney(debtor.paid, currency)} {tStr(lang, 'paid').toLowerCase()}
               </Text>
             ) : null}
           </View>
@@ -463,10 +461,10 @@ const DebtorCard: React.FC<{ debtor: Debt; t: Tokens; onPress: () => void }> = (
           </View>
           <Text style={{ fontSize: 15, fontWeight: '700', color: t.text }}>
             {isOweMe ? '+' : '−'}
-            {fmtMoney(remaining, s.prefs.currency)}
+            {fmtMoney(remaining, currency)}
           </Text>
           <Text style={{ fontSize: 10, color: t.textSec, marginTop: 2 }}>
-            {unitOf(s.prefs.currency)}
+            {unitOf(currency)}
           </Text>
         </View>
       </View>

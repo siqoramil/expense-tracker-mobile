@@ -1,3 +1,4 @@
+import { router } from 'expo-router';
 import React from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { fmtDate, fmtMoney, unitOf } from '../../lib/format';
@@ -6,16 +7,15 @@ import { actions, catLabel, useStore, walletName, type Transaction } from '../..
 import { toast } from '../../lib/toast';
 import type { Tokens } from '../../lib/tokens';
 import { Icon } from '../Icon';
-import { Card, DetailRow, ScreenHeader } from '../ui';
+import { Card, DetailRow } from '../ui';
 
 type Props = {
   t: Tokens;
   tx: Transaction;
-  onBack: () => void;
   onEdit: (tx: Transaction) => void;
 };
 
-export const TxDetail: React.FC<Props> = ({ t, tx, onBack, onEdit }) => {
+export const TxDetail: React.FC<Props> = ({ t, tx, onEdit }) => {
   const s = useStore();
   const lang = s.prefs.lang;
   const cat = s.categories.find((c) => c.id === tx.cat);
@@ -24,7 +24,6 @@ export const TxDetail: React.FC<Props> = ({ t, tx, onBack, onEdit }) => {
 
   return (
     <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 120 }}>
-      <ScreenHeader t={t} title={tStr(lang, 'transactionDetail')} onBack={onBack} />
       <View style={{ paddingHorizontal: 20, paddingBottom: 18, alignItems: 'center' }}>
         <Text
           style={{
@@ -87,9 +86,9 @@ export const TxDetail: React.FC<Props> = ({ t, tx, onBack, onEdit }) => {
         </Pressable>
         <Pressable
           onPress={() => {
+            router.back();
             actions.deleteTx(tx.id);
             toast(tStr(lang, 'deleted'));
-            onBack();
           }}
           style={{
             flex: 1,

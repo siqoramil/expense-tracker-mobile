@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { SectionList, StyleSheet, Text, View } from 'react-native';
 import { AppTextInput } from '../AppTextInput';
 import { fmtDate } from '../../lib/format';
@@ -6,15 +6,14 @@ import { tStr } from '../../lib/i18n';
 import { catLabel, useStore, type Transaction } from '../../lib/store';
 import type { Tokens } from '../../lib/tokens';
 import { Icon } from '../Icon';
-import { Card, EmptyState, ScreenHeader, SegmentedControl, TxRow } from '../ui';
+import { Card, EmptyState, SegmentedControl, TxRow } from '../ui';
 
 type Filter = 'all' | 'income' | 'expense';
 
 export const AllTxScreen: React.FC<{
   t: Tokens;
-  onBack: () => void;
   onOpenTx: (tx: Transaction) => void;
-}> = ({ t, onBack, onOpenTx }) => {
+}> = ({ t, onOpenTx }) => {
   const s = useStore();
   const lang = s.prefs.lang;
   const [q, setQ] = useState('');
@@ -45,6 +44,9 @@ export const AllTxScreen: React.FC<{
       (groups[x.date] = groups[x.date] || []).push(x);
     });
     const sortedDates = Object.keys(groups).sort((a, b) => b.localeCompare(a));
+    sortedDates.forEach((date) => {
+      groups[date].sort((a, b) => (b.time ?? '').localeCompare(a.time ?? ''));
+    });
     return { groups, sortedDates };
   }, [s.tx, catById, lang, q, filter]);
 
@@ -53,9 +55,43 @@ export const AllTxScreen: React.FC<{
     [sortedDates, groups],
   );
 
+  const renderItem = useCallback(
+    ({ item: tx, index: i, section }: { item: Transaction; index: number; section: { data: Transaction[] } }) => {
+      const isFirst = i === 0;
+      const isLast = i === section.data.length - 1;
+      return (
+        <View style={{ paddingHorizontal: 20, marginBottom: isLast ? 14 : 0 }}>
+          <View
+            style={{
+              backgroundColor: t.surface,
+              borderLeftWidth: StyleSheet.hairlineWidth,
+              borderRightWidth: StyleSheet.hairlineWidth,
+              borderTopWidth: isFirst ? StyleSheet.hairlineWidth : 0,
+              borderBottomWidth: isLast ? StyleSheet.hairlineWidth : 0,
+              borderColor: t.border,
+              borderTopLeftRadius: isFirst ? 20 : 0,
+              borderTopRightRadius: isFirst ? 20 : 0,
+              borderBottomLeftRadius: isLast ? 20 : 0,
+              borderBottomRightRadius: isLast ? 20 : 0,
+              paddingHorizontal: 16,
+              paddingVertical: 4,
+            }}
+          >
+            <TxRow
+              tx={tx}
+              t={t}
+              last={isLast}
+              onPress={() => onOpenTx(tx)}
+            />
+          </View>
+        </View>
+      );
+    },
+    [t, onOpenTx],
+  );
+
   const listHeader = (
     <>
-      <ScreenHeader t={t} title={tStr(lang, 'allTransactions')} onBack={onBack} />
       <View style={{ paddingHorizontal: 20, paddingBottom: 12 }}>
         <View style={{ position: 'relative', marginBottom: 10 }}>
           <View
@@ -138,37 +174,7 @@ export const AllTxScreen: React.FC<{
           </Text>
         </View>
       )}
-      renderItem={({ item: tx, index: i, section }) => {
-        const isFirst = i === 0;
-        const isLast = i === section.data.length - 1;
-        return (
-          <View style={{ paddingHorizontal: 20, marginBottom: isLast ? 14 : 0 }}>
-            <View
-              style={{
-                backgroundColor: t.surface,
-                borderLeftWidth: StyleSheet.hairlineWidth,
-                borderRightWidth: StyleSheet.hairlineWidth,
-                borderTopWidth: isFirst ? StyleSheet.hairlineWidth : 0,
-                borderBottomWidth: isLast ? StyleSheet.hairlineWidth : 0,
-                borderColor: t.border,
-                borderTopLeftRadius: isFirst ? 20 : 0,
-                borderTopRightRadius: isFirst ? 20 : 0,
-                borderBottomLeftRadius: isLast ? 20 : 0,
-                borderBottomRightRadius: isLast ? 20 : 0,
-                paddingHorizontal: 16,
-                paddingVertical: 4,
-              }}
-            >
-              <TxRow
-                tx={tx}
-                t={t}
-                last={isLast}
-                onPress={() => onOpenTx(tx)}
-              />
-            </View>
-          </View>
-        );
-      }}
+      renderItem={renderItem}
     />
   );
 };

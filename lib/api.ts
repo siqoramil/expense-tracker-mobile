@@ -211,12 +211,12 @@ export const authApi = {
       skipAuthRefresh: true,
     }),
   verifyResetCode: (body: { email: string; code: string }) =>
-    apiRequest<{ ok: true }>('/auth/password/verify-code', {
+    apiRequest<{ ok: true; verifiedToken: string }>('/auth/password/verify-code', {
       method: 'POST',
       body,
       skipAuthRefresh: true,
     }),
-  resetPassword: (body: { email: string; code: string; newPassword: string }) =>
+  resetPassword: (body: { email: string; code: string; newPassword: string; verifiedToken: string }) =>
     apiRequest<{ token: string; user: UserDTO }>('/auth/password/reset', {
       method: 'POST',
       body,

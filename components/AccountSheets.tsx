@@ -1,6 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
-import { KeyboardAwareScrollView, KeyboardProvider } from 'react-native-keyboard-controller';
+import {
+  KeyboardAwareScrollView,
+  KeyboardProvider,
+  KeyboardStickyView,
+} from 'react-native-keyboard-controller';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppTextInput } from './AppTextInput';
 import { errorMessage } from '../lib/errors';
 import { isGoogleAuthAvailable, signInWithGoogle } from '../lib/googleAuth';
@@ -19,77 +24,99 @@ const SheetContainer: React.FC<{
   onClose: () => void;
   title: string;
   children: React.ReactNode;
-}> = ({ t, visible, onClose, title, children }) => (
-  <Modal
-    visible={visible}
-    transparent
-    animationType="slide"
-    statusBarTranslucent
-    onRequestClose={onClose}
-  >
-    <KeyboardProvider statusBarTranslucent navigationBarTranslucent>
-      <ModalBackdrop>
-        <Pressable onPress={onClose} style={{ flex: 1, justifyContent: 'flex-end' }}>
-          <Pressable
-            onPress={() => {}}
-            style={{
-              backgroundColor: t.sheetBg,
-              borderTopLeftRadius: 28,
-              borderTopRightRadius: 28,
-              paddingHorizontal: 22,
-              paddingTop: 12,
-              paddingBottom: 34,
-              maxHeight: '90%',
-            }}
-          >
-            <View
+  footer?: React.ReactNode;
+}> = ({ t, visible, onClose, title, children, footer }) => {
+  const insets = useSafeAreaInsets();
+  return (
+    <Modal
+      visible={visible}
+      transparent
+      animationType="slide"
+      statusBarTranslucent
+      onRequestClose={onClose}
+    >
+      <KeyboardProvider statusBarTranslucent navigationBarTranslucent>
+        <ModalBackdrop>
+          <Pressable onPress={onClose} style={{ flex: 1, justifyContent: 'flex-end' }}>
+            <Pressable
+              onPress={() => {}}
               style={{
-                width: 40,
-                height: 4,
-                borderRadius: 2,
-                backgroundColor: t.borderStrong,
-                alignSelf: 'center',
-                marginBottom: 14,
-              }}
-            />
-            <View
-              style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                marginBottom: 18,
+                backgroundColor: t.sheetBg,
+                borderTopLeftRadius: 28,
+                borderTopRightRadius: 28,
+                paddingHorizontal: 22,
+                paddingTop: 12,
+                maxHeight: '90%',
               }}
             >
-              <Text style={{ fontSize: 20, fontWeight: '700', color: t.text, letterSpacing: -0.4 }}>
-                {title}
-              </Text>
-              <Pressable
-                onPress={onClose}
+              <View
                 style={{
-                  width: 34,
-                  height: 34,
-                  borderRadius: 17,
-                  backgroundColor: t.surfaceAlt,
+                  width: 40,
+                  height: 4,
+                  borderRadius: 2,
+                  backgroundColor: t.borderStrong,
+                  alignSelf: 'center',
+                  marginBottom: 14,
+                }}
+              />
+              <View
+                style={{
+                  flexDirection: 'row',
                   alignItems: 'center',
-                  justifyContent: 'center',
+                  justifyContent: 'space-between',
+                  marginBottom: 18,
                 }}
               >
-                <Icon name="close" size={16} color={t.textSec} stroke={2.2} />
-              </Pressable>
-            </View>
-            <KeyboardAwareScrollView
-              bottomOffset={24}
-              keyboardShouldPersistTaps="handled"
-              showsVerticalScrollIndicator={false}
-            >
-              {children}
-            </KeyboardAwareScrollView>
+                <Text
+                  style={{ fontSize: 20, fontWeight: '700', color: t.text, letterSpacing: -0.4 }}
+                >
+                  {title}
+                </Text>
+                <Pressable
+                  onPress={onClose}
+                  style={{
+                    width: 34,
+                    height: 34,
+                    borderRadius: 17,
+                    backgroundColor: t.surfaceAlt,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <Icon name="close" size={16} color={t.textSec} stroke={2.2} />
+                </Pressable>
+              </View>
+              <KeyboardAwareScrollView
+                bottomOffset={80}
+                keyboardShouldPersistTaps="handled"
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={{ paddingBottom: 8 }}
+              >
+                {children}
+              </KeyboardAwareScrollView>
+              {footer ? (
+                <KeyboardStickyView
+                  offset={{ opened: 16 }}
+                  style={{
+                    paddingTop: 12,
+                    paddingBottom: Math.max(insets.bottom, 16),
+                    borderTopWidth: StyleSheet.hairlineWidth,
+                    borderTopColor: t.divider,
+                    backgroundColor: t.sheetBg,
+                  }}
+                >
+                  {footer}
+                </KeyboardStickyView>
+              ) : (
+                <View style={{ height: Math.max(insets.bottom, 16) }} />
+              )}
+            </Pressable>
           </Pressable>
-        </Pressable>
-      </ModalBackdrop>
-    </KeyboardProvider>
-  </Modal>
-);
+        </ModalBackdrop>
+      </KeyboardProvider>
+    </Modal>
+  );
+};
 
 const fieldLabel = (t: Tokens, label: string) => (
   <Text
@@ -116,7 +143,7 @@ const inputStyle = (t: Tokens) => ({
   fontSize: 15,
 });
 
-const primaryBtn = (t: Tokens, label: string, onPress: () => void, busy = false) => (
+const primaryBtn = (t: Tokens, label: string, onPress: () => void, busy = false, mt = 0) => (
   <Pressable
     onPress={busy ? undefined : onPress}
     style={{
@@ -125,7 +152,7 @@ const primaryBtn = (t: Tokens, label: string, onPress: () => void, busy = false)
       backgroundColor: t.accent,
       alignItems: 'center',
       justifyContent: 'center',
-      marginTop: 16,
+      marginTop: mt,
       opacity: busy ? 0.7 : 1,
       shadowColor: t.accent,
       shadowOpacity: 0.3,
@@ -186,6 +213,7 @@ export const EditNameSheet: React.FC<SheetProps> = ({ t, visible, onClose }) => 
       visible={visible}
       onClose={onClose}
       title={tStr(lang, 'editName')}
+      footer={primaryBtn(t, tStr(lang, 'save'), submit, busy)}
     >
       {fieldLabel(t, tStr(lang, 'name'))}
       <AppTextInput
@@ -198,7 +226,6 @@ export const EditNameSheet: React.FC<SheetProps> = ({ t, visible, onClose }) => 
         style={inputStyle(t)}
       />
       {errorText(t, err)}
-      {primaryBtn(t, tStr(lang, 'save'), submit, busy)}
     </SheetContainer>
   );
 };
@@ -250,12 +277,27 @@ export const EditEmailSheet: React.FC<SheetProps> = ({ t, visible, onClose }) =>
     }
   };
 
+  const emailFooter =
+    step === 1 ? (
+      primaryBtn(t, tStr(lang, 'sendCode'), requestCode, busy)
+    ) : (
+      <View>
+        {primaryBtn(t, tStr(lang, 'verify'), verify, busy)}
+        <Pressable onPress={() => setStep(1)} style={{ alignItems: 'center', marginTop: 12 }}>
+          <Text style={{ color: t.accent, fontSize: 14, fontWeight: '600' }}>
+            {tStr(lang, 'useDifferentEmail')}
+          </Text>
+        </Pressable>
+      </View>
+    );
+
   return (
     <SheetContainer
       t={t}
       visible={visible}
       onClose={onClose}
       title={tStr(lang, 'editEmail')}
+      footer={emailFooter}
     >
       {step === 1 ? (
         <>
@@ -282,7 +324,6 @@ export const EditEmailSheet: React.FC<SheetProps> = ({ t, visible, onClose }) =>
             style={inputStyle(t)}
           />
           {errorText(t, err)}
-          {primaryBtn(t, tStr(lang, 'sendCode'), requestCode, busy)}
         </>
       ) : (
         <>
@@ -311,12 +352,6 @@ export const EditEmailSheet: React.FC<SheetProps> = ({ t, visible, onClose }) =>
             ]}
           />
           {errorText(t, err)}
-          {primaryBtn(t, tStr(lang, 'verify'), verify, busy)}
-          <Pressable onPress={() => setStep(1)} style={{ alignItems: 'center', marginTop: 12 }}>
-            <Text style={{ color: t.accent, fontSize: 14, fontWeight: '600' }}>
-              {tStr(lang, 'useDifferentEmail')}
-            </Text>
-          </Pressable>
         </>
       )}
     </SheetContainer>
@@ -331,6 +366,7 @@ export const ForgotPasswordSheet: React.FC<SheetProps> = ({ t, visible, onClose 
   const [code, setCode] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [verifiedToken, setVerifiedToken] = useState('');
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
@@ -341,6 +377,7 @@ export const ForgotPasswordSheet: React.FC<SheetProps> = ({ t, visible, onClose 
       setCode('');
       setNewPassword('');
       setConfirmPassword('');
+      setVerifiedToken('');
       setBusy(false);
       setErr(null);
     }
@@ -375,7 +412,8 @@ export const ForgotPasswordSheet: React.FC<SheetProps> = ({ t, visible, onClose 
     }
     setBusy(true);
     try {
-      await actions.verifyResetCode(email, code);
+      const token = await actions.verifyResetCode(email, code);
+      setVerifiedToken(token);
       setStep(3);
     } catch (e) {
       setErr(extractError(e, lang));
@@ -396,7 +434,7 @@ export const ForgotPasswordSheet: React.FC<SheetProps> = ({ t, visible, onClose 
     }
     setBusy(true);
     try {
-      await actions.resetPassword(email, code, newPassword);
+      await actions.resetPassword(email, code, newPassword, verifiedToken);
       toast(tStr(lang, 'passwordReset'));
       onClose();
     } catch (e) {
@@ -413,8 +451,33 @@ export const ForgotPasswordSheet: React.FC<SheetProps> = ({ t, visible, onClose 
         ? tStr(lang, 'verifyCode')
         : tStr(lang, 'newPassword');
 
+  const forgotFooter =
+    step === 1 ? (
+      primaryBtn(t, tStr(lang, 'sendCode'), sendCode, busy)
+    ) : step === 2 ? (
+      <View>
+        {primaryBtn(t, tStr(lang, 'verify'), verifyCode, busy)}
+        <Pressable
+          onPress={() => !busy && setStep(1)}
+          style={{ alignItems: 'center', marginTop: 12 }}
+        >
+          <Text style={{ color: t.accent, fontSize: 14, fontWeight: '600' }}>
+            {tStr(lang, 'useDifferentEmail')}
+          </Text>
+        </Pressable>
+      </View>
+    ) : (
+      primaryBtn(t, tStr(lang, 'savePassword'), reset, busy)
+    );
+
   return (
-    <SheetContainer t={t} visible={visible} onClose={onClose} title={stepTitle}>
+    <SheetContainer
+      t={t}
+      visible={visible}
+      onClose={onClose}
+      title={stepTitle}
+      footer={forgotFooter}
+    >
       <StepIndicator t={t} step={step} />
 
       {step === 1 ? (
@@ -443,7 +506,6 @@ export const ForgotPasswordSheet: React.FC<SheetProps> = ({ t, visible, onClose 
             style={inputStyle(t)}
           />
           {errorText(t, err)}
-          {primaryBtn(t, tStr(lang, 'sendCode'), sendCode, busy)}
         </>
       ) : step === 2 ? (
         <>
@@ -472,15 +534,6 @@ export const ForgotPasswordSheet: React.FC<SheetProps> = ({ t, visible, onClose 
             ]}
           />
           {errorText(t, err)}
-          {primaryBtn(t, tStr(lang, 'verify'), verifyCode, busy)}
-          <Pressable
-            onPress={() => !busy && setStep(1)}
-            style={{ alignItems: 'center', marginTop: 12 }}
-          >
-            <Text style={{ color: t.accent, fontSize: 14, fontWeight: '600' }}>
-              {tStr(lang, 'useDifferentEmail')}
-            </Text>
-          </Pressable>
         </>
       ) : (
         <>
@@ -521,7 +574,6 @@ export const ForgotPasswordSheet: React.FC<SheetProps> = ({ t, visible, onClose 
             style={inputStyle(t)}
           />
           {errorText(t, err)}
-          {primaryBtn(t, tStr(lang, 'savePassword'), reset, busy)}
         </>
       )}
     </SheetContainer>
@@ -629,7 +681,6 @@ export const DeleteAccountSheet: React.FC<SheetProps & { onDeleted: () => void }
         backgroundColor: t.expense,
         alignItems: 'center',
         justifyContent: 'center',
-        marginTop: 16,
         opacity: busyState ? 0.7 : 1,
       }}
     >
@@ -643,8 +694,19 @@ export const DeleteAccountSheet: React.FC<SheetProps & { onDeleted: () => void }
     </Pressable>
   );
 
+  const deleteFooter =
+    step === 1
+      ? dangerBtn(tStr(lang, 'sendCode'), requestCode, busy)
+      : dangerBtn(tStr(lang, 'deleteAccount'), confirm, busy);
+
   return (
-    <SheetContainer t={t} visible={visible} onClose={onClose} title={tStr(lang, 'deleteAccount')}>
+    <SheetContainer
+      t={t}
+      visible={visible}
+      onClose={onClose}
+      title={tStr(lang, 'deleteAccount')}
+      footer={deleteFooter}
+    >
       {step === 1 ? (
         <>
           <Text
@@ -668,7 +730,6 @@ export const DeleteAccountSheet: React.FC<SheetProps & { onDeleted: () => void }
             {tStr(lang, 'deleteCodeHint', { email })}
           </Text>
           {errorText(t, err)}
-          {dangerBtn(tStr(lang, 'sendCode'), requestCode, busy)}
         </>
       ) : (
         <>
@@ -724,7 +785,6 @@ export const DeleteAccountSheet: React.FC<SheetProps & { onDeleted: () => void }
             </View>
           )}
           {errorText(t, err)}
-          {dangerBtn(tStr(lang, 'deleteAccount'), confirm, busy)}
         </>
       )}
     </SheetContainer>

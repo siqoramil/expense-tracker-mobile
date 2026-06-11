@@ -1,3 +1,4 @@
+import { router } from 'expo-router';
 import React, { useState } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { AppTextInput } from '../AppTextInput';
@@ -7,11 +8,11 @@ import { actions, useStore, type Debt } from '../../lib/store';
 import { toast } from '../../lib/toast';
 import type { Tokens } from '../../lib/tokens';
 import { Icon } from '../Icon';
-import { Card, EmptyState, ScreenHeader, SectionHeader } from '../ui';
+import { Card, EmptyState, SectionHeader } from '../ui';
 
-type Props = { t: Tokens; debtor: Debt; onBack: () => void };
+type Props = { t: Tokens; debtor: Debt };
 
-export const DebtorDetail: React.FC<Props> = ({ t, debtor, onBack }) => {
+export const DebtorDetail: React.FC<Props> = ({ t, debtor }) => {
   const s = useStore();
   const d = s.debts.find((x) => x.id === debtor.id) || debtor;
   const lang = s.prefs.lang;
@@ -36,19 +37,18 @@ export const DebtorDetail: React.FC<Props> = ({ t, debtor, onBack }) => {
   };
 
   const markPaid = () => {
+    router.back();
     actions.archiveDebt(d.id);
     toast(tStr(lang, 'paidOff'));
-    onBack();
   };
 
   return (
     <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 120 }}>
-      <ScreenHeader
-        t={t}
-        title={d.name}
-        subtitle={d.direction === 'owe_me' ? tStr(lang, 'oweMe') : tStr(lang, 'iOwe')}
-        onBack={onBack}
-      />
+      <View style={{ paddingHorizontal: 20, paddingTop: 8, paddingBottom: 4 }}>
+        <Text style={{ fontSize: 13, color: t.textSec, fontWeight: '500', letterSpacing: 0.2 }}>
+          {d.direction === 'owe_me' ? tStr(lang, 'oweMe') : tStr(lang, 'iOwe')}
+        </Text>
+      </View>
 
       <View style={{ paddingHorizontal: 20, paddingBottom: 18 }}>
         <Card
@@ -183,7 +183,7 @@ export const DebtorDetail: React.FC<Props> = ({ t, debtor, onBack }) => {
           <Card t={t}>
             <EmptyState
               icon="check"
-              title={lang === 'uz' ? 'Hali to‘lovlar yo‘q' : 'No payments yet'}
+              title={tStr(lang, 'noPaymentsYet')}
               t={t}
             />
           </Card>
@@ -195,8 +195,9 @@ export const DebtorDetail: React.FC<Props> = ({ t, debtor, onBack }) => {
         <Card t={t} style={{ padding: 16 }}>
           <Text style={{ fontSize: 13.5, color: t.text }}>{d.note || '—'}</Text>
           <Text style={{ fontSize: 11.5, color: t.textSec, marginTop: 6 }}>
-            {lang === 'uz' ? 'Boshlangan' : 'Created'}: {fmtDate(d.created, lang)} ·{' '}
-            {lang === 'uz' ? 'Muddati' : 'Due'}: {fmtDate(d.due, lang)}
+            {tStr(lang, 'createdLabel')}: {fmtDate(d.created, lang)} ·{' '}
+            {tStr(lang, 'dueLabel')}: {fmtDate(d.due, lang)}
+            {d.dueTime ? ` · ${d.dueTime}` : ''}
           </Text>
         </Card>
       </View>

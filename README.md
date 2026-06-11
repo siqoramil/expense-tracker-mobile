@@ -1,195 +1,320 @@
-# Expense Tracker — Mobile
+<div align="center">
 
-React Native / Expo client for the Expense Tracker app. Tracks income, expenses, wallets, debts, budgets, and recurring transactions, with a multilingual UI (uz / en / ru / es / fr / de) and Google sign-in.
+# 💸 ExTracker Mobile
 
-The production app talks to `https://expensetracker.ovrin.uz` (configured in `app.json` → `expo.extra.apiUrl`). Compatible with **server v1.1.0+**.
+### *Track every coin. Own your finances.*
 
-## Stack
+[![Expo](https://img.shields.io/badge/Expo-~54.0.34-000020?logo=expo&logoColor=white)](https://expo.dev)
+[![React Native](https://img.shields.io/badge/React%20Native-0.81.5-61DAFB?logo=react&logoColor=white)](https://reactnative.dev)
+[![TypeScript](https://img.shields.io/badge/TypeScript-~5.9.2-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
+[![expo-router](https://img.shields.io/badge/expo--router-~6.0.23-000020?logo=expo&logoColor=white)](https://expo.github.io/router)
+[![License](https://img.shields.io/badge/License-Private-red)](./package.json)
 
-- **Expo SDK 54** with `expo-router` (file-based navigation) and `expo-dev-client`
-- **React Native 0.81** + **React 19**
-- **TypeScript 5.9**
-- **react-native-reanimated 4** + **react-native-worklets** — animations
-- **i18next** + **react-i18next** — localization
-- **expo-auth-session** — Google OAuth (`useIdTokenAuthRequest`)
-- **expo-image-picker** — profile avatar
-- **AsyncStorage** — local persistence (auth token, prefs cache)
-- **react-native-svg** — icons / charts (Sparkline)
-- **EAS Build** — managed cloud builds (see `eas.json`)
+</div>
 
-## Requirements
+---
 
-- Node.js `>=20`
-- Yarn
-- Xcode (iOS) / Android Studio (Android) — required only for `expo run:*` and local prebuild
-- An [EAS](https://expo.dev) account — required for `eas build` (production / preview / dev client)
-- The [server](../server/README.md) running locally, **or** the deployed instance at `https://expensetracker.ovrin.uz`
+## ✨ Features
 
-## Setup
+- 💰 **Transactions** — add income and expenses with category, wallet, note, and date
+- 👛 **Wallets** — multiple wallets, each with its own balance, icon, and color
+- 🤝 **Debts & Lending** — track money you owe and money owed to you, with payment history
+- 📊 **Budgets** — per-category monthly spending caps with real-time progress
+- 🔁 **Recurring** — weekly/monthly repeating transactions with auto-scheduling
+- 🏷️ **Categories** — fully customizable income, expense, and subscription categories
+- 📅 **Calendar** — monthly heat-map view of daily income and expense activity
+- 📈 **Statistics** — 6-month bar chart, category breakdown, and income-vs-expense totals
+- 📋 **Reports** — detailed filtered transaction lists and export-ready summaries
+- 🔔 **Notifications** — overdue debt alerts, budget warnings, and upcoming bill reminders
+- 🌙 **Dark mode** — system-aware, toggleable, themed via `lib/tokens.ts`
+- 🍎 **Native iOS Liquid Glass tab bar** — uses `expo-router` unstable-native-tabs on iOS 26+ for Apple's real Liquid Glass material
+- 🤖 **Android custom FAB tab bar** — floating curved bar with SVG notch, animated Liquid Glass pill, and ripple-pulse FAB
+- 🔐 **Google Sign-In** — one-tap login/signup via `@react-native-google-signin/google-signin`
+- 📧 **Email + password auth** — with email-code password reset
+- 🌍 **6-language i18n** — English, Uzbek, Russian, German, French, Spanish
+- 🔒 **Hide balance** — banking-style toggle to mask all amounts across the app
+- ☁️ **Offline-first sync** — optimistic local writes, server sync per data type (wallets, categories, transactions, debts, budgets, recurring, notifications)
+
+---
+
+## 🧱 Tech Stack
+
+| Layer | Technology | Version |
+|---|---|---|
+| Framework | Expo (managed + dev client) | ~54.0.34 |
+| UI runtime | React Native | 0.81.5 |
+| Language | TypeScript | ~5.9.2 |
+| Navigation | expo-router (file-based) | ~6.0.23 |
+| State | Custom store with AsyncStorage | — |
+| Animations | react-native-reanimated + worklets | ~4.1.1 / 0.5.1 |
+| i18n | i18next + react-i18next | ^26.0.7 / ^17.0.4 |
+| Auth — Google | @react-native-google-signin/google-signin | ^16.1.2 |
+| Auth — OAuth helper | expo-auth-session | ~7.0.11 |
+| Secure token storage | expo-secure-store | ~15.0.8 |
+| Glass effects | expo-glass-effect | ~0.1.10 |
+| Charts / icons | react-native-svg | 15.12.1 |
+| Keyboard handling | react-native-keyboard-controller | 1.18.5 |
+| Image picking | expo-image-picker | ~17.0.11 |
+| Build & delivery | EAS Build / EAS Submit | eas.json |
+| Tests | Vitest | ^2.1.8 |
+
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+- **Node.js** `>=20`
+- **npm** (bundled with Node)
+- **Xcode** — required for `npm run ios` and local iOS prebuild
+- **Android Studio + SDK** — required for `npm run android` and local Android prebuild
+- **EAS CLI** — `npm install -g eas-cli` for cloud builds
+
+### Install
 
 ```bash
-yarn install
+cd mobile
+npm install
 ```
 
-Configure `app.json` → `expo.extra` for your environment:
+### Run in Expo Go (quick start — limited native modules)
+
+```bash
+npx expo start
+```
+
+Scan the QR with the Expo Go app. Note: Google Sign-In will not work in Expo Go — it requires a dev client build.
+
+### Run with dev client (recommended — full native modules)
+
+Build the dev client once (or after adding a new native module):
+
+```bash
+npx expo prebuild --clean
+npm run ios       # or: npm run android
+```
+
+The dev client is required for Google Sign-In, `expo-glass-effect`, `expo-secure-store`, and `expo-navigation-bar`.
+
+---
+
+## ⚙️ Configuration
+
+All runtime config lives in `app.json` under `expo.extra`:
 
 ```json
 "extra": {
   "apiUrl": "https://expensetracker.ovrin.uz",
-  "googleWebClientId": "...",
-  "googleIosClientId": "...",
-  "googleAndroidClientId": "...",
-  "eas": { "projectId": "..." }
+  "googleWebClientId": "<WEB_CLIENT_ID>",
+  "googleIosClientId": "<IOS_CLIENT_ID>",
+  "googleAndroidClientId": "<ANDROID_CLIENT_ID>",
+  "eas": { "projectId": "<EAS_PROJECT_ID>" }
 }
 ```
 
-For physical devices on the local network, set `apiUrl` to your machine's LAN IP (e.g. `http://192.168.1.10:3000`).
+| Key | Description |
+|---|---|
+| `apiUrl` | Backend base URL. Change to your LAN IP (e.g. `http://192.168.1.10:3000`) for local dev. Read at build time — changes require a new build. |
+| `googleWebClientId` | "Web application" type client in Google Cloud Console |
+| `googleIosClientId` | "iOS" type client (bundle ID: `com.siqoramil.extracker`) |
+| `googleAndroidClientId` | "Android" type client (package + SHA-1). Production builds need the EAS keystore SHA-1 registered — run `eas credentials` to get it. |
 
-## Scripts
+---
 
-| Command           | Description                                                  |
-| ----------------- | ------------------------------------------------------------ |
-| `yarn start`      | Start Metro bundler                                          |
-| `yarn android`    | `expo run:android` (requires Android SDK + dev client build) |
-| `yarn ios`        | `expo run:ios` (requires Xcode + dev client build)           |
-| `yarn web`        | Run as a web app                                             |
-| `yarn test`       | Run the Vitest unit suite (`tests/`)                         |
-| `yarn test:watch` | Vitest in watch mode                                         |
+## 📜 Scripts
 
-## Tests
+| Script | Command | Description |
+|---|---|---|
+| Start Metro | `npm run start` | Start the Metro bundler (Expo Go) |
+| Run iOS | `npm run ios` | `expo run:ios` — requires Xcode + dev client prebuild |
+| Run Android | `npm run android` | `expo run:android` — requires Android SDK + dev client prebuild |
+| Run Web | `npm run web` | Start with Metro web bundler |
+| Test | `npm test` | Run Vitest unit suite once |
+| Test watch | `npm run test:watch` | Vitest in interactive watch mode |
+| Lint | `npm run lint` | ESLint check |
+| Lint fix | `npm run lint:fix` | ESLint auto-fix |
+| Format | `npm run format` | Prettier write |
+| Format check | `npm run format:check` | Prettier dry-run check |
 
-Unit tests live under `tests/` and target pure logic in `lib/api.ts` and `lib/store.ts` — the parts that exercise the v1.1.0 server contract (auto-logout on 401, confirm-delete re-auth payload, Google-link flow, email normalisation). They run on Node via Vitest with module aliases for `expo-constants`, `@react-native-async-storage/async-storage`, and `react-i18next` (see `vitest.config.ts` and `tests/__mocks__/`).
+---
 
-Component-level tests are intentionally out of scope here — those would need a heavier setup (React Native testing library + jsdom). The current suite covers the security-sensitive paths added when the server moved to 1.1.0.
+## 📁 Project Structure
 
-## Running the app
-
-**Dev client (recommended — full native modules including Google sign-in):**
-
-```bash
-npx expo prebuild --clean
-yarn ios       # or: yarn android
+```
+mobile/
+├── app/                          # expo-router file-based routes
+│   ├── _layout.tsx               # Root layout (auth gate, sync bootstrap)
+│   ├── (tabs)/
+│   │   ├── _layout.tsx           # Tab bar layout (iOS NativeTabs / Android FAB)
+│   │   ├── index.tsx             # Home tab
+│   │   ├── stats.tsx             # Statistics tab
+│   │   ├── debtors.tsx           # Debtors tab
+│   │   └── profile.tsx           # Profile tab
+│   ├── add.tsx                   # Add transaction sheet
+│   ├── all-tx.tsx                # All transactions list
+│   ├── budgets.tsx               # Budgets management
+│   ├── calendar.tsx              # Calendar heat-map
+│   ├── categories.tsx            # Category management
+│   ├── currency.tsx              # Currency picker
+│   ├── language.tsx              # Language picker
+│   ├── notifications.tsx         # Notifications list
+│   ├── recurring.tsx             # Recurring transactions
+│   ├── reports.tsx               # Reports screen
+│   ├── wallets.tsx               # Wallets management
+│   ├── debtor/[id].tsx           # Debtor detail
+│   └── tx/[id].tsx               # Transaction detail
+│
+├── components/
+│   ├── screens/                  # Full-screen component implementations
+│   │   ├── HomeScreen.tsx
+│   │   ├── StatsScreen.tsx
+│   │   ├── ReportsScreen.tsx
+│   │   ├── CalendarScreen.tsx
+│   │   ├── AllTxScreen.tsx
+│   │   ├── TxDetail.tsx
+│   │   ├── WalletsScreen.tsx
+│   │   ├── CategoriesScreen.tsx
+│   │   ├── BudgetsScreen.tsx
+│   │   ├── DebtorsScreen.tsx
+│   │   ├── DebtorDetail.tsx
+│   │   ├── RecurringScreen.tsx
+│   │   ├── NotificationsScreen.tsx
+│   │   ├── ProfileScreen.tsx
+│   │   └── SettingsSubs.tsx
+│   ├── AccountSheets.tsx         # Forgot-password / email-change bottom sheets
+│   ├── ActionSheet.tsx           # Generic action sheet
+│   ├── AddSheet.tsx              # New transaction bottom sheet
+│   ├── AppTextInput.tsx          # Themed text input
+│   ├── Glass.tsx                 # Liquid Glass wrapper component
+│   ├── Icon.tsx                  # SVG icon set
+│   ├── KeyboardAvoider.tsx       # Keyboard-aware wrapper
+│   ├── LoginScreen.tsx           # Email/password + Google Sign-In
+│   ├── Onboarding.tsx            # First-run onboarding flow
+│   ├── ServerUnreachable.tsx     # Network/server-down global UI
+│   ├── Sparkline.tsx             # Mini inline chart
+│   ├── TabBar.tsx                # Android custom FAB tab bar
+│   ├── TabHeader.tsx             # Screen header with tab title
+│   ├── TabSafeArea.tsx           # Safe-area wrapper for tab screens
+│   └── ui.tsx                   # Shared primitives (Card, TxRow, CatIcon, …)
+│
+├── lib/
+│   ├── api.ts                    # HTTP client, ApiError, setUnauthorizedHandler
+│   ├── dataApi.ts                # Typed server endpoints
+│   ├── errors.ts                 # Server error code → i18n key mapping
+│   ├── format.ts                 # Currency, date, number formatters
+│   ├── googleAuth.ts             # Google Sign-In wrapper
+│   ├── i18n.ts                   # tStr(lang, key) helper
+│   ├── store.ts                  # Global state + actions (AsyncStorage-backed)
+│   ├── tokens.ts                 # Light/dark theme tokens
+│   ├── toast.ts                  # Toast helper
+│   └── locales/                  # Translation files
+│       ├── en.json               # English (canonical)
+│       ├── uz.json               # Uzbek
+│       ├── ru.json               # Russian
+│       ├── de.json               # German
+│       ├── fr.json               # French
+│       └── es.json               # Spanish
+│   └── sync/                     # Per-entity optimistic sync modules
+│       ├── index.ts
+│       ├── types.ts
+│       ├── idmap.ts
+│       ├── transactions.ts
+│       ├── wallets.ts
+│       ├── categories.ts
+│       ├── budgets.ts
+│       ├── debts.ts
+│       ├── recurring.ts
+│       └── notifications.ts
+│
+├── assets/                       # Images, icons, splash, fonts
+├── app.json                      # Expo config (version, bundle IDs, extra)
+├── eas.json                      # EAS Build profiles
+├── tsconfig.json
+└── package.json
 ```
 
-Rebuild the dev client whenever you add a native module (e.g. `expo-image-picker`, `expo-auth-session`).
+---
 
-**Expo Go (limited — no `expo-auth-session` Google flow):**
+## 🌍 Internationalization
 
-```bash
-npx expo start --go -c
-```
+Translations live in `lib/locales/<lang>.json`. `en.json` is the canonical source — all other files mirror its keys.
 
-Scan the QR with the Expo Go app.
+| Code | Language |
+|---|---|
+| `en` | English |
+| `uz` | Uzbek |
+| `ru` | Russian |
+| `de` | German |
+| `fr` | French |
+| `es` | Spanish |
 
-## EAS builds
+Use `tStr(lang, key)` from `lib/i18n.ts` for static strings. The active language is stored in `store.get().prefs.lang` (default: `uz`). When adding new user-facing strings, add the key to `en.json` first, then propagate to all other locales.
 
-`eas.json` defines three profiles:
+---
 
-| Profile       | Distribution          | Android output                        |
-| ------------- | --------------------- | ------------------------------------- |
-| `development` | internal (dev client) | —                                     |
-| `preview`     | internal              | `apk`                                 |
-| `production`  | store / sideload      | `apk` (auto-incremented version code) |
+## 🔐 Authentication
 
-Common flow:
+| Method | Details |
+|---|---|
+| Email + password | Registration, login, email-code password reset |
+| Google Sign-In | One-tap signup/login via `@react-native-google-signin/google-signin`; native on both platforms |
+| Token storage | JWT stored in `expo-secure-store` (Keychain on iOS, EncryptedSharedPreferences on Android) |
+| 401 handling | Any `401` response triggers a global logout via `setUnauthorizedHandler` in `lib/api.ts` — never bypassed |
+| Google linking | If an email already has a password account, Google sign-in returns `409 account_link_required`. Sign in with password first, then link Google from profile settings. |
+
+---
+
+## 🚢 EAS Builds
+
+`eas.json` defines three build profiles:
+
+| Profile | Distribution | Android output | Notes |
+|---|---|---|---|
+| `development` | Internal (dev client) | — | Full native module access for local dev |
+| `preview` | Internal | APK | Shareable test builds |
+| `production` | Store | AAB (auto-incremented version) | Submitted to Play Store internal track |
 
 ```bash
 eas login
 eas build --profile production --platform android
 eas build --profile production --platform ios
-eas submit --profile production --platform android   # optional
+eas submit --profile production --platform android
 ```
 
-### Google sign-in in production builds
+> **Google Sign-In in production**: the EAS-managed signing keystore has a different SHA-1 from your local keystore. Register it in [Google Cloud Console](https://console.cloud.google.com/apis/credentials) under the Android OAuth client. Get the SHA-1 via `eas credentials`.
 
-Production builds use a different signing keystore than local dev — Google OAuth will reject requests with `Error 400: invalid_request` until the production SHA-1 is registered.
+---
 
-1. Get the EAS-managed SHA-1:
+## 🧪 Testing
 
-   ```bash
-   eas credentials
-   # → Android → production → "Keystore: Manage everything..."
-   ```
+Tests run on Node via **Vitest** with module aliases for Expo and React Native packages.
 
-2. Add that SHA-1 to the **Android** OAuth client at https://console.cloud.google.com/apis/credentials (package: `com.ramildeveloper.expensetracker`). Multiple SHA-1s on the same client are allowed.
-
-3. Each client ID in `app.json` → `expo.extra` must be the correct **type** in Google Cloud:
-   - `googleAndroidClientId` → "Android" type with package + SHA-1
-   - `googleIosClientId` → "iOS" type with bundle ID
-   - `googleWebClientId` → "Web application" type
-
-Changes propagate in 5–10 minutes; no rebuild required.
-
-## Project layout
-
-```
-app/
-├── _layout.tsx         # Expo Router root layout
-└── index.tsx           # App shell, navigation stack, screen routing
-components/
-├── screens/            # Per-screen components
-│   ├── HomeScreen.tsx
-│   ├── StatsScreen.tsx
-│   ├── ReportsScreen.tsx
-│   ├── CalendarScreen.tsx
-│   ├── AllTxScreen.tsx
-│   ├── TxDetail.tsx
-│   ├── WalletsScreen.tsx
-│   ├── CategoriesScreen.tsx
-│   ├── BudgetsScreen.tsx
-│   ├── DebtorsScreen.tsx
-│   ├── DebtorDetail.tsx
-│   ├── RecurringScreen.tsx
-│   ├── NotificationsScreen.tsx
-│   ├── ProfileScreen.tsx
-│   └── SettingsSubs.tsx
-├── AccountSheets.tsx   # Forgot password / email change bottom sheets
-├── AddSheet.tsx        # Bottom-sheet for new transactions
-├── Icon.tsx            # SVG icon set
-├── LoginScreen.tsx     # Email + password + Google sign-in
-├── Onboarding.tsx
-├── Sparkline.tsx       # Mini chart component
-├── TabBar.tsx          # Bottom tab bar
-└── ui.tsx              # Shared UI primitives
-lib/
-├── api.ts              # REST client + ApiError class
-├── googleAuth.ts       # expo-auth-session wrapper with safe fallback
-├── store.ts            # Global state + actions (AsyncStorage-backed)
-├── i18n.ts             # tStr(lang, key) helper
-├── locales/            # uz, en, ru, es, fr, de
-├── tokens.ts           # Theme tokens (light / dark)
-├── format.ts           # Currency, date, number formatting
-└── toast.ts            # Toast helper
-assets/                 # Icons, splash, fonts
-constants/              # Static config
-android/  ios/          # Generated by `expo prebuild` — do not hand-edit
+```bash
+npm test            # run once
+npm run test:watch  # interactive watch mode
 ```
 
-## Server contract (v1.1.0)
+The suite covers security-sensitive paths in `lib/api.ts` and `lib/store.ts`: auto-logout on 401, Google link flow, email normalization, and server contract expectations. Component-level tests are out of scope and require React Native Testing Library + jsdom.
 
-The mobile client expects the security model added in server `1.1.0`. Worth knowing:
+---
 
-- **Token revocation.** Resetting the password on the server bumps `passwordChangedAt` and invalidates every previously-issued JWT. The client detects a `401` response and clears the local session via the `setUnauthorizedHandler` wired up in `lib/store.ts:hydrate`. The user is bounced to the login screen automatically.
-- **Google linking is no longer automatic.** `POST /auth/google` returns `409 account_link_required` when the email already has a password account. Mapped to a friendly message in `LoginScreen`. The user must sign in with their password first, then call `actions.linkGoogle(idToken)` (wraps `POST /auth/google/link`) to attach a Google identity. The Google ID token's email must match the account email.
-- **Account deletion requires re-auth.** `confirmAccountDelete(code, reauth)` now takes a second arg: `{ password }` for password accounts, `{ idToken }` (fresh Google sign-in) for Google-only accounts. `DeleteAccountSheet` picks the right form based on `profile.hasPassword` / `profile.hasGoogle`, both surfaced by the server in `UserDTO`.
-- **Strict body validation.** Server v1.1.0 disables Fastify's silent-strip default — sending unknown fields to `PATCH /auth/me` (or any other body) returns `400 bad_request`. `lib/store.ts` only sends whitelisted fields, but be careful when extending API calls.
-- **Avatar size cap.** `avatar` is limited to ~600 KB on the server. The image picker uses `quality: 0.3` + `aspect: [1, 1]`, which typically produces 150–300 KB base64, so the cap rarely matters in practice. Migration to a CDN/S3 URL is on the server roadmap.
+## 🛠️ Troubleshooting
 
-## Localization
+| Symptom | Fix |
+|---|---|
+| "Cannot reach the server" on production APK | Verify `Constants.expoConfig.extra.apiUrl` was bundled correctly. The API URL is read from `app.json` at build time — changing it requires a new build. |
+| Google Sign-In "Error 400: invalid_request" in production | Production keystore SHA-1 not registered in Google Cloud Console. Run `eas credentials` and add it. |
+| `account_link_required` after Google sign-in | Email already has a password account. Sign in with password, then link Google from profile. |
+| User repeatedly bounced to login | JWT rejected with `401 token_revoked` — password was reset elsewhere. Sign in again. |
+| "Old dev client — rebuild required" | A native module was added since the dev client was built. Run `npx expo prebuild --clean && npm run ios` (or `npm run android`). |
+| Metro cache issues | Run `npx expo start -c` to clear the cache. |
 
-Translations live in `lib/locales/<lang>.json`. Use `tStr(lang, key)` from `lib/i18n.ts` for static text. The current language comes from `store.get().prefs.lang` (`uz` default).
+---
 
-Supported: Uzbek (`uz`), English (`en`), Russian (`ru`), Spanish (`es`), French (`fr`), German (`de`).
+## 🤝 Contributing
 
-## Theming
-
-Tokens are produced by `makeTokens(dark)` in `lib/tokens.ts` and threaded through components as the `t` prop. Dark mode follows `store.get().prefs.dark`.
-
-## Troubleshooting
-
-- **Production APK login fails with "Cannot reach the server"** — verify the device has internet, then check `Constants.expoConfig.extra.apiUrl` was bundled correctly. The API URL is read from `app.json` at build time; changing it requires a new build.
-- **Google sign-in "Error 400: invalid_request" in production** — see _Google sign-in in production builds_ above. Most common cause: production keystore SHA-1 not registered in Google Cloud Console.
-- **`account_link_required` after Google sign-in** — the email already has a password account on the server. Sign in with the password instead, then link Google from the profile.
-- **User keeps being kicked back to login** — the JWT is being rejected (`401 token_revoked`). Usually means the password was reset elsewhere; sign in again to get a fresh token.
-- **`Old dev client — rebuild required`** — a native module was added since the dev client was built. Run `npx expo prebuild --clean && yarn ios` (or `yarn android`).
-- **Metro cache issues** — `npx expo start -c` to clear the cache.
+1. Branch from `main`.
+2. `npx tsc --noEmit` must pass before opening a PR.
+3. No `console.log` in committed code.
+4. New user-facing strings: add to `lib/locales/en.json` first, then propagate to all six locales.
+5. Server error codes are `snake_case` and must be mapped in `lib/errors.ts`.

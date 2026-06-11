@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import {
   ActionSheetIOS,
-  Alert,
   Image,
   Platform,
   Pressable,
@@ -11,13 +10,16 @@ import {
   View,
 } from 'react-native';
 import { errorMessage } from '../../lib/errors';
+import { isGoogleAuthAvailable, signInWithGoogle } from '../../lib/googleAuth';
 import { LANGUAGES, tStr } from '../../lib/i18n';
 import { actions, isImageAvatar, useStore } from '../../lib/store';
 import { toast } from '../../lib/toast';
 import type { Tokens } from '../../lib/tokens';
 import { DeleteAccountSheet, EditEmailSheet, EditNameSheet } from '../AccountSheets';
+import { ActionSheet, type ActionSheetConfig } from '../ActionSheet';
+import Svg, { Path } from 'react-native-svg';
 import { Icon, type IconName } from '../Icon';
-import { Card, ScreenHeader, SectionHeader, Switch } from '../ui';
+import { Card, SectionHeader, Switch } from '../ui';
 
 type ImagePickerModule = typeof import('expo-image-picker');
 const loadImagePicker = (): ImagePickerModule | null => {
@@ -41,23 +43,20 @@ export const ProfileScreen: React.FC<{ t: Tokens; onNav: Nav; onLogout: () => vo
   const [editName, setEditName] = useState(false);
   const [editEmail, setEditEmail] = useState(false);
   const [deleteAccountOpen, setDeleteAccountOpen] = useState(false);
+  const [sheetConfig, setSheetConfig] = useState<ActionSheetConfig | null>(null);
 
   const hasImage = isImageAvatar(s.profile.avatar);
 
   const pickImage = async () => {
     const ImagePicker = loadImagePicker();
     if (!ImagePicker) {
-      toast(
-        lang === 'uz'
-          ? 'Rasm tanlash mavjud emas — ilovani qayta build qiling'
-          : 'Image picker unavailable — rebuild the dev client',
-      );
+      toast(tStr(lang, 'imagePickerUnavailable'));
       return;
     }
     try {
       const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (perm.status !== 'granted') {
-        toast(lang === 'uz' ? 'Ruxsat berilmagan' : 'Permission denied');
+        toast(tStr(lang, 'permissionDenied'));
         return;
       }
       const result = await ImagePicker.launchImageLibraryAsync({
@@ -91,9 +90,9 @@ export const ProfileScreen: React.FC<{ t: Tokens; onNav: Nav; onLogout: () => vo
       return;
     }
     const labels = {
-      title: lang === 'uz' ? 'Profil rasmi' : 'Profile photo',
-      library: lang === 'uz' ? 'Galereyadan tanlash' : 'Choose from library',
-      remove: lang === 'uz' ? "Rasmni o'chirish" : 'Remove photo',
+      title: tStr(lang, 'profilePhoto'),
+      library: tStr(lang, 'chooseFromLibrary'),
+      remove: tStr(lang, 'removePhoto'),
       cancel: tStr(lang, 'cancel'),
     };
     const options = [labels.library, labels.remove, labels.cancel];
@@ -116,95 +115,127 @@ export const ProfileScreen: React.FC<{ t: Tokens; onNav: Nav; onLogout: () => vo
         handle,
       );
     } else {
-      const buttons = options.slice(0, -1).map((label, i) => ({
-        text: label,
-        style: (i === destructiveIdx ? 'destructive' : 'default') as 'destructive' | 'default',
-        onPress: () => handle(i),
-      }));
-      Alert.alert(labels.title, undefined, [...buttons, { text: labels.cancel, style: 'cancel' }]);
+      setSheetConfig({
+        title: labels.title,
+        options: [
+          { label: labels.library, onPress: () => void pickImage() },
+          { label: labels.remove, destructive: true, onPress: () => void actions.removeAvatar() },
+        ],
+      });
+    }
+  };
+
+  // Link Google to an existing password account. The server refuses to
+  // auto-link on sign-in (account-takeover guard), so the user authenticates
+  // here while logged in; the matched, verified Google identity is then bound.
+  const connectGoogle = async () => {
+    if (!isGoogleAuthAvailable()) {
+      toast(tStr(lang, 'err_google_unavailable'));
+      return;
+    }
+    try {
+      const res = await signInWithGoogle();
+      if (res.type === 'cancel') return;
+      if (res.type === 'error') {
+        toast(tStr(lang, 'err_google_sign_in_failed'));
+        return;
+      }
+      await actions.linkGoogle(res.idToken);
+      toast(tStr(lang, 'googleLinked'));
+    } catch (e) {
+      toast(errorMessage(lang, e));
+    }
+  };
+
+  // Single entry point (top-right pencil) to edit name, email, or photo.
+  const openEditMenu = () => {
+    const labels = {
+      title: tStr(lang, 'editProfile'),
+      name: tStr(lang, 'editName'),
+      email: tStr(lang, 'editEmail'),
+      photo: tStr(lang, 'changePhoto'),
+      cancel: tStr(lang, 'cancel'),
+    };
+    const options = [labels.name, labels.email, labels.photo, labels.cancel];
+    const handle = (idx: number) => {
+      if (idx === 0) setEditName(true);
+      else if (idx === 1) setEditEmail(true);
+      else if (idx === 2) openAvatarMenu();
+    };
+    if (Platform.OS === 'ios') {
+      ActionSheetIOS.showActionSheetWithOptions(
+        { title: labels.title, options, cancelButtonIndex: options.length - 1 },
+        handle,
+      );
+    } else {
+      setSheetConfig({
+        title: labels.title,
+        options: [
+          { label: labels.name, onPress: () => setEditName(true) },
+          { label: labels.email, onPress: () => setEditEmail(true) },
+          { label: labels.photo, onPress: openAvatarMenu },
+        ],
+      });
     }
   };
 
   return (
     <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 160 }}>
-      <ScreenHeader t={t} title={tStr(lang, 'profile')} />
-
       <View style={{ paddingHorizontal: 20, paddingBottom: 18 }}>
         <Card t={t} style={{ padding: 18 }}>
+          <Pressable
+            onPress={openEditMenu}
+            hitSlop={8}
+            style={{
+              position: 'absolute',
+              top: 12,
+              right: 12,
+              width: 30,
+              height: 30,
+              borderRadius: 15,
+              backgroundColor: t.surfaceAlt,
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 1,
+            }}
+          >
+            <Icon name="pen" size={14} color={t.textSec} stroke={2} />
+          </Pressable>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
-            <Pressable onPress={openAvatarMenu} style={{ width: 64, height: 64 }}>
-              <View
-                style={{
-                  width: 64,
-                  height: 64,
-                  borderRadius: 32,
-                  backgroundColor: t.accent,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  overflow: 'hidden',
-                  shadowColor: t.accent,
-                  shadowOpacity: 0.3,
-                  shadowRadius: 16,
-                  shadowOffset: { width: 0, height: 6 },
-                  elevation: 6,
-                }}
-              >
-                {hasImage ? (
-                  <Image source={{ uri: s.profile.avatar }} style={{ width: 64, height: 64 }} />
-                ) : (
-                  <Text style={{ fontSize: 23, fontWeight: '700', color: '#fff' }}>
-                    {s.profile.avatar}
-                  </Text>
-                )}
-              </View>
-              <View
-                style={{
-                  position: 'absolute',
-                  right: -2,
-                  bottom: -2,
-                  width: 25,
-                  height: 25,
-                  borderRadius: 12.5,
-                  backgroundColor: t.accent,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  borderWidth: 2.5,
-                  borderColor: t.surface,
-                }}
-              >
-                <Icon name="pen" size={11} color="#fff" stroke={2.5} />
-              </View>
-            </Pressable>
+            <View
+              style={{
+                width: 64,
+                height: 64,
+                borderRadius: 32,
+                backgroundColor: t.accent,
+                alignItems: 'center',
+                justifyContent: 'center',
+                overflow: 'hidden',
+                shadowColor: t.accent,
+                shadowOpacity: 0.3,
+                shadowRadius: 16,
+                shadowOffset: { width: 0, height: 6 },
+                elevation: 6,
+              }}
+            >
+              {hasImage ? (
+                <Image source={{ uri: s.profile.avatar }} style={{ width: 64, height: 64 }} />
+              ) : (
+                <Text style={{ fontSize: 23, fontWeight: '700', color: '#fff' }}>
+                  {s.profile.avatar}
+                </Text>
+              )}
+            </View>
             <View style={{ flex: 1, minWidth: 0 }}>
-              <Pressable
-                onPress={() => setEditName(true)}
-                hitSlop={6}
-                style={{ flexDirection: 'row', alignItems: 'center', gap: 7 }}
+              <Text
+                style={{ fontSize: 19, fontWeight: '700', color: t.text, letterSpacing: -0.4 }}
+                numberOfLines={1}
               >
-                <Text
-                  style={{
-                    fontSize: 19,
-                    fontWeight: '700',
-                    color: t.text,
-                    letterSpacing: -0.4,
-                    flexShrink: 1,
-                  }}
-                  numberOfLines={1}
-                >
-                  {s.profile.name}
-                </Text>
-                <Icon name="pen" size={12.5} color={t.textTer} stroke={2} />
-              </Pressable>
-              <Pressable
-                onPress={() => setEditEmail(true)}
-                hitSlop={6}
-                style={{ flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 3 }}
-              >
-                <Text style={{ fontSize: 13, color: t.textSec, flexShrink: 1 }} numberOfLines={1}>
-                  {s.profile.email}
-                </Text>
-                <Icon name="pen" size={10.5} color={t.textTer} stroke={2} />
-              </Pressable>
+                {s.profile.name}
+              </Text>
+              <Text style={{ fontSize: 13, color: t.textSec, marginTop: 3 }} numberOfLines={1}>
+                {s.profile.email}
+              </Text>
               <View
                 style={{
                   flexDirection: 'row',
@@ -240,6 +271,25 @@ export const ProfileScreen: React.FC<{ t: Tokens; onNav: Nav; onLogout: () => vo
         onClose={() => setDeleteAccountOpen(false)}
         onDeleted={onLogout}
       />
+      <ActionSheet
+        t={t}
+        config={sheetConfig}
+        cancelLabel={tStr(lang, 'cancel')}
+        onClose={() => setSheetConfig(null)}
+      />
+
+      <View style={{ paddingHorizontal: 20, paddingBottom: 16 }}>
+        <Card t={t}>
+          <NavRow
+            t={t}
+            icon="user"
+            color="#6366F1"
+            label={tStr(lang, 'account')}
+            onPress={() => onNav('account')}
+            last
+          />
+        </Card>
+      </View>
 
       <SectionHeader t={t} title={tStr(lang, 'preferences')} />
       <View style={{ paddingHorizontal: 20, paddingBottom: 16 }}>
@@ -301,7 +351,7 @@ export const ProfileScreen: React.FC<{ t: Tokens; onNav: Nav; onLogout: () => vo
             t={t}
             icon="calendar"
             color="#3B82F6"
-            label={lang === 'uz' ? 'Takrorlanuvchi' : 'Recurring'}
+            label={tStr(lang, 'recurring')}
             onPress={() => onNav('recurring')}
           />
           <NavRow
@@ -320,13 +370,6 @@ export const ProfileScreen: React.FC<{ t: Tokens; onNav: Nav; onLogout: () => vo
           />
           <NavRow
             t={t}
-            icon="lock"
-            color="#8B5CF6"
-            label={tStr(lang, 'security')}
-            onPress={() => onNav('security')}
-          />
-          <NavRow
-            t={t}
             icon="download"
             color="#0EA5E9"
             label={tStr(lang, 'reports')}
@@ -335,6 +378,61 @@ export const ProfileScreen: React.FC<{ t: Tokens; onNav: Nav; onLogout: () => vo
           />
         </Card>
       </View>
+
+      {s.profile.hasGoogle || isGoogleAuthAvailable() ? (
+        <View style={{ paddingHorizontal: 20, paddingBottom: 16 }}>
+          <Card t={t}>
+            {s.profile.hasGoogle ? (
+              <View
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: 12,
+                  paddingVertical: 12,
+                  paddingHorizontal: 16,
+                }}
+              >
+                <View
+                  style={{
+                    width: 34,
+                    height: 34,
+                    borderRadius: 9,
+                    backgroundColor: '#5F636822',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <GoogleGlyph />
+                </View>
+                <Text style={{ flex: 1, fontSize: 14.5, color: t.text, fontWeight: '500' }}>
+                  {tStr(lang, 'googleLinked')}
+                </Text>
+                <View
+                  style={{
+                    width: 20,
+                    height: 20,
+                    borderRadius: 10,
+                    backgroundColor: t.income,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <Icon name="check" size={12} color="#fff" stroke={3} />
+                </View>
+              </View>
+            ) : (
+              <NavRow
+                t={t}
+                iconNode={<GoogleGlyph />}
+                color="#5F6368"
+                label={tStr(lang, 'connectGoogle')}
+                onPress={connectGoogle}
+                last
+              />
+            )}
+          </Card>
+        </View>
+      ) : null}
 
       <View style={{ paddingHorizontal: 20, paddingBottom: 16 }}>
         <Card t={t}>
@@ -402,15 +500,37 @@ export const ToggleRow: React.FC<{
   </View>
 );
 
+export const GoogleGlyph: React.FC<{ size?: number }> = ({ size = 17 }) => (
+  <Svg width={size} height={size} viewBox="0 0 18 18">
+    <Path
+      d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.49h4.84a4.13 4.13 0 0 1-1.79 2.71v2.26h2.9c1.7-1.56 2.69-3.87 2.69-6.62z"
+      fill="#4285F4"
+    />
+    <Path
+      d="M9 18c2.43 0 4.47-.81 5.96-2.18l-2.9-2.26c-.8.54-1.83.86-3.06.86-2.35 0-4.34-1.59-5.05-3.72H.96v2.33A9 9 0 0 0 9 18z"
+      fill="#34A853"
+    />
+    <Path
+      d="M3.95 10.7A5.4 5.4 0 0 1 3.66 9c0-.59.1-1.16.29-1.7V4.97H.96A9 9 0 0 0 0 9c0 1.45.35 2.82.96 4.03l2.99-2.33z"
+      fill="#FBBC05"
+    />
+    <Path
+      d="M9 3.58c1.32 0 2.5.45 3.44 1.35l2.58-2.58A9 9 0 0 0 9 0 9 9 0 0 0 .96 4.97L3.95 7.3C4.66 5.17 6.65 3.58 9 3.58z"
+      fill="#EA4335"
+    />
+  </Svg>
+);
+
 export const NavRow: React.FC<{
   t: Tokens;
-  icon: IconName;
+  icon?: IconName;
+  iconNode?: React.ReactNode;
   color: string;
   label: string;
   detail?: string;
   onPress: () => void;
   last?: boolean;
-}> = ({ t, icon, color, label, detail, onPress, last }) => (
+}> = ({ t, icon, iconNode, color, label, detail, onPress, last }) => (
   <Pressable
     onPress={onPress}
     style={{
@@ -433,7 +553,7 @@ export const NavRow: React.FC<{
         justifyContent: 'center',
       }}
     >
-      <Icon name={icon} size={17} color={color} />
+      {iconNode ?? (icon ? <Icon name={icon} size={17} color={color} /> : null)}
     </View>
     <Text style={{ flex: 1, fontSize: 14.5, color: t.text, fontWeight: '500' }}>{label}</Text>
     {detail ? <Text style={{ fontSize: 13, color: t.textSec }}>{detail}</Text> : null}

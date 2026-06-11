@@ -1,9 +1,11 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as SecureStore from 'expo-secure-store';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { isoDate, today, type Currency } from './format';
 import { authApi, setApiToken, setUnauthorizedHandler, type UserDTO } from './api';
 import { setAppLanguage, type Lang, type Localized } from './i18n';
+import { idmap } from './sync/idmap';
+import { bootstrapSync, push } from './sync';
 
 const STORAGE_KEY = 'expense_tracker_state_v2';
 // JWT lives in SecureStore (Keychain on iOS, EncryptedSharedPreferences on
@@ -56,6 +58,7 @@ export type Debt = {
   amount: number;
   paid: number;
   due: string;
+  dueTime?: string;
   note?: string;
   created: string;
   payments: Payment[];
@@ -212,6 +215,14 @@ const SEED_CATEGORIES: Category[] = [
   },
 ];
 
+// Default wallets so the app is always usable (every transaction needs one).
+// Seeded only when the user has zero wallets. Lazily synced to the server on
+// first use, like seed categories.
+const SEED_WALLETS: Wallet[] = [
+  { id: 'w_cash', name: { en: 'Cash', uz: 'Naqd' }, icon: 'wallet', color: '#10B981', balance: 0 },
+  { id: 'w_card', name: { en: 'Card', uz: 'Karta' }, icon: 'credit-card', color: '#6366F1', balance: 0 },
+];
+
 // Fresh install state: default categories only, everything else empty so the
 // user starts with a clean slate. Bump `version` whenever this shape changes —
 // hydrate() migrates older persisted states (see the version check there).
@@ -231,7 +242,7 @@ const SEED = (): State => ({
   },
   prefs: {
     lang: 'en',
-    currency: 'UZS',
+    currency: 'USD',
     dark: false,
     pin: false,
     notifications: true,
@@ -331,6 +342,17 @@ export const hydrate = async () => {
   if (missingSeeds.length > 0) {
     state = { ...state, categories: [...state.categories, ...missingSeeds] };
   }
+  if (state.wallets.length === 0) {
+    state = { ...state, wallets: SEED_WALLETS };
+  }
+  // Uzbek language was removed (so'm currency stays available) — migrate anyone
+  // still on the Uzbek UI language to English.
+  if (state.prefs.lang === 'uz') {
+    state = { ...state, prefs: { ...state.prefs, lang: 'en' } };
+  }
+  if (!['UZS', 'USD', 'EUR', 'GBP', 'RUB'].includes(state.prefs.currency as string)) {
+    state = { ...state, prefs: { ...state.prefs, currency: 'USD' } };
+  }
   setAppLanguage(state.prefs.lang);
   if (state.token) setApiToken(state.token);
   // Bounce the user out as soon as the server reports the token is no
@@ -345,6 +367,7 @@ export const hydrate = async () => {
   });
   hydrated = true;
   listeners.forEach((fn) => fn(state));
+  if (state.token) void bootstrapSync();
 };
 
 export const store = {
@@ -363,11 +386,13 @@ export const store = {
   reset: async () => {
     state = SEED();
     listeners.forEach((fn) => fn(state));
-    // Await SecureStore so the token is gone on disk before this
-    // promise resolves; the AsyncStorage persist races freely since
-    // it never holds sensitive bytes.
-    void persist(state);
-    await persistToken(null);
+    // Persist cleared state to AsyncStorage first so no ghost data remains,
+    // then clear the token from SecureStore. Reversing the order would leave
+    // a window where the token is already gone but the old state is still on
+    // disk, which is safe but inconsistent; this order guarantees that after
+    // reset() resolves the disk holds neither sensitive state nor a stale token.
+    await persist(state);
+    await Promise.all([persistToken(null), idmap.clear()]);
   },
 };
 
@@ -375,6 +400,44 @@ export function useStore(): State {
   const [s, setS] = useState(state);
   useEffect(() => store.subscribe(setS), []);
   return s;
+}
+
+export function useStoreSelector<T>(
+  selector: (s: State) => T,
+  isEqual?: (a: T, b: T) => boolean,
+): T {
+  const selectorRef = useRef(selector);
+  selectorRef.current = selector;
+  const isEqualRef = useRef(isEqual);
+  isEqualRef.current = isEqual;
+
+  // Cache the last derived value so the getSnapshot function can return the
+  // same reference when the selected slice has not changed, preventing
+  // useSyncExternalStore from scheduling a re-render.
+  const lastRef = useRef<{ input: State; output: T } | null>(null);
+
+  const getSnapshot = (): T => {
+    const s = store.get();
+    if (lastRef.current !== null && lastRef.current.input === s) {
+      return lastRef.current.output;
+    }
+    const next = selectorRef.current(s);
+    if (
+      lastRef.current !== null &&
+      (isEqualRef.current
+        ? isEqualRef.current(lastRef.current.output, next)
+        : Object.is(lastRef.current.output, next))
+    ) {
+      // Return the previous output so the reference stays stable and
+      // useSyncExternalStore sees no change.
+      lastRef.current = { input: s, output: lastRef.current.output };
+      return lastRef.current.output;
+    }
+    lastRef.current = { input: s, output: next };
+    return next;
+  };
+
+  return useSyncExternalStore(store.subscribe, getSnapshot, getSnapshot);
 }
 
 const avatarFromName = (name: string) =>
@@ -415,6 +478,7 @@ export const actions = {
   logout: async (): Promise<void> => {
     setApiToken(null);
     await persistToken(null);
+    await idmap.clear();
     store.set((s) => ({ ...s, loggedIn: false, token: null }));
   },
 
@@ -440,6 +504,7 @@ export const actions = {
       loggedIn: true,
       onboarded: true,
     }));
+    void bootstrapSync();
   },
 
   setPref: <K extends keyof Prefs>(k: K, v: Prefs[K]) => {
@@ -496,15 +561,17 @@ export const actions = {
     await authApi.forgotPassword({ email: email.trim().toLowerCase() });
   },
 
-  verifyResetCode: async (email: string, code: string) => {
-    await authApi.verifyResetCode({ email: email.trim().toLowerCase(), code });
+  verifyResetCode: async (email: string, code: string): Promise<string> => {
+    const { verifiedToken } = await authApi.verifyResetCode({ email: email.trim().toLowerCase(), code });
+    return verifiedToken;
   },
 
-  resetPassword: async (email: string, code: string, newPassword: string) => {
+  resetPassword: async (email: string, code: string, newPassword: string, verifiedToken: string) => {
     await authApi.resetPassword({
       email: email.trim().toLowerCase(),
       code,
       newPassword,
+      verifiedToken,
     });
   },
 
@@ -516,62 +583,114 @@ export const actions = {
     store.set((s) => applyUserDTO(s, user));
   },
 
-  addTx: (tx: Omit<Transaction, 'id'>) =>
+  addTx: (tx: Omit<Transaction, 'id'>) => {
+    const id = 't' + Date.now();
+    const newTx: Transaction = { id, ...tx };
     store.set((s) => {
-      const id = 't' + Date.now();
-      const newTx: Transaction = { id, ...tx };
       const wallets = s.wallets.map((w) => {
         if (w.id !== tx.wallet) return w;
         const delta = tx.kind === 'income' ? tx.amount : -tx.amount;
         return { ...w, balance: w.balance + delta };
       });
       return { ...s, tx: [newTx, ...s.tx], wallets };
-    }),
-  updateTx: (id: string, patch: Partial<Transaction>) =>
-    store.set((s) => {
-      const old = s.tx.find((x) => x.id === id);
-      if (!old) return s;
-      const next: Transaction = { ...old, ...patch };
-      const wallets = s.wallets.map((w) => {
+    });
+    void push.tx.create(newTx, () => {
+      store.set((s) => {
+        const old = s.tx.find((x) => x.id === id);
+        if (!old) return s;
+        const wallets = s.wallets.map((w) => {
+          if (w.id !== old.wallet) return w;
+          const delta = old.kind === 'income' ? -old.amount : old.amount;
+          return { ...w, balance: w.balance + delta };
+        });
+        return { ...s, tx: s.tx.filter((x) => x.id !== id), wallets };
+      });
+    });
+  },
+  updateTx: (id: string, patch: Partial<Transaction>) => {
+    const s = store.get();
+    const old = s.tx.find((x) => x.id === id);
+    if (!old) return;
+    const next: Transaction = { ...old, ...patch };
+    store.set((cur) => {
+      const wallets = cur.wallets.map((w) => {
         let bal = w.balance;
         if (w.id === old.wallet) bal -= old.kind === 'income' ? old.amount : -old.amount;
         if (w.id === next.wallet) bal += next.kind === 'income' ? next.amount : -next.amount;
         return { ...w, balance: bal };
       });
-      return { ...s, tx: s.tx.map((x) => (x.id === id ? next : x)), wallets };
-    }),
-  deleteTx: (id: string) =>
-    store.set((s) => {
-      const old = s.tx.find((x) => x.id === id);
-      if (!old) return s;
-      const wallets = s.wallets.map((w) => {
+      return { ...cur, tx: cur.tx.map((x) => (x.id === id ? next : x)), wallets };
+    });
+    void push.tx.update(id, patch, () => {
+      store.set((cur) => {
+        const wallets = cur.wallets.map((w) => {
+          let bal = w.balance;
+          if (w.id === next.wallet) bal -= next.kind === 'income' ? next.amount : -next.amount;
+          if (w.id === old.wallet) bal += old.kind === 'income' ? old.amount : -old.amount;
+          return { ...w, balance: bal };
+        });
+        return { ...cur, tx: cur.tx.map((x) => (x.id === id ? old : x)), wallets };
+      });
+    });
+  },
+  deleteTx: (id: string) => {
+    const s = store.get();
+    const old = s.tx.find((x) => x.id === id);
+    if (!old) return;
+    store.set((cur) => {
+      const wallets = cur.wallets.map((w) => {
         if (w.id !== old.wallet) return w;
         const delta = old.kind === 'income' ? -old.amount : old.amount;
         return { ...w, balance: w.balance + delta };
       });
-      return { ...s, tx: s.tx.filter((x) => x.id !== id), wallets };
-    }),
+      return { ...cur, tx: cur.tx.filter((x) => x.id !== id), wallets };
+    });
+    void push.tx.remove(id, () => {
+      store.set((cur) => {
+        const wallets = cur.wallets.map((w) => {
+          if (w.id !== old.wallet) return w;
+          const delta = old.kind === 'income' ? old.amount : -old.amount;
+          return { ...w, balance: w.balance + delta };
+        });
+        return { ...cur, tx: [old, ...cur.tx], wallets };
+      });
+    });
+  },
 
-  addDebt: (d: Partial<Debt> & Pick<Debt, 'name' | 'direction' | 'amount' | 'due' | 'color'>) =>
-    store.set((s) => ({
-      ...s,
-      debts: [
-        {
-          id: 'd' + Date.now(),
-          paid: 0,
-          payments: [],
-          created: isoDate(today()),
-          note: '',
-          ...d,
-        } as Debt,
-        ...s.debts,
-      ],
-    })),
-  updateDebt: (id: string, patch: Partial<Debt>) =>
-    store.set((s) => ({ ...s, debts: s.debts.map((d) => (d.id === id ? { ...d, ...patch } : d)) })),
-  deleteDebt: (id: string) =>
-    store.set((s) => ({ ...s, debts: s.debts.filter((d) => d.id !== id) })),
-  addPayment: (debtId: string, amount: number) =>
+  addDebt: (d: Partial<Debt> & Pick<Debt, 'name' | 'direction' | 'amount' | 'due' | 'color'>) => {
+    const newDebt: Debt = {
+      id: 'd' + Date.now(),
+      paid: 0,
+      payments: [],
+      created: isoDate(today()),
+      note: '',
+      ...d,
+    };
+    store.set((s) => ({ ...s, debts: [newDebt, ...s.debts] }));
+    void push.debts.create(newDebt, () => {
+      store.set((s) => ({ ...s, debts: s.debts.filter((x) => x.id !== newDebt.id) }));
+    });
+  },
+  updateDebt: (id: string, patch: Partial<Debt>) => {
+    const old = store.get().debts.find((d) => d.id === id);
+    if (!old) return;
+    store.set((s) => ({ ...s, debts: s.debts.map((d) => (d.id === id ? { ...d, ...patch } : d)) }));
+    void push.debts.update(id, patch, () => {
+      store.set((s) => ({ ...s, debts: s.debts.map((d) => (d.id === id ? old : d)) }));
+    });
+  },
+  deleteDebt: (id: string) => {
+    const old = store.get().debts.find((d) => d.id === id);
+    if (!old) return;
+    store.set((s) => ({ ...s, debts: s.debts.filter((d) => d.id !== id) }));
+    void push.debts.remove(id, () => {
+      store.set((s) => ({ ...s, debts: [old, ...s.debts] }));
+    });
+  },
+  addPayment: (debtId: string, amount: number) => {
+    const paymentDate = isoDate(today());
+    const old = store.get().debts.find((d) => d.id === debtId);
+    if (!old) return;
     store.set((s) => ({
       ...s,
       debts: s.debts.map((d) =>
@@ -579,21 +698,42 @@ export const actions = {
           ? {
               ...d,
               paid: d.paid + amount,
-              payments: [...d.payments, { id: 'p' + Date.now(), amount, date: isoDate(today()) }],
+              payments: [...d.payments, { id: 'p' + Date.now(), amount, date: paymentDate }],
             }
           : d,
       ),
-    })),
-  archiveDebt: (id: string) =>
+    }));
+    void push.debts.addPayment(debtId, amount, paymentDate, () => {
+      store.set((s) => ({ ...s, debts: s.debts.map((d) => (d.id === debtId ? old : d)) }));
+    });
+  },
+  archiveDebt: (id: string) => {
+    const old = store.get().debts.find((d) => d.id === id);
+    if (!old) return;
     store.set((s) => ({
       ...s,
       debts: s.debts.map((d) => (d.id === id ? { ...d, archived: true, paid: d.amount } : d)),
-    })),
+    }));
+    void push.debts.archive(id, () => {
+      store.set((s) => ({ ...s, debts: s.debts.map((d) => (d.id === id ? old : d)) }));
+    });
+  },
 
-  addCategory: (c: Omit<Category, 'id'>) =>
-    store.set((s) => ({ ...s, categories: [...s.categories, { id: 'c' + Date.now(), ...c }] })),
-  deleteCategory: (id: string) =>
-    store.set((s) => ({ ...s, categories: s.categories.filter((c) => c.id !== id) })),
+  addCategory: (c: Omit<Category, 'id'>) => {
+    const newCat: Category = { id: 'c' + Date.now(), ...c };
+    store.set((s) => ({ ...s, categories: [...s.categories, newCat] }));
+    void push.categories.create(newCat, () => {
+      store.set((s) => ({ ...s, categories: s.categories.filter((x) => x.id !== newCat.id) }));
+    });
+  },
+  deleteCategory: (id: string) => {
+    const old = store.get().categories.find((c) => c.id === id);
+    if (!old) return;
+    store.set((s) => ({ ...s, categories: s.categories.filter((c) => c.id !== id) }));
+    void push.categories.remove(id, () => {
+      store.set((s) => ({ ...s, categories: [...s.categories, old] }));
+    });
+  },
   setCategoryHidden: (id: string, hidden: boolean) =>
     store.set((s) => ({
       ...s,
@@ -605,24 +745,83 @@ export const actions = {
       wallets: s.wallets.map((w) => (w.id === id ? { ...w, hidden } : w)),
     })),
 
-  addBudget: (b: Omit<Budget, 'id'>) =>
-    store.set((s) => ({ ...s, budgets: [...s.budgets, { id: 'b' + Date.now(), ...b }] })),
-  deleteBudget: (id: string) =>
-    store.set((s) => ({ ...s, budgets: s.budgets.filter((b) => b.id !== id) })),
+  addWallet: (w: Omit<Wallet, 'id'>) => {
+    const id = 'w' + Date.now();
+    const newWallet: Wallet = { id, ...w };
+    store.set((s) => ({ ...s, wallets: [newWallet, ...s.wallets] }));
+    void push.wallets.create(newWallet, () => {
+      store.set((s) => ({ ...s, wallets: s.wallets.filter((x) => x.id !== id) }));
+    });
+  },
+  updateWallet: (id: string, patch: Partial<Wallet>) => {
+    const old = store.get().wallets.find((w) => w.id === id);
+    if (!old) return;
+    store.set((s) => ({ ...s, wallets: s.wallets.map((w) => (w.id === id ? { ...w, ...patch } : w)) }));
+    void push.wallets.update(id, patch, () => {
+      store.set((s) => ({ ...s, wallets: s.wallets.map((w) => (w.id === id ? old : w)) }));
+    });
+  },
+  deleteWallet: (id: string) => {
+    const old = store.get().wallets.find((w) => w.id === id);
+    if (!old) return;
+    store.set((s) => ({ ...s, wallets: s.wallets.filter((w) => w.id !== id) }));
+    void push.wallets.remove(id, () => {
+      store.set((s) => ({ ...s, wallets: [old, ...s.wallets] }));
+    });
+  },
 
-  updateRecurring: (id: string, patch: Partial<Recurring>) =>
+  addBudget: (b: Omit<Budget, 'id'>) => {
+    const newBudget: Budget = { id: 'b' + Date.now(), ...b };
+    store.set((s) => ({ ...s, budgets: [...s.budgets, newBudget] }));
+    void push.budgets.create(newBudget, () => {
+      store.set((s) => ({ ...s, budgets: s.budgets.filter((x) => x.id !== newBudget.id) }));
+    });
+  },
+  deleteBudget: (id: string) => {
+    const old = store.get().budgets.find((b) => b.id === id);
+    if (!old) return;
+    store.set((s) => ({ ...s, budgets: s.budgets.filter((b) => b.id !== id) }));
+    void push.budgets.remove(id, () => {
+      store.set((s) => ({ ...s, budgets: [...s.budgets, old] }));
+    });
+  },
+
+  updateRecurring: (id: string, patch: Partial<Recurring>) => {
+    const old = store.get().recurring.find((r) => r.id === id);
+    if (!old) return;
     store.set((s) => ({
       ...s,
       recurring: s.recurring.map((r) => (r.id === id ? { ...r, ...patch } : r)),
-    })),
+    }));
+    void push.recurring.update(id, patch, () => {
+      store.set((s) => ({
+        ...s,
+        recurring: s.recurring.map((r) => (r.id === id ? old : r)),
+      }));
+    });
+  },
 
-  markNotifRead: (id: string) =>
+  markNotifRead: (id: string) => {
+    const old = store.get().notifs.find((n) => n.id === id);
+    if (!old) return;
     store.set((s) => ({
       ...s,
       notifs: s.notifs.map((n) => (n.id === id ? { ...n, read: true } : n)),
-    })),
-  markAllNotifsRead: () =>
-    store.set((s) => ({ ...s, notifs: s.notifs.map((n) => ({ ...n, read: true })) })),
+    }));
+    void push.notifs.markRead(id, () => {
+      store.set((s) => ({
+        ...s,
+        notifs: s.notifs.map((n) => (n.id === id ? old : n)),
+      }));
+    });
+  },
+  markAllNotifsRead: () => {
+    const oldNotifs = store.get().notifs;
+    store.set((s) => ({ ...s, notifs: s.notifs.map((n) => ({ ...n, read: true })) }));
+    void push.notifs.markAllRead(() => {
+      store.set((s) => ({ ...s, notifs: oldNotifs }));
+    });
+  },
 };
 
 export const selectMonth = (s: State, month: string) => {

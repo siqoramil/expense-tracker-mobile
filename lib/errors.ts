@@ -23,6 +23,10 @@ const SERVER_CODE_KEYS = new Set<string>([
   'wallet_not_found',
   'invalid_amount',
   'email_not_verified',
+  'budget_exists',
+  'wallet_not_empty',
+  'category_in_use',
+  'category_not_found',
 ]);
 
 const statusKey = (status: number): string => {

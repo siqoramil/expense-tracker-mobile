@@ -5,7 +5,7 @@ import { tStr } from '../../lib/i18n';
 import { catLabel, selectMonth, useStore } from '../../lib/store';
 import type { Tokens } from '../../lib/tokens';
 import { Icon } from '../Icon';
-import { Card, CatIcon, EmptyState, ScreenHeader, SectionHeader } from '../ui';
+import { Card, CatIcon, EmptyState, SectionHeader } from '../ui';
 
 export const StatsScreen: React.FC<{ t: Tokens }> = ({ t }) => {
   const s = useStore();
@@ -22,6 +22,8 @@ export const StatsScreen: React.FC<{ t: Tokens }> = ({ t }) => {
       totalInc: d.reduce((a, row) => a + row.income, 0),
       totalExp: d.reduce((a, row) => a + row.expense, 0),
     };
+    // selectMonth reads the whole store; re-run only when tx/months change
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [s.tx, months]);
 
   const catBreakdown = useMemo(() => {
@@ -39,20 +41,20 @@ export const StatsScreen: React.FC<{ t: Tokens }> = ({ t }) => {
 
   return (
     <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 160 }}>
-      <ScreenHeader t={t} title={tStr(lang, 'statistics')} subtitle="Last 6 months" />
-
       <View style={{ paddingHorizontal: 20, paddingBottom: 14, flexDirection: 'row', gap: 10 }}>
         <SumCard
           t={t}
           label={tStr(lang, 'totalIncome')}
           amount={totalInc}
           kind="income"
+          currency={s.prefs.currency}
         />
         <SumCard
           t={t}
           label={tStr(lang, 'totalExpenses')}
           amount={totalExp}
           kind="expense"
+          currency={s.prefs.currency}
         />
       </View>
 
@@ -151,9 +153,9 @@ const SumCard: React.FC<{
   label: string;
   amount: number;
   kind: 'income' | 'expense';
+  currency: import('../../lib/format').Currency;
   t: Tokens;
-}> = ({ label, amount, kind, t }) => {
-  const s = useStore();
+}> = ({ label, amount, kind, currency, t }) => {
   const up = kind === 'income';
   const color = up ? t.income : t.expense;
   return (
@@ -189,7 +191,7 @@ const SumCard: React.FC<{
         <Text style={{ fontSize: 12, color: t.textSec, fontWeight: '500' }}>{label}</Text>
       </View>
       <Text style={{ fontSize: 17, fontWeight: '700', color: t.text, letterSpacing: -0.4 }}>
-        {fmtMoney(amount, s.prefs.currency)}
+        {fmtMoney(amount, currency)}
       </Text>
     </View>
   );
