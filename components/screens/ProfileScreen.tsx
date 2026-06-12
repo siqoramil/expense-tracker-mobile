@@ -15,7 +15,7 @@ import { LANGUAGES, tStr } from '../../lib/i18n';
 import { actions, isImageAvatar, useStore } from '../../lib/store';
 import { toast } from '../../lib/toast';
 import type { Tokens } from '../../lib/tokens';
-import { DeleteAccountSheet, EditEmailSheet, EditNameSheet } from '../AccountSheets';
+import { DeleteAccountSheet } from '../AccountSheets';
 import { ActionSheet, type ActionSheetConfig } from '../ActionSheet';
 import Svg, { Path } from 'react-native-svg';
 import { Icon, type IconName } from '../Icon';
@@ -40,8 +40,6 @@ export const ProfileScreen: React.FC<{ t: Tokens; onNav: Nav; onLogout: () => vo
 }) => {
   const s = useStore();
   const lang = s.prefs.lang;
-  const [editName, setEditName] = useState(false);
-  const [editEmail, setEditEmail] = useState(false);
   const [deleteAccountOpen, setDeleteAccountOpen] = useState(false);
   const [sheetConfig, setSheetConfig] = useState<ActionSheetConfig | null>(null);
 
@@ -147,85 +145,56 @@ export const ProfileScreen: React.FC<{ t: Tokens; onNav: Nav; onLogout: () => vo
     }
   };
 
-  // Single entry point (top-right pencil) to edit name, email, or photo.
-  const openEditMenu = () => {
-    const labels = {
-      title: tStr(lang, 'editProfile'),
-      name: tStr(lang, 'editName'),
-      email: tStr(lang, 'editEmail'),
-      photo: tStr(lang, 'changePhoto'),
-      cancel: tStr(lang, 'cancel'),
-    };
-    const options = [labels.name, labels.email, labels.photo, labels.cancel];
-    const handle = (idx: number) => {
-      if (idx === 0) setEditName(true);
-      else if (idx === 1) setEditEmail(true);
-      else if (idx === 2) openAvatarMenu();
-    };
-    if (Platform.OS === 'ios') {
-      ActionSheetIOS.showActionSheetWithOptions(
-        { title: labels.title, options, cancelButtonIndex: options.length - 1 },
-        handle,
-      );
-    } else {
-      setSheetConfig({
-        title: labels.title,
-        options: [
-          { label: labels.name, onPress: () => setEditName(true) },
-          { label: labels.email, onPress: () => setEditEmail(true) },
-          { label: labels.photo, onPress: openAvatarMenu },
-        ],
-      });
-    }
-  };
-
   return (
     <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 160 }}>
       <View style={{ paddingHorizontal: 20, paddingBottom: 18 }}>
         <Card t={t} style={{ padding: 18 }}>
-          <Pressable
-            onPress={openEditMenu}
-            hitSlop={8}
-            style={{
-              position: 'absolute',
-              top: 12,
-              right: 12,
-              width: 30,
-              height: 30,
-              borderRadius: 15,
-              backgroundColor: t.surfaceAlt,
-              alignItems: 'center',
-              justifyContent: 'center',
-              zIndex: 1,
-            }}
-          >
-            <Icon name="pen" size={14} color={t.textSec} stroke={2} />
-          </Pressable>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
-            <View
-              style={{
-                width: 64,
-                height: 64,
-                borderRadius: 32,
-                backgroundColor: t.accent,
-                alignItems: 'center',
-                justifyContent: 'center',
-                overflow: 'hidden',
-                shadowColor: t.accent,
-                shadowOpacity: 0.3,
-                shadowRadius: 16,
-                shadowOffset: { width: 0, height: 6 },
-                elevation: 6,
-              }}
-            >
-              {hasImage ? (
-                <Image source={{ uri: s.profile.avatar }} style={{ width: 64, height: 64 }} />
-              ) : (
-                <Text style={{ fontSize: 23, fontWeight: '700', color: '#fff' }}>
-                  {s.profile.avatar}
-                </Text>
-              )}
-            </View>
+            {/* Avatar is the only editable thing here: tap it (or the badge) to
+                change the photo, Instagram-style. Name/email live in Account. */}
+            <Pressable onPress={openAvatarMenu} hitSlop={6} style={{ width: 64, height: 64 }}>
+              <View
+                style={{
+                  width: 64,
+                  height: 64,
+                  borderRadius: 32,
+                  backgroundColor: t.accent,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  overflow: 'hidden',
+                  shadowColor: t.accent,
+                  shadowOpacity: 0.3,
+                  shadowRadius: 16,
+                  shadowOffset: { width: 0, height: 6 },
+                  elevation: 6,
+                }}
+              >
+                {hasImage ? (
+                  <Image source={{ uri: s.profile.avatar }} style={{ width: 64, height: 64 }} />
+                ) : (
+                  <Text style={{ fontSize: 23, fontWeight: '700', color: '#fff' }}>
+                    {s.profile.avatar}
+                  </Text>
+                )}
+              </View>
+              <View
+                style={{
+                  position: 'absolute',
+                  bottom: -2,
+                  right: -2,
+                  width: 24,
+                  height: 24,
+                  borderRadius: 12,
+                  backgroundColor: t.accent,
+                  borderWidth: 2,
+                  borderColor: t.surface,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <Icon name="pen" size={11} color="#fff" stroke={2.2} />
+              </View>
+            </Pressable>
             <View style={{ flex: 1, minWidth: 0 }}>
               <Text
                 style={{ fontSize: 19, fontWeight: '700', color: t.text, letterSpacing: -0.4 }}
@@ -263,8 +232,6 @@ export const ProfileScreen: React.FC<{ t: Tokens; onNav: Nav; onLogout: () => vo
         </Card>
       </View>
 
-      <EditNameSheet t={t} visible={editName} onClose={() => setEditName(false)} />
-      <EditEmailSheet t={t} visible={editEmail} onClose={() => setEditEmail(false)} />
       <DeleteAccountSheet
         t={t}
         visible={deleteAccountOpen}
