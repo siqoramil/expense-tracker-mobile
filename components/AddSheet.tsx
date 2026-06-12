@@ -9,7 +9,11 @@ import { toast } from '../lib/toast';
 import type { Tokens } from '../lib/tokens';
 import { ModalBackdrop } from './Glass';
 import { Icon, type IconName } from './Icon';
-import { KeyboardAwareScrollView, KeyboardStickyView } from 'react-native-keyboard-controller';
+import {
+  KeyboardAwareScrollView,
+  KeyboardGestureArea,
+  KeyboardStickyView,
+} from 'react-native-keyboard-controller';
 import { SegmentedControl } from './ui';
 
 export type AddMode = 'expense' | 'income' | 'debt';
@@ -167,212 +171,215 @@ export const AddSheet: React.FC<Props> = ({ t, mode, editTx, editDebt, onClose }
         </Pressable>
       </View>
 
-      <KeyboardAwareScrollView
-        bottomOffset={88}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
-        style={{ flex: 1 }}
-        contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 20 }}
-      >
-        {!editTx && !editDebt ? (
-          <View style={{ marginBottom: 18 }}>
-            <SegmentedControl
-              t={t}
-              value={kind}
-              onChange={setKind}
-              options={[
-                { k: 'expense' as const, label: tStr(lang, 'expense_s') },
-                { k: 'income' as const, label: tStr(lang, 'income_s') },
-                { k: 'debt' as const, label: tStr(lang, 'debtLabel') },
-              ]}
-            />
-          </View>
-        ) : null}
-
-        <View
-          style={{
-            paddingVertical: 22,
-            paddingHorizontal: 20,
-            alignItems: 'center',
-            borderRadius: 22,
-            backgroundColor: accentTint,
-            marginBottom: 18,
-          }}
+      <KeyboardGestureArea interpolator="ios" style={{ flex: 1 }}>
+        <KeyboardAwareScrollView
+          bottomOffset={88}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="interactive"
+          showsVerticalScrollIndicator={false}
+          style={{ flex: 1 }}
+          contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 20 }}
         >
-          <Text
-            style={{
-              fontSize: 11,
-              color: t.textSec,
-              fontWeight: '700',
-              letterSpacing: 0.8,
-              marginBottom: 10,
-            }}
-          >
-            {tStr(lang, 'amount').toUpperCase()}
-          </Text>
+          {!editTx && !editDebt ? (
+            <View style={{ marginBottom: 18 }}>
+              <SegmentedControl
+                t={t}
+                value={kind}
+                onChange={setKind}
+                options={[
+                  { k: 'expense' as const, label: tStr(lang, 'expense_s') },
+                  { k: 'income' as const, label: tStr(lang, 'income_s') },
+                  { k: 'debt' as const, label: tStr(lang, 'debtLabel') },
+                ]}
+              />
+            </View>
+          ) : null}
+
           <View
             style={{
-              flexDirection: 'row',
-              alignItems: 'baseline',
-              gap: 8,
-              justifyContent: 'center',
+              paddingVertical: 22,
+              paddingHorizontal: 20,
+              alignItems: 'center',
+              borderRadius: 22,
+              backgroundColor: accentTint,
+              marginBottom: 18,
             }}
           >
-            <AppTextInput
-              value={formatAmountInput(amount)}
-              onChangeText={(v) => setAmount(v.replace(/[^0-9.]/g, ''))}
-              placeholder="0"
-              placeholderTextColor={t.textTer}
-              keyboardType="decimal-pad"
-              style={{
-                fontSize: 44,
-                fontWeight: '800',
-                color: amtColor,
-                letterSpacing: -1.6,
-                textAlign: 'center',
-                minWidth: 100,
-                padding: 0,
-              }}
-            />
-            <Text style={{ fontSize: 16, color: t.textSec, fontWeight: '600' }}>
-              {CURRENCIES[s.prefs.currency].suffix ?? CURRENCIES[s.prefs.currency].symbol}
-            </Text>
-          </View>
-        </View>
-
-        {kind === 'debt' ? (
-          <View style={{ gap: 10, marginBottom: 14 }}>
-            <SegmentedControl
-              t={t}
-              value={direction}
-              onChange={setDirection}
-              options={[
-                { k: 'owe_me' as const, label: tStr(lang, 'oweMe') },
-                { k: 'i_owe' as const, label: tStr(lang, 'iOwe') },
-              ]}
-            />
-            <Field t={t} label={tStr(lang, 'person')}>
-              <Input t={t} value={name} onChangeText={setName} placeholder="John Doe" />
-            </Field>
-            <Field t={t} label={tStr(lang, 'dueDate')}>
-              <DateTimeField
-                t={t}
-                date={due}
-                time={dueTime}
-                onChangeDate={setDue}
-                onChangeTime={setDueTime}
-              />
-            </Field>
-            <Field t={t} label={tStr(lang, 'note')}>
-              <Input
-                t={t}
-                value={note}
-                onChangeText={setNote}
-                placeholder={tStr(lang, 'notePlaceholder')}
-              />
-            </Field>
-          </View>
-        ) : (
-          <>
             <Text
               style={{
-                fontSize: 12,
-                fontWeight: '600',
+                fontSize: 11,
                 color: t.textSec,
-                marginBottom: 8,
-                letterSpacing: 0.2,
+                fontWeight: '700',
+                letterSpacing: 0.8,
+                marginBottom: 10,
               }}
             >
-              {tStr(lang, 'category').toUpperCase()}
+              {tStr(lang, 'amount').toUpperCase()}
             </Text>
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginBottom: 14 }}>
-              {cats.map((c) => {
-                const on = cat === c.id;
-                return (
-                  <Pressable
-                    key={c.id}
-                    onPress={() => setCat(c.id)}
-                    style={{
-                      width: '20%',
-                      padding: 4,
-                    }}
-                  >
-                    <View
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'baseline',
+                gap: 8,
+                justifyContent: 'center',
+              }}
+            >
+              <AppTextInput
+                value={formatAmountInput(amount)}
+                onChangeText={(v) => setAmount(v.replace(/[^0-9.]/g, ''))}
+                placeholder="0"
+                placeholderTextColor={t.textTer}
+                keyboardType="decimal-pad"
+                style={{
+                  fontSize: 44,
+                  fontWeight: '800',
+                  color: amtColor,
+                  letterSpacing: -1.6,
+                  textAlign: 'center',
+                  minWidth: 100,
+                  padding: 0,
+                }}
+              />
+              <Text style={{ fontSize: 16, color: t.textSec, fontWeight: '600' }}>
+                {CURRENCIES[s.prefs.currency].suffix ?? CURRENCIES[s.prefs.currency].symbol}
+              </Text>
+            </View>
+          </View>
+
+          {kind === 'debt' ? (
+            <View style={{ gap: 10, marginBottom: 14 }}>
+              <SegmentedControl
+                t={t}
+                value={direction}
+                onChange={setDirection}
+                options={[
+                  { k: 'owe_me' as const, label: tStr(lang, 'oweMe') },
+                  { k: 'i_owe' as const, label: tStr(lang, 'iOwe') },
+                ]}
+              />
+              <Field t={t} label={tStr(lang, 'person')}>
+                <Input t={t} value={name} onChangeText={setName} placeholder="John Doe" />
+              </Field>
+              <Field t={t} label={tStr(lang, 'dueDate')}>
+                <DateTimeField
+                  t={t}
+                  date={due}
+                  time={dueTime}
+                  onChangeDate={setDue}
+                  onChangeTime={setDueTime}
+                />
+              </Field>
+              <Field t={t} label={tStr(lang, 'note')}>
+                <Input
+                  t={t}
+                  value={note}
+                  onChangeText={setNote}
+                  placeholder={tStr(lang, 'notePlaceholder')}
+                />
+              </Field>
+            </View>
+          ) : (
+            <>
+              <Text
+                style={{
+                  fontSize: 12,
+                  fontWeight: '600',
+                  color: t.textSec,
+                  marginBottom: 8,
+                  letterSpacing: 0.2,
+                }}
+              >
+                {tStr(lang, 'category').toUpperCase()}
+              </Text>
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginBottom: 14 }}>
+                {cats.map((c) => {
+                  const on = cat === c.id;
+                  return (
+                    <Pressable
+                      key={c.id}
+                      onPress={() => setCat(c.id)}
                       style={{
-                        paddingVertical: 10,
-                        paddingHorizontal: 4,
-                        borderRadius: 14,
-                        backgroundColor: on ? c.color + '22' : t.surfaceAlt,
-                        borderWidth: 1.5,
-                        borderColor: on ? c.color : 'transparent',
-                        alignItems: 'center',
-                        gap: 5,
+                        width: '20%',
+                        padding: 4,
                       }}
                     >
-                      <Icon name={c.icon as IconName} size={19} color={c.color} stroke={2} />
-                      <Text style={{ fontSize: 10, fontWeight: '600', color: t.text }}>
-                        {catLabel(c, lang as Lang)}
-                      </Text>
-                    </View>
-                  </Pressable>
-                );
-              })}
-            </View>
-
-            <Field t={t} label={tStr(lang, 'wallet')}>
-              <View style={{ flexDirection: 'row', gap: 6 }}>
-                {s.wallets
-                  .filter((w) => !w.hidden)
-                  .map((w) => {
-                    const on = wallet === w.id;
-                    return (
-                      <Pressable
-                        key={w.id}
-                        onPress={() => setWallet(w.id)}
+                      <View
                         style={{
-                          flex: 1,
-                          padding: 10,
-                          borderRadius: 10,
-                          backgroundColor: on ? w.color + '22' : t.surfaceAlt,
+                          paddingVertical: 10,
+                          paddingHorizontal: 4,
+                          borderRadius: 14,
+                          backgroundColor: on ? c.color + '22' : t.surfaceAlt,
                           borderWidth: 1.5,
-                          borderColor: on ? w.color : 'transparent',
-                          flexDirection: 'row',
+                          borderColor: on ? c.color : 'transparent',
                           alignItems: 'center',
-                          justifyContent: 'center',
-                          gap: 6,
+                          gap: 5,
                         }}
                       >
-                        <Icon name={w.icon as IconName} size={14} color={w.color} />
-                        <Text style={{ fontSize: 12, fontWeight: '600', color: t.text }}>
-                          {walletName(w, lang)}
+                        <Icon name={c.icon as IconName} size={19} color={c.color} stroke={2} />
+                        <Text style={{ fontSize: 10, fontWeight: '600', color: t.text }}>
+                          {catLabel(c, lang as Lang)}
                         </Text>
-                      </Pressable>
-                    );
-                  })}
+                      </View>
+                    </Pressable>
+                  );
+                })}
               </View>
-            </Field>
 
-            <Field t={t} label={tStr(lang, 'note')} mt={10}>
-              <Input
-                t={t}
-                value={note}
-                onChangeText={setNote}
-                placeholder={tStr(lang, 'noteOptionalPlaceholder')}
-              />
-            </Field>
+              <Field t={t} label={tStr(lang, 'wallet')}>
+                <View style={{ flexDirection: 'row', gap: 6 }}>
+                  {s.wallets
+                    .filter((w) => !w.hidden)
+                    .map((w) => {
+                      const on = wallet === w.id;
+                      return (
+                        <Pressable
+                          key={w.id}
+                          onPress={() => setWallet(w.id)}
+                          style={{
+                            flex: 1,
+                            padding: 10,
+                            borderRadius: 10,
+                            backgroundColor: on ? w.color + '22' : t.surfaceAlt,
+                            borderWidth: 1.5,
+                            borderColor: on ? w.color : 'transparent',
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: 6,
+                          }}
+                        >
+                          <Icon name={w.icon as IconName} size={14} color={w.color} />
+                          <Text style={{ fontSize: 12, fontWeight: '600', color: t.text }}>
+                            {walletName(w, lang)}
+                          </Text>
+                        </Pressable>
+                      );
+                    })}
+                </View>
+              </Field>
 
-            <Field t={t} label={tStr(lang, 'date')} mt={10}>
-              <DateTimeField
-                t={t}
-                date={date}
-                time={time}
-                onChangeDate={setDate}
-                onChangeTime={setTime}
-              />
-            </Field>
-          </>
-        )}
-      </KeyboardAwareScrollView>
+              <Field t={t} label={tStr(lang, 'note')} mt={10}>
+                <Input
+                  t={t}
+                  value={note}
+                  onChangeText={setNote}
+                  placeholder={tStr(lang, 'noteOptionalPlaceholder')}
+                />
+              </Field>
+
+              <Field t={t} label={tStr(lang, 'date')} mt={10}>
+                <DateTimeField
+                  t={t}
+                  date={date}
+                  time={time}
+                  onChangeDate={setDate}
+                  onChangeTime={setTime}
+                />
+              </Field>
+            </>
+          )}
+        </KeyboardAwareScrollView>
+      </KeyboardGestureArea>
 
       <KeyboardStickyView
         offset={{ opened: 20 }}
