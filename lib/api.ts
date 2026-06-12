@@ -1,6 +1,6 @@
 import Constants from 'expo-constants';
 
-const DEFAULT_API_URL = 'https://expensetracker.ovrin.uz';
+const DEFAULT_API_URL = 'https://api.siqoramil.uz';
 const REQUEST_TIMEOUT_MS = 12_000;
 
 const configuredApiUrl = (Constants.expoConfig?.extra as { apiUrl?: string } | undefined)?.apiUrl;

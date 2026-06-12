@@ -61,7 +61,7 @@
     },
     "extra": {
       "router": {},
-      "apiUrl": "https://expensetracker.ovrin.uz",
+      "apiUrl": "https://api.siqoramil.uz",
       "googleWebClientId": "117558488241-6ic41go20uck8983jqe9k77i2oeqqkph.apps.googleusercontent.com",
       "googleIosClientId": "117558488241-clq1pfoivvjcnvs8diedcc5ml468sh28.apps.googleusercontent.com",
       "googleAndroidClientId": "117558488241-3g4g7r8lq2651ne0gimojtbe6rbvspem.apps.googleusercontent.com",
