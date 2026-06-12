@@ -34,10 +34,13 @@ const formatAmountInput = (raw: string): string => {
 export const AddSheet: React.FC<Props> = ({ t, mode, editTx, editDebt, onClose }) => {
   const s = useStore();
   const insets = useSafeAreaInsets();
-  // Android's formSheet does not inset for the status bar, so the title clips
-  // under it — pad the top by the safe-area inset there. iOS shows a grabber
-  // and sits below the status bar already, so the small fixed pad is fine.
-  const sheetTopPad = Platform.OS === 'android' ? insets.top + 12 : 14;
+  // Android formSheet draws under the status bar, so add the safe-area inset.
+  // iOS formSheet does NOT go under the status bar, but the sheet's own top
+  // has a grabber pill inside the rounded corner (sheetCornerRadius: 32).
+  // useSafeAreaInsets() returns top:0 inside an iOS sheet, so insets.top is
+  // no help here. A fixed 28px clears the grabber zone and corner radius;
+  // 14px was too small and caused the header row to hide behind the grabber.
+  const sheetTopPad = Platform.OS === 'android' ? insets.top + 12 : 28;
   const lang = s.prefs.lang;
   const initialKind: Kind = editTx ? editTx.kind : editDebt ? 'debt' : mode || 'expense';
 
