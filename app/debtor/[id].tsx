@@ -1,9 +1,9 @@
 import { Stack, router, useLocalSearchParams } from 'expo-router';
 import { Pressable } from 'react-native';
-import { DebtorDetail } from '../../components/screens/DebtorDetail';
-import { Icon } from '../../components/Icon';
-import { useStore } from '../../lib/store';
-import { makeTokens } from '../../lib/tokens';
+import { DebtorDetail } from '@/components/screens';
+import { Icon } from '@/components/Icon';
+import { makeTokens } from '@/lib/tokens';
+import { useStore } from '@/lib/store';
 
 export default function DebtorDetailRoute() {
   const s = useStore();

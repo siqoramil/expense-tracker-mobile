@@ -1,10 +1,10 @@
 import React, { useMemo } from 'react';
 import { FlatList, Text, View } from 'react-native';
-import { fmtMoney, last6Months } from '../../lib/format';
-import { tStr } from '../../lib/i18n';
-import { catLabel, useStore, type Budget } from '../../lib/store';
-import type { Tokens } from '../../lib/tokens';
-import { Card, CatIcon, EmptyState } from '../ui';
+import type { Tokens } from '@/lib/tokens';
+import { Card, CatIcon, EmptyState } from '@/components/ui';
+import { catLabel, type Budget, useStore } from '@/lib/store';
+import { fmtMoney, last6Months } from '@/lib/format';
+import { tStr } from '@/lib/i18n';
 
 export const BudgetsScreen: React.FC<{ t: Tokens }> = ({ t }) => {
   const s = useStore();

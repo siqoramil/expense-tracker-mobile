@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, StatusBar, StyleSheet, Text, View } from 'react-native';
-import { authApi, subscribeServerStatus, getServerStatus } from '../lib/api';
-import { tStr, type Lang } from '../lib/i18n';
-import type { Tokens } from '../lib/tokens';
-import { Icon } from './Icon';
+import type { Tokens } from '@/lib/tokens';
+import { Icon } from '@/components/Icon';
+import { authApi, getServerStatus, subscribeServerStatus } from '@/lib/api';
+import { tStr, type Lang } from '@/lib/i18n';
 
 type Props = {
   t: Tokens;
@@ -12,7 +12,7 @@ type Props = {
 
 export const ServerUnreachable: React.FC<Props> = ({ t, lang }) => {
   const [visible, setVisible] = useState(getServerStatus() === 'unreachable');
-  const [checking, setChecking] = useState(false);
+  const [checking, setChecking] = useState<boolean>(false);
 
   useEffect(() => subscribeServerStatus((s) => setVisible(s === 'unreachable')), []);
 

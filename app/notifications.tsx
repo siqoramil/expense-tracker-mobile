@@ -1,9 +1,9 @@
 import { Stack } from 'expo-router';
 import { Pressable, Text } from 'react-native';
-import { NotificationsScreen } from '../components/screens/NotificationsScreen';
-import { tStr } from '../lib/i18n';
-import { actions, useStore } from '../lib/store';
-import { makeTokens } from '../lib/tokens';
+import { NotificationsScreen } from '@/components/screens';
+import { actions, useStore } from '@/lib/store';
+import { makeTokens } from '@/lib/tokens';
+import { tStr } from '@/lib/i18n';
 
 export default function NotificationsRoute() {
   const s = useStore();

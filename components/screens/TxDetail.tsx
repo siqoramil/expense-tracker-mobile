@@ -1,13 +1,13 @@
 import { router } from 'expo-router';
 import React from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
-import { fmtDate, fmtMoney, unitOf } from '../../lib/format';
-import { tStr } from '../../lib/i18n';
-import { actions, catLabel, useStore, walletName, type Transaction } from '../../lib/store';
-import { toast } from '../../lib/toast';
-import type { Tokens } from '../../lib/tokens';
-import { Icon } from '../Icon';
-import { Card, DetailRow } from '../ui';
+import type { Tokens } from '@/lib/tokens';
+import { Card, DetailRow } from '@/components/ui';
+import { Icon } from '@/components/Icon';
+import { actions, catLabel, type Transaction, useStore, walletName } from '@/lib/store';
+import { fmtDate, fmtMoney, unitOf } from '@/lib/format';
+import { tStr } from '@/lib/i18n';
+import { toast } from '@/lib/toast';
 
 type Props = {
   t: Tokens;

@@ -1,18 +1,18 @@
 import React, { useState } from 'react';
 import { ScrollView, View } from 'react-native';
-import { EditEmailSheet, EditNameSheet, ForgotPasswordSheet } from '../AccountSheets';
-import { tStr } from '../../lib/i18n';
-import { useStore } from '../../lib/store';
-import type { Tokens } from '../../lib/tokens';
-import { Card } from '../ui';
-import { NavRow } from './ProfileScreen';
+import type { Tokens } from '@/lib/tokens';
+import { Card } from '@/components/ui';
+import { EditEmailSheet, EditNameSheet, ForgotPasswordSheet } from '@/components/AccountSheets';
+import { NavRow } from '@/components/screens/ProfileScreen';
+import { tStr } from '@/lib/i18n';
+import { useStore } from '@/lib/store';
 
 export const AccountScreen: React.FC<{ t: Tokens }> = ({ t }) => {
   const s = useStore();
   const lang = s.prefs.lang;
-  const [editName, setEditName] = useState(false);
-  const [editEmail, setEditEmail] = useState(false);
-  const [resetPassword, setResetPassword] = useState(false);
+  const [editName, setEditName] = useState<boolean>(false);
+  const [editEmail, setEditEmail] = useState<boolean>(false);
+  const [resetPassword, setResetPassword] = useState<boolean>(false);
 
   return (
     <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 160 }}>

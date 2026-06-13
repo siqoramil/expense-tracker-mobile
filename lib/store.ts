@@ -1,11 +1,11 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as SecureStore from 'expo-secure-store';
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
-import { isoDate, today, type Currency } from './format';
-import { authApi, setApiToken, setUnauthorizedHandler, type UserDTO } from './api';
-import { setAppLanguage, type Lang, type Localized } from './i18n';
-import { idmap } from './sync/idmap';
-import { bootstrapSync, push } from './sync';
+import { authApi, setApiToken, setUnauthorizedHandler, type UserDTO } from '@/lib/api';
+import { bootstrapSync, push } from '@/lib/sync';
+import { idmap } from '@/lib/sync/idmap';
+import { isoDate, today, type Currency } from '@/lib/format';
+import { setAppLanguage, type Lang, type Localized } from '@/lib/i18n';
 
 const STORAGE_KEY = 'expense_tracker_state_v2';
 // JWT lives in SecureStore (Keychain on iOS, EncryptedSharedPreferences on
@@ -342,7 +342,12 @@ export const hydrate = async () => {
   if (missingSeeds.length > 0) {
     state = { ...state, categories: [...state.categories, ...missingSeeds] };
   }
-  if (state.wallets.length === 0) {
+  // Seed default wallets only for offline/not-logged-in users. When a token
+  // is present the server is authoritative: bootstrapSync will populate
+  // wallets from GET /wallets (which seeds Cash+Card server-side on first
+  // call). Seeding locally for a logged-in user would cause divergence across
+  // devices if the server already has different wallet ids.
+  if (state.wallets.length === 0 && !token) {
     state = { ...state, wallets: SEED_WALLETS };
   }
   // Uzbek language was removed (so'm currency stays available) — migrate anyone

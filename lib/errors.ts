@@ -1,5 +1,5 @@
-import { ApiError, NetworkError, TimeoutError } from './api';
-import { tStr, type Lang } from './i18n';
+import { ApiError, NetworkError, TimeoutError } from '@/lib/api';
+import { tStr, type Lang } from '@/lib/i18n';
 
 const SERVER_CODE_KEYS = new Set<string>([
   'email_taken',

@@ -1,8 +1,8 @@
 import { Stack } from 'expo-router';
-import { WalletsScreen } from '../components/screens/WalletsScreen';
-import { tStr } from '../lib/i18n';
-import { useStore } from '../lib/store';
-import { makeTokens } from '../lib/tokens';
+import { WalletsScreen } from '@/components/screens';
+import { makeTokens } from '@/lib/tokens';
+import { tStr } from '@/lib/i18n';
+import { useStore } from '@/lib/store';
 export default function WalletsRoute() {
   const s = useStore();
   const t = makeTokens(s.prefs.dark);

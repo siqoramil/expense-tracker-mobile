@@ -1,14 +1,16 @@
 import { router } from 'expo-router';
 import React, { useState } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { AppTextInput } from '../AppTextInput';
-import { fmtDate, fmtMoney } from '../../lib/format';
-import { tStr } from '../../lib/i18n';
-import { actions, useStore, type Debt } from '../../lib/store';
-import { toast } from '../../lib/toast';
-import type { Tokens } from '../../lib/tokens';
-import { Icon } from '../Icon';
-import { Card, EmptyState, SectionHeader } from '../ui';
+import { KeyboardAwareScrollView, KeyboardProvider, KeyboardStickyView } from 'react-native-keyboard-controller';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import type { Tokens } from '@/lib/tokens';
+import { AppTextInput } from '@/components/AppTextInput';
+import { Card, EmptyState, SectionHeader } from '@/components/ui';
+import { Icon } from '@/components/Icon';
+import { actions, type Debt, useStore } from '@/lib/store';
+import { fmtDate, fmtMoney } from '@/lib/format';
+import { tStr } from '@/lib/i18n';
+import { toast } from '@/lib/toast';
 
 type Props = { t: Tokens; debtor: Debt };
 
@@ -16,8 +18,9 @@ export const DebtorDetail: React.FC<Props> = ({ t, debtor }) => {
   const s = useStore();
   const d = s.debts.find((x) => x.id === debtor.id) || debtor;
   const lang = s.prefs.lang;
-  const [payOpen, setPayOpen] = useState(false);
-  const [payAmt, setPayAmt] = useState('');
+  const insets = useSafeAreaInsets();
+  const [payOpen, setPayOpen] = useState<boolean>(false);
+  const [payAmt, setPayAmt] = useState<string>('');
   const remaining = d.amount - d.paid;
   const pct = Math.min(100, (d.paid / d.amount) * 100);
   const initials = d.name
@@ -206,80 +209,99 @@ export const DebtorDetail: React.FC<Props> = ({ t, debtor }) => {
         visible={payOpen}
         transparent
         animationType="slide"
+        statusBarTranslucent
         onRequestClose={() => setPayOpen(false)}
       >
-        <Pressable
-          onPress={() => setPayOpen(false)}
-          style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end' }}
-        >
+        <KeyboardProvider statusBarTranslucent navigationBarTranslucent>
           <Pressable
-            onPress={() => {}}
-            style={{
-              backgroundColor: t.sheetBg,
-              borderTopLeftRadius: 28,
-              borderTopRightRadius: 28,
-              padding: 20,
-              paddingBottom: 34,
-            }}
+            onPress={() => setPayOpen(false)}
+            style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end' }}
           >
-            <View
-              style={{
-                width: 38,
-                height: 5,
-                borderRadius: 3,
-                backgroundColor: t.borderStrong,
-                alignSelf: 'center',
-                marginBottom: 16,
-              }}
-            />
-            <Text style={{ fontSize: 18, fontWeight: '700', color: t.text, marginBottom: 16 }}>
-              {tStr(lang, 'addPayment')}
-            </Text>
-            <AppTextInput
-              autoFocus
-              keyboardType="numeric"
-              value={payAmt}
-              onChangeText={setPayAmt}
-              placeholder="0"
-              placeholderTextColor={t.textTer}
-              style={{
-                padding: 16,
-                borderRadius: 14,
-                backgroundColor: t.surfaceAlt,
-                borderWidth: 1,
-                borderColor: t.border,
-                color: t.text,
-                fontSize: 24,
-                fontWeight: '700',
-                textAlign: 'center',
-              }}
-            />
-            <Text
-              style={{
-                fontSize: 12,
-                color: t.textSec,
-                textAlign: 'center',
-                marginTop: 6,
-              }}
-            >
-              Max: {fmtMoney(remaining, s.prefs.currency)}
-            </Text>
             <Pressable
-              onPress={addPay}
+              onPress={() => {}}
               style={{
-                marginTop: 16,
-                padding: 14,
-                borderRadius: 14,
-                backgroundColor: t.accent,
-                alignItems: 'center',
+                backgroundColor: t.sheetBg,
+                borderTopLeftRadius: 28,
+                borderTopRightRadius: 28,
+                paddingHorizontal: 20,
+                paddingTop: 20,
               }}
             >
-              <Text style={{ color: '#fff', fontSize: 15, fontWeight: '600' }}>
-                {tStr(lang, 'save')}
+              <View
+                style={{
+                  width: 38,
+                  height: 5,
+                  borderRadius: 3,
+                  backgroundColor: t.borderStrong,
+                  alignSelf: 'center',
+                  marginBottom: 16,
+                }}
+              />
+              <Text style={{ fontSize: 18, fontWeight: '700', color: t.text, marginBottom: 16 }}>
+                {tStr(lang, 'addPayment')}
               </Text>
+              <KeyboardAwareScrollView
+                bottomOffset={24}
+                extraKeyboardSpace={14 + 48 + Math.max(insets.bottom, 16) + 16}
+                keyboardShouldPersistTaps="handled"
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={{ paddingBottom: 8 }}
+              >
+                <AppTextInput
+                  autoFocus
+                  keyboardType="numeric"
+                  value={payAmt}
+                  onChangeText={setPayAmt}
+                  placeholder="0"
+                  placeholderTextColor={t.textTer}
+                  style={{
+                    padding: 16,
+                    borderRadius: 14,
+                    backgroundColor: t.surfaceAlt,
+                    borderWidth: 1,
+                    borderColor: t.border,
+                    color: t.text,
+                    fontSize: 24,
+                    fontWeight: '700',
+                    textAlign: 'center',
+                  }}
+                />
+                <Text
+                  style={{
+                    fontSize: 12,
+                    color: t.textSec,
+                    textAlign: 'center',
+                    marginTop: 6,
+                  }}
+                >
+                  Max: {fmtMoney(remaining, s.prefs.currency)}
+                </Text>
+              </KeyboardAwareScrollView>
+              <KeyboardStickyView
+                offset={{ opened: 16 }}
+                style={{
+                  paddingTop: 14,
+                  paddingBottom: Math.max(insets.bottom, 16),
+                  backgroundColor: t.sheetBg,
+                }}
+              >
+                <Pressable
+                  onPress={addPay}
+                  style={{
+                    padding: 14,
+                    borderRadius: 14,
+                    backgroundColor: t.accent,
+                    alignItems: 'center',
+                  }}
+                >
+                  <Text style={{ color: '#fff', fontSize: 15, fontWeight: '600' }}>
+                    {tStr(lang, 'save')}
+                  </Text>
+                </Pressable>
+              </KeyboardStickyView>
             </Pressable>
           </Pressable>
-        </Pressable>
+        </KeyboardProvider>
       </Modal>
     </ScrollView>
   );

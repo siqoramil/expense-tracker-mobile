@@ -1,20 +1,16 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Modal, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { AppTextInput } from './AppTextInput';
-import { CURRENCIES, daysFromNow, isoDate, today } from '../lib/format';
-import { tStr, type Lang } from '../lib/i18n';
-import { actions, catLabel, useStore, walletName, type Debt, type Transaction } from '../lib/store';
-import { toast } from '../lib/toast';
-import type { Tokens } from '../lib/tokens';
-import { ModalBackdrop } from './Glass';
-import { Icon, type IconName } from './Icon';
-import {
-  KeyboardAwareScrollView,
-  KeyboardGestureArea,
-  KeyboardStickyView,
-} from 'react-native-keyboard-controller';
-import { SegmentedControl } from './ui';
+import type { Tokens } from '@/lib/tokens';
+import { AppTextInput } from '@/components/AppTextInput';
+import { CURRENCIES, daysFromNow, isoDate, today } from '@/lib/format';
+import { Icon, type IconName } from '@/components/Icon';
+import { ModalBackdrop } from '@/components/Glass';
+import { SegmentedControl } from '@/components/ui';
+import { actions, catLabel, type Debt, type Transaction, useStore, walletName } from '@/lib/store';
+import { tStr, type Lang } from '@/lib/i18n';
+import { toast } from '@/lib/toast';
+import { KeyboardAwareScrollView, KeyboardStickyView } from 'react-native-keyboard-controller';
 
 export type AddMode = 'expense' | 'income' | 'debt';
 
@@ -38,13 +34,17 @@ const formatAmountInput = (raw: string): string => {
 export const AddSheet: React.FC<Props> = ({ t, mode, editTx, editDebt, onClose }) => {
   const s = useStore();
   const insets = useSafeAreaInsets();
-  // Android formSheet draws under the status bar, so add the safe-area inset.
-  // iOS formSheet does NOT go under the status bar, but the sheet's own top
-  // has a grabber pill inside the rounded corner (sheetCornerRadius: 32).
-  // useSafeAreaInsets() returns top:0 inside an iOS sheet, so insets.top is
-  // no help here. A fixed 28px clears the grabber zone and corner radius;
-  // 14px was too small and caused the header row to hide behind the grabber.
-  const sheetTopPad = Platform.OS === 'android' ? insets.top + 12 : 28;
+  // Pushed full-screen route (not a formSheet), so the content goes under the
+  // status bar — pad the top by the safe-area inset on both platforms.
+  const topPad = insets.top + 12;
+  // Footer rests above the home indicator; the floor keeps a margin on devices
+  // without a bottom inset. Drives footerStyle padding and the sticky offset.
+  const footerPaddingBottom = Math.max(insets.bottom, 16);
+  const footerHeight = 14 + 54 + footerPaddingBottom; // paddingTop + button + paddingBottom
+  // KeyboardAwareScrollView lifts the focused input this far above the keyboard —
+  // enough to also clear the Save footer that floats above the keyboard.
+  const keyboardBottomOffset = footerHeight + 16;
+
   const lang = s.prefs.lang;
   const initialKind: Kind = editTx ? editTx.kind : editDebt ? 'debt' : mode || 'expense';
 
@@ -142,8 +142,272 @@ export const AddSheet: React.FC<Props> = ({ t, mode, editTx, editDebt, onClose }
   const accentTint =
     kind === 'income' ? t.incomeSoft : kind === 'debt' ? t.accentSoft : t.expenseSoft;
 
+  // Shared form body rendered inside the platform-appropriate scroll container.
+  const formBody = (
+    <>
+      {!editTx && !editDebt ? (
+        <View style={{ marginBottom: 18 }}>
+          <SegmentedControl
+            t={t}
+            value={kind}
+            onChange={setKind}
+            options={[
+              { k: 'expense' as const, label: tStr(lang, 'expense_s') },
+              { k: 'income' as const, label: tStr(lang, 'income_s') },
+              { k: 'debt' as const, label: tStr(lang, 'debtLabel') },
+            ]}
+          />
+        </View>
+      ) : null}
+
+      <View
+        style={{
+          paddingVertical: 22,
+          paddingHorizontal: 20,
+          alignItems: 'center',
+          borderRadius: 22,
+          backgroundColor: accentTint,
+          marginBottom: 18,
+        }}
+      >
+        <Text
+          style={{
+            fontSize: 11,
+            color: t.textSec,
+            fontWeight: '700',
+            letterSpacing: 0.8,
+            marginBottom: 10,
+          }}
+        >
+          {tStr(lang, 'amount').toUpperCase()}
+        </Text>
+        <View
+          style={{
+            flexDirection: 'row',
+            alignItems: 'baseline',
+            gap: 8,
+            justifyContent: 'center',
+          }}
+        >
+          <AppTextInput
+            value={formatAmountInput(amount)}
+            onChangeText={(v) => setAmount(v.replace(/[^0-9.]/g, ''))}
+            placeholder="0"
+            placeholderTextColor={t.textTer}
+            keyboardType="decimal-pad"
+            style={{
+              fontSize: 44,
+              fontWeight: '800',
+              color: amtColor,
+              letterSpacing: -1.6,
+              textAlign: 'center',
+              minWidth: 100,
+              padding: 0,
+            }}
+          />
+          <Text style={{ fontSize: 16, color: t.textSec, fontWeight: '600' }}>
+            {CURRENCIES[s.prefs.currency].suffix ?? CURRENCIES[s.prefs.currency].symbol}
+          </Text>
+        </View>
+      </View>
+
+      {kind === 'debt' ? (
+        <View style={{ gap: 10, marginBottom: 14 }}>
+          <SegmentedControl
+            t={t}
+            value={direction}
+            onChange={setDirection}
+            options={[
+              { k: 'owe_me' as const, label: tStr(lang, 'oweMe') },
+              { k: 'i_owe' as const, label: tStr(lang, 'iOwe') },
+            ]}
+          />
+          <Field t={t} label={tStr(lang, 'person')}>
+            <Input
+              t={t}
+              value={name}
+              onChangeText={setName}
+              placeholder="John Doe"
+            />
+          </Field>
+          <Field t={t} label={tStr(lang, 'dueDate')}>
+            <DateTimeField
+              t={t}
+              date={due}
+              time={dueTime}
+              onChangeDate={setDue}
+              onChangeTime={setDueTime}
+            />
+          </Field>
+          <Field t={t} label={tStr(lang, 'note')}>
+            <Input
+              t={t}
+              value={note}
+              onChangeText={setNote}
+              placeholder={tStr(lang, 'notePlaceholder')}
+            />
+          </Field>
+        </View>
+      ) : (
+        <>
+          <Text
+            style={{
+              fontSize: 12,
+              fontWeight: '600',
+              color: t.textSec,
+              marginBottom: 8,
+              letterSpacing: 0.2,
+            }}
+          >
+            {tStr(lang, 'category').toUpperCase()}
+          </Text>
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginBottom: 14 }}>
+            {cats.map((c) => {
+              const on = cat === c.id;
+              return (
+                <Pressable
+                  key={c.id}
+                  onPress={() => setCat(c.id)}
+                  style={{
+                    width: '20%',
+                    padding: 4,
+                  }}
+                >
+                  <View
+                    style={{
+                      paddingVertical: 10,
+                      paddingHorizontal: 4,
+                      borderRadius: 14,
+                      backgroundColor: on ? c.color + '22' : t.surfaceAlt,
+                      borderWidth: 1.5,
+                      borderColor: on ? c.color : 'transparent',
+                      alignItems: 'center',
+                      gap: 5,
+                    }}
+                  >
+                    <Icon name={c.icon as IconName} size={19} color={c.color} stroke={2} />
+                    <Text style={{ fontSize: 10, fontWeight: '600', color: t.text }}>
+                      {catLabel(c, lang as Lang)}
+                    </Text>
+                  </View>
+                </Pressable>
+              );
+            })}
+          </View>
+
+          <Field t={t} label={tStr(lang, 'wallet')}>
+            <View style={{ flexDirection: 'row', gap: 6 }}>
+              {s.wallets
+                .filter((w) => !w.hidden)
+                .map((w) => {
+                  const on = wallet === w.id;
+                  return (
+                    <Pressable
+                      key={w.id}
+                      onPress={() => setWallet(w.id)}
+                      style={{
+                        flex: 1,
+                        padding: 10,
+                        borderRadius: 10,
+                        backgroundColor: on ? w.color + '22' : t.surfaceAlt,
+                        borderWidth: 1.5,
+                        borderColor: on ? w.color : 'transparent',
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: 6,
+                      }}
+                    >
+                      <Icon name={w.icon as IconName} size={14} color={w.color} />
+                      <Text style={{ fontSize: 12, fontWeight: '600', color: t.text }}>
+                        {walletName(w, lang)}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+            </View>
+          </Field>
+
+          <Field t={t} label={tStr(lang, 'note')} mt={10}>
+            <Input
+              t={t}
+              value={note}
+              onChangeText={setNote}
+              placeholder={tStr(lang, 'noteOptionalPlaceholder')}
+            />
+          </Field>
+
+          <Field t={t} label={tStr(lang, 'date')} mt={10}>
+            <DateTimeField
+              t={t}
+              date={date}
+              time={time}
+              onChangeDate={setDate}
+              onChangeTime={setTime}
+            />
+          </Field>
+        </>
+      )}
+    </>
+  );
+
+  // Shared footer buttons rendered inside the platform-appropriate sticky wrapper.
+  const footerButtons = (
+    <>
+      {editTx || editDebt ? (
+        <Pressable
+          onPress={handleDelete}
+          style={{
+            width: 54,
+            height: 54,
+            borderRadius: 16,
+            backgroundColor: t.expenseSoft,
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <Icon name="close" size={20} color={t.expense} stroke={2.5} />
+        </Pressable>
+      ) : null}
+      <Pressable
+        onPress={submit}
+        style={({ pressed }) => [
+          {
+            flex: 1,
+            height: 54,
+            borderRadius: 16,
+            backgroundColor: t.accent,
+            alignItems: 'center',
+            justifyContent: 'center',
+            shadowColor: t.accent,
+            shadowOpacity: 0.35,
+            shadowRadius: 16,
+            shadowOffset: { width: 0, height: 6 },
+            elevation: 6,
+          },
+          pressed && { transform: [{ scale: 0.98 }], shadowOpacity: 0.2 },
+        ]}
+      >
+        <Text style={{ color: '#fff', fontSize: 16, fontWeight: '700', letterSpacing: 0.2 }}>
+          {tStr(lang, 'save')}
+        </Text>
+      </Pressable>
+    </>
+  );
+
+  const footerStyle = {
+    flexDirection: 'row' as const,
+    gap: 10,
+    paddingHorizontal: 20,
+    paddingTop: 14,
+    paddingBottom: footerPaddingBottom,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: t.divider,
+    backgroundColor: t.sheetBg,
+  };
+
   return (
-    <View style={{ flex: 1, backgroundColor: t.sheetBg, paddingTop: sheetTopPad }}>
+    <View style={{ flex: 1, backgroundColor: t.sheetBg, paddingTop: topPad }}>
       <View
         style={{
           flexDirection: 'row',
@@ -171,267 +435,25 @@ export const AddSheet: React.FC<Props> = ({ t, mode, editTx, editDebt, onClose }
         </Pressable>
       </View>
 
-      <KeyboardGestureArea interpolator="ios" style={{ flex: 1 }}>
-        <KeyboardAwareScrollView
-          bottomOffset={88}
-          keyboardShouldPersistTaps="handled"
-          keyboardDismissMode="interactive"
-          showsVerticalScrollIndicator={false}
-          style={{ flex: 1 }}
-          contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 20 }}
-        >
-          {!editTx && !editDebt ? (
-            <View style={{ marginBottom: 18 }}>
-              <SegmentedControl
-                t={t}
-                value={kind}
-                onChange={setKind}
-                options={[
-                  { k: 'expense' as const, label: tStr(lang, 'expense_s') },
-                  { k: 'income' as const, label: tStr(lang, 'income_s') },
-                  { k: 'debt' as const, label: tStr(lang, 'debtLabel') },
-                ]}
-              />
-            </View>
-          ) : null}
-
-          <View
-            style={{
-              paddingVertical: 22,
-              paddingHorizontal: 20,
-              alignItems: 'center',
-              borderRadius: 22,
-              backgroundColor: accentTint,
-              marginBottom: 18,
-            }}
-          >
-            <Text
-              style={{
-                fontSize: 11,
-                color: t.textSec,
-                fontWeight: '700',
-                letterSpacing: 0.8,
-                marginBottom: 10,
-              }}
-            >
-              {tStr(lang, 'amount').toUpperCase()}
-            </Text>
-            <View
-              style={{
-                flexDirection: 'row',
-                alignItems: 'baseline',
-                gap: 8,
-                justifyContent: 'center',
-              }}
-            >
-              <AppTextInput
-                value={formatAmountInput(amount)}
-                onChangeText={(v) => setAmount(v.replace(/[^0-9.]/g, ''))}
-                placeholder="0"
-                placeholderTextColor={t.textTer}
-                keyboardType="decimal-pad"
-                style={{
-                  fontSize: 44,
-                  fontWeight: '800',
-                  color: amtColor,
-                  letterSpacing: -1.6,
-                  textAlign: 'center',
-                  minWidth: 100,
-                  padding: 0,
-                }}
-              />
-              <Text style={{ fontSize: 16, color: t.textSec, fontWeight: '600' }}>
-                {CURRENCIES[s.prefs.currency].suffix ?? CURRENCIES[s.prefs.currency].symbol}
-              </Text>
-            </View>
-          </View>
-
-          {kind === 'debt' ? (
-            <View style={{ gap: 10, marginBottom: 14 }}>
-              <SegmentedControl
-                t={t}
-                value={direction}
-                onChange={setDirection}
-                options={[
-                  { k: 'owe_me' as const, label: tStr(lang, 'oweMe') },
-                  { k: 'i_owe' as const, label: tStr(lang, 'iOwe') },
-                ]}
-              />
-              <Field t={t} label={tStr(lang, 'person')}>
-                <Input t={t} value={name} onChangeText={setName} placeholder="John Doe" />
-              </Field>
-              <Field t={t} label={tStr(lang, 'dueDate')}>
-                <DateTimeField
-                  t={t}
-                  date={due}
-                  time={dueTime}
-                  onChangeDate={setDue}
-                  onChangeTime={setDueTime}
-                />
-              </Field>
-              <Field t={t} label={tStr(lang, 'note')}>
-                <Input
-                  t={t}
-                  value={note}
-                  onChangeText={setNote}
-                  placeholder={tStr(lang, 'notePlaceholder')}
-                />
-              </Field>
-            </View>
-          ) : (
-            <>
-              <Text
-                style={{
-                  fontSize: 12,
-                  fontWeight: '600',
-                  color: t.textSec,
-                  marginBottom: 8,
-                  letterSpacing: 0.2,
-                }}
-              >
-                {tStr(lang, 'category').toUpperCase()}
-              </Text>
-              <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginBottom: 14 }}>
-                {cats.map((c) => {
-                  const on = cat === c.id;
-                  return (
-                    <Pressable
-                      key={c.id}
-                      onPress={() => setCat(c.id)}
-                      style={{
-                        width: '20%',
-                        padding: 4,
-                      }}
-                    >
-                      <View
-                        style={{
-                          paddingVertical: 10,
-                          paddingHorizontal: 4,
-                          borderRadius: 14,
-                          backgroundColor: on ? c.color + '22' : t.surfaceAlt,
-                          borderWidth: 1.5,
-                          borderColor: on ? c.color : 'transparent',
-                          alignItems: 'center',
-                          gap: 5,
-                        }}
-                      >
-                        <Icon name={c.icon as IconName} size={19} color={c.color} stroke={2} />
-                        <Text style={{ fontSize: 10, fontWeight: '600', color: t.text }}>
-                          {catLabel(c, lang as Lang)}
-                        </Text>
-                      </View>
-                    </Pressable>
-                  );
-                })}
-              </View>
-
-              <Field t={t} label={tStr(lang, 'wallet')}>
-                <View style={{ flexDirection: 'row', gap: 6 }}>
-                  {s.wallets
-                    .filter((w) => !w.hidden)
-                    .map((w) => {
-                      const on = wallet === w.id;
-                      return (
-                        <Pressable
-                          key={w.id}
-                          onPress={() => setWallet(w.id)}
-                          style={{
-                            flex: 1,
-                            padding: 10,
-                            borderRadius: 10,
-                            backgroundColor: on ? w.color + '22' : t.surfaceAlt,
-                            borderWidth: 1.5,
-                            borderColor: on ? w.color : 'transparent',
-                            flexDirection: 'row',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            gap: 6,
-                          }}
-                        >
-                          <Icon name={w.icon as IconName} size={14} color={w.color} />
-                          <Text style={{ fontSize: 12, fontWeight: '600', color: t.text }}>
-                            {walletName(w, lang)}
-                          </Text>
-                        </Pressable>
-                      );
-                    })}
-                </View>
-              </Field>
-
-              <Field t={t} label={tStr(lang, 'note')} mt={10}>
-                <Input
-                  t={t}
-                  value={note}
-                  onChangeText={setNote}
-                  placeholder={tStr(lang, 'noteOptionalPlaceholder')}
-                />
-              </Field>
-
-              <Field t={t} label={tStr(lang, 'date')} mt={10}>
-                <DateTimeField
-                  t={t}
-                  date={date}
-                  time={time}
-                  onChangeDate={setDate}
-                  onChangeTime={setTime}
-                />
-              </Field>
-            </>
-          )}
-        </KeyboardAwareScrollView>
-      </KeyboardGestureArea>
-
-      <KeyboardStickyView
-        offset={{ opened: 20 }}
-        style={{
-          flexDirection: 'row',
-          gap: 10,
-          paddingHorizontal: 20,
-          paddingTop: 14,
-          paddingBottom: 30,
-          borderTopWidth: StyleSheet.hairlineWidth,
-          borderTopColor: t.divider,
-          backgroundColor: t.sheetBg,
-        }}
+      {/* Pushed screen inherits the root <KeyboardProvider>. KeyboardAwareScrollView
+          keeps the focused input above the keyboard; KeyboardStickyView makes the
+          Save footer ride the keyboard. Works cleanly because this is no longer a
+          formSheet (which breaks ScrollView scrolling — lib #726). */}
+      <KeyboardAwareScrollView
+        bottomOffset={keyboardBottomOffset}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="interactive"
+        showsVerticalScrollIndicator={false}
+        style={{ flex: 1 }}
+        contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: footerHeight + 20 }}
       >
-        {editTx || editDebt ? (
-          <Pressable
-            onPress={handleDelete}
-            style={{
-              width: 54,
-              height: 54,
-              borderRadius: 16,
-              backgroundColor: t.expenseSoft,
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <Icon name="close" size={20} color={t.expense} stroke={2.5} />
-          </Pressable>
-        ) : null}
-        <Pressable
-          onPress={submit}
-          style={({ pressed }) => [
-            {
-              flex: 1,
-              height: 54,
-              borderRadius: 16,
-              backgroundColor: t.accent,
-              alignItems: 'center',
-              justifyContent: 'center',
-              shadowColor: t.accent,
-              shadowOpacity: 0.35,
-              shadowRadius: 16,
-              shadowOffset: { width: 0, height: 6 },
-              elevation: 6,
-            },
-            pressed && { transform: [{ scale: 0.98 }], shadowOpacity: 0.2 },
-          ]}
-        >
-          <Text style={{ color: '#fff', fontSize: 16, fontWeight: '700', letterSpacing: 0.2 }}>
-            {tStr(lang, 'save')}
-          </Text>
-        </Pressable>
+        {formBody}
+      </KeyboardAwareScrollView>
+
+      {/* opened offset shifts the footer down by the safe-area surplus so the visible
+          gap above the keyboard equals the 14px top padding while the keyboard is up. */}
+      <KeyboardStickyView offset={{ closed: 0, opened: footerPaddingBottom - 14 }}>
+        <View style={footerStyle}>{footerButtons}</View>
       </KeyboardStickyView>
     </View>
   );

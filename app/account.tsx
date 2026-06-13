@@ -1,8 +1,8 @@
 import { Stack } from 'expo-router';
-import { AccountScreen } from '../components/screens/AccountScreen';
-import { tStr } from '../lib/i18n';
-import { useStore } from '../lib/store';
-import { makeTokens } from '../lib/tokens';
+import { AccountScreen } from '@/components/screens';
+import { makeTokens } from '@/lib/tokens';
+import { tStr } from '@/lib/i18n';
+import { useStore } from '@/lib/store';
 
 export default function AccountRoute() {
   const s = useStore();

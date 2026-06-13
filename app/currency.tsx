@@ -1,8 +1,8 @@
 import { Stack } from 'expo-router';
-import { CurrencyScreen } from '../components/screens/SettingsSubs';
-import { tStr } from '../lib/i18n';
-import { useStore } from '../lib/store';
-import { makeTokens } from '../lib/tokens';
+import { CurrencyScreen } from '@/components/screens';
+import { makeTokens } from '@/lib/tokens';
+import { tStr } from '@/lib/i18n';
+import { useStore } from '@/lib/store';
 
 export default function CurrencyRoute() {
   const s = useStore();

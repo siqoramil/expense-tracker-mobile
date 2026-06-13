@@ -1,11 +1,11 @@
 import { router } from 'expo-router';
 import { useMemo } from 'react';
-import { StatsScreen } from '../../components/screens/StatsScreen';
-import { TabHeader } from '../../components/TabHeader';
-import { TabSafeArea } from '../../components/TabSafeArea';
-import { tStr } from '../../lib/i18n';
-import { useStoreSelector } from '../../lib/store';
-import { makeTokens } from '../../lib/tokens';
+import { StatsScreen } from '@/components/screens';
+import { TabHeader } from '@/components/TabHeader';
+import { TabSafeArea } from '@/components/TabSafeArea';
+import { makeTokens } from '@/lib/tokens';
+import { tStr } from '@/lib/i18n';
+import { useStoreSelector } from '@/lib/store';
 
 export default function StatsRoute() {
   const dark = useStoreSelector((s) => s.prefs.dark);

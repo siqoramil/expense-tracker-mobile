@@ -1,22 +1,11 @@
 import React, { useEffect, useRef } from 'react';
-import {
-  Animated,
-  Easing,
-  type LayoutChangeEvent,
-  Platform,
-  Pressable,
-  type StyleProp,
-  StyleSheet,
-  View,
-  type ViewStyle,
-  useWindowDimensions,
-} from 'react-native';
+import { Animated, Easing, type LayoutChangeEvent, Platform, Pressable, type StyleProp, StyleSheet, View, type ViewStyle, useWindowDimensions, } from 'react-native';
 import Reanimated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
-import type { Lang } from '../lib/i18n';
-import type { Tokens } from '../lib/tokens';
-import { Icon, type IconName } from './Icon';
+import type { Lang } from '@/lib/i18n';
+import type { Tokens } from '@/lib/tokens';
+import { Icon, type IconName } from '@/components/Icon';
 
 // Liquid Glass (iOS 26+) is optional — probe lazily so a missing native module
 // or older OS never throws. The active-tab pill renders as real Liquid Glass

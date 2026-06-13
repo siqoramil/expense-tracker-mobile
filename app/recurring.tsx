@@ -1,8 +1,8 @@
 import { Stack } from 'expo-router';
-import { RecurringScreen } from '../components/screens/RecurringScreen';
-import { tStr } from '../lib/i18n';
-import { useStore } from '../lib/store';
-import { makeTokens } from '../lib/tokens';
+import { RecurringScreen } from '@/components/screens';
+import { makeTokens } from '@/lib/tokens';
+import { tStr } from '@/lib/i18n';
+import { useStore } from '@/lib/store';
 export default function RecurringRoute() {
   const s = useStore();
   const t = makeTokens(s.prefs.dark);

@@ -1,8 +1,8 @@
 import { Stack } from 'expo-router';
-import { CategoriesScreen } from '../components/screens/CategoriesScreen';
-import { tStr } from '../lib/i18n';
-import { useStore } from '../lib/store';
-import { makeTokens } from '../lib/tokens';
+import { CategoriesScreen } from '@/components/screens';
+import { makeTokens } from '@/lib/tokens';
+import { tStr } from '@/lib/i18n';
+import { useStore } from '@/lib/store';
 
 export default function CategoriesRoute() {
   const s = useStore();

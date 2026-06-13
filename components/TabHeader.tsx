@@ -1,7 +1,7 @@
 import React from 'react';
 import { Platform, Pressable, Text, View } from 'react-native';
-import type { Tokens } from '../lib/tokens';
-import { Icon } from './Icon';
+import type { Tokens } from '@/lib/tokens';
+import { Icon } from '@/components/Icon';
 
 // Large-title header for tab screens. No navigator draws a header for tabs on
 // either platform, so each tab supplies its own title. The "+" action is shown

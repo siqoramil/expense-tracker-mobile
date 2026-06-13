@@ -65,12 +65,16 @@ const _runBootstrap = async (): Promise<void> => {
     );
     const clientOnly = currentState.categories.filter((c) => {
       if (serverCatIds.has(c.id)) return false;
-      if (idmap.forDomain('categories').toServer(c.id)) return false;
       const serverId = serverSig.get(`${c.kind}|${c.label?.en ?? ''}`);
       if (serverId) {
         idmap.forDomain('categories').link(c.id, serverId);
         return false;
       }
+      // Drop only when the idmap-mapped server id is actually in the current
+      // server set; a stale mapping to a deleted id must not silently drop a
+      // category that is genuinely offline-only.
+      const mappedServerId = idmap.forDomain('categories').toServer(c.id);
+      if (mappedServerId && serverCatIds.has(mappedServerId)) return false;
       return true;
     });
     const mergedCategories = [...fetchedCategories, ...clientOnly];
@@ -94,13 +98,18 @@ const _runBootstrap = async (): Promise<void> => {
               return local ? { ...sw, hidden: local.hidden } : sw;
             }),
             // Keep local wallets the server doesn't have yet so syncing never
-            // wipes them; they lazy-create on first use. Drop a local wallet if
-            // it is already mapped to a server id, or if a server wallet with
-            // the same name already represents it (link + dedup) — otherwise a
-            // lazily-synced seed wallet would show up twice.
+            // wipes them; they lazy-create on first use. A local wallet is
+            // genuinely represented on the server (and should be dropped from
+            // the local-only tail) only when ONE of these is true:
+            //   1. Its id is directly in serverWalletIds (already a server id).
+            //   2. A server wallet with the same name.en exists (link + dedup).
+            //   3. Its idmap-mapped server id IS present in serverWalletIds
+            //      (it was previously pushed; the mapped id is still live).
+            // Condition 3 now checks that the mapped id is actually in the
+            // fresh server set, preventing stale idmap entries from silently
+            // dropping a wallet that no longer exists on the server.
             ...currentState.wallets.filter((w) => {
               if (serverWalletIds.has(w.id)) return false;
-              if (idmap.forDomain('wallets').toServer(w.id)) return false;
               const match = (serverWallets ?? []).find(
                 (sw) => (sw.name?.en ?? '') === (w.name?.en ?? ''),
               );
@@ -108,6 +117,8 @@ const _runBootstrap = async (): Promise<void> => {
                 idmap.forDomain('wallets').link(w.id, match.id);
                 return false;
               }
+              const mappedServerId = idmap.forDomain('wallets').toServer(w.id);
+              if (mappedServerId && serverWalletIds.has(mappedServerId)) return false;
               return true;
             }),
           ]

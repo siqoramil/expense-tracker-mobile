@@ -1,25 +1,16 @@
 import React, { useState } from 'react';
-import {
-  ActionSheetIOS,
-  Image,
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
-import { errorMessage } from '../../lib/errors';
-import { isGoogleAuthAvailable, signInWithGoogle } from '../../lib/googleAuth';
-import { LANGUAGES, tStr } from '../../lib/i18n';
-import { actions, isImageAvatar, useStore } from '../../lib/store';
-import { toast } from '../../lib/toast';
-import type { Tokens } from '../../lib/tokens';
-import { DeleteAccountSheet } from '../AccountSheets';
-import { ActionSheet, type ActionSheetConfig } from '../ActionSheet';
+import { ActionSheetIOS, Image, Platform, Pressable, ScrollView, StyleSheet, Text, View, } from 'react-native';
+import type { Tokens } from '@/lib/tokens';
+import { ActionSheet, type ActionSheetConfig } from '@/components/ActionSheet';
+import { Card, SectionHeader, Switch } from '@/components/ui';
+import { DeleteAccountSheet } from '@/components/AccountSheets';
+import { Icon, type IconName } from '@/components/Icon';
+import { LANGUAGES, tStr } from '@/lib/i18n';
+import { actions, isImageAvatar, useStore } from '@/lib/store';
+import { errorMessage } from '@/lib/errors';
+import { isGoogleAuthAvailable, signInWithGoogle } from '@/lib/googleAuth';
+import { toast } from '@/lib/toast';
 import Svg, { Path } from 'react-native-svg';
-import { Icon, type IconName } from '../Icon';
-import { Card, SectionHeader, Switch } from '../ui';
 
 type ImagePickerModule = typeof import('expo-image-picker');
 const loadImagePicker = (): ImagePickerModule | null => {
@@ -40,7 +31,7 @@ export const ProfileScreen: React.FC<{ t: Tokens; onNav: Nav; onLogout: () => vo
 }) => {
   const s = useStore();
   const lang = s.prefs.lang;
-  const [deleteAccountOpen, setDeleteAccountOpen] = useState(false);
+  const [deleteAccountOpen, setDeleteAccountOpen] = useState<boolean>(false);
   const [sheetConfig, setSheetConfig] = useState<ActionSheetConfig | null>(null);
 
   const hasImage = isImageAvatar(s.profile.avatar);

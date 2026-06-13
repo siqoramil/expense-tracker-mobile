@@ -1,6 +1,6 @@
-import { walletsApi, type WalletDTO, type CreateWalletInput, type UpdateWalletInput } from '../dataApi';
-import type { Wallet } from '../store';
-import type { SyncModule } from './types';
+import type { SyncModule } from '@/lib/sync/types';
+import type { Wallet } from '@/lib/store';
+import { type CreateWalletInput, type UpdateWalletInput, type WalletDTO, walletsApi } from '@/lib/dataApi';
 
 export const walletsSync: SyncModule<Wallet, WalletDTO, CreateWalletInput, UpdateWalletInput> = {
   domain: 'wallets',

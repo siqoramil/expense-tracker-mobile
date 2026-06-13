@@ -1,8 +1,8 @@
 import { Stack } from 'expo-router';
-import { BudgetsScreen } from '../components/screens/BudgetsScreen';
-import { tStr } from '../lib/i18n';
-import { useStore } from '../lib/store';
-import { makeTokens } from '../lib/tokens';
+import { BudgetsScreen } from '@/components/screens';
+import { makeTokens } from '@/lib/tokens';
+import { tStr } from '@/lib/i18n';
+import { useStore } from '@/lib/store';
 
 export default function BudgetsRoute() {
   const s = useStore();

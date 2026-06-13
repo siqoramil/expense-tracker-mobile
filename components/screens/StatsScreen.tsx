@@ -1,11 +1,11 @@
 import React, { useMemo } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
-import { fmtMoney, last6Months } from '../../lib/format';
-import { tStr } from '../../lib/i18n';
-import { catLabel, selectMonth, useStore } from '../../lib/store';
-import type { Tokens } from '../../lib/tokens';
-import { Icon } from '../Icon';
-import { Card, CatIcon, EmptyState, SectionHeader } from '../ui';
+import type { Tokens } from '@/lib/tokens';
+import { Card, CatIcon, EmptyState, SectionHeader } from '@/components/ui';
+import { Icon } from '@/components/Icon';
+import { catLabel, selectMonth, useStore } from '@/lib/store';
+import { fmtMoney, last6Months } from '@/lib/format';
+import { tStr } from '@/lib/i18n';
 
 export const StatsScreen: React.FC<{ t: Tokens }> = ({ t }) => {
   const s = useStore();

@@ -1,11 +1,11 @@
 import React from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { CURRENCY_LIST } from '../../lib/format';
-import { LANGUAGES } from '../../lib/i18n';
-import { actions, useStore } from '../../lib/store';
-import type { Tokens } from '../../lib/tokens';
-import { Icon } from '../Icon';
-import { Card } from '../ui';
+import type { Tokens } from '@/lib/tokens';
+import { CURRENCY_LIST } from '@/lib/format';
+import { Card } from '@/components/ui';
+import { Icon } from '@/components/Icon';
+import { LANGUAGES } from '@/lib/i18n';
+import { actions, useStore } from '@/lib/store';
 
 export const LanguageScreen: React.FC<{ t: Tokens }> = ({ t }) => {
   const s = useStore();

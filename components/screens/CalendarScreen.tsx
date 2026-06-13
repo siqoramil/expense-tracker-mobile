@@ -1,11 +1,11 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { fmtDate, fmtMoney, isoDate, today } from '../../lib/format';
-import { tStr } from '../../lib/i18n';
-import { useStore, useStoreSelector, type Transaction } from '../../lib/store';
-import type { Tokens } from '../../lib/tokens';
-import { Icon } from '../Icon';
-import { Card, EmptyState, TxRow } from '../ui';
+import type { Tokens } from '@/lib/tokens';
+import { Card, EmptyState, TxRow } from '@/components/ui';
+import { Icon } from '@/components/Icon';
+import { fmtDate, fmtMoney, isoDate, today } from '@/lib/format';
+import { tStr } from '@/lib/i18n';
+import { type Transaction, useStore, useStoreSelector } from '@/lib/store';
 
 const MONTH_NAMES = [
   'January',

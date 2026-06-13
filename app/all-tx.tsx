@@ -1,8 +1,8 @@
 import { Stack, router } from 'expo-router';
-import { AllTxScreen } from '../components/screens/AllTxScreen';
-import { tStr } from '../lib/i18n';
-import { useStore } from '../lib/store';
-import { makeTokens } from '../lib/tokens';
+import { AllTxScreen } from '@/components/screens';
+import { makeTokens } from '@/lib/tokens';
+import { tStr } from '@/lib/i18n';
+import { useStore } from '@/lib/store';
 
 export default function AllTxRoute() {
   const s = useStore();

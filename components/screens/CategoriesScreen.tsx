@@ -1,10 +1,10 @@
 import React from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { tStr, type Lang } from '../../lib/i18n';
-import { actions, catLabel, useStore, type Category, type CategoryKind } from '../../lib/store';
-import type { Tokens } from '../../lib/tokens';
-import { Icon } from '../Icon';
-import { Card, CatIcon } from '../ui';
+import type { Tokens } from '@/lib/tokens';
+import { Card, CatIcon } from '@/components/ui';
+import { Icon } from '@/components/Icon';
+import { actions, catLabel, type Category, type CategoryKind, useStore } from '@/lib/store';
+import { tStr, type Lang } from '@/lib/i18n';
 
 const Row: React.FC<{
   t: Tokens;

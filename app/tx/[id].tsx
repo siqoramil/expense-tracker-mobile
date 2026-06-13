@@ -1,8 +1,8 @@
 import { Stack, router, useLocalSearchParams } from 'expo-router';
-import { TxDetail } from '../../components/screens/TxDetail';
-import { tStr } from '../../lib/i18n';
-import { useStore } from '../../lib/store';
-import { makeTokens } from '../../lib/tokens';
+import { TxDetail } from '@/components/screens';
+import { makeTokens } from '@/lib/tokens';
+import { tStr } from '@/lib/i18n';
+import { useStore } from '@/lib/store';
 
 export default function TxDetailRoute() {
   const s = useStore();

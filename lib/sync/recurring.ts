@@ -1,6 +1,6 @@
-import { recurringApi, type RecurringDTO, type CreateRecurringInput, type UpdateRecurringInput } from '../dataApi';
-import type { Recurring } from '../store';
-import type { SyncModule } from './types';
+import type { Recurring } from '@/lib/store';
+import type { SyncModule } from '@/lib/sync/types';
+import { recurringApi, type CreateRecurringInput, type RecurringDTO, type UpdateRecurringInput } from '@/lib/dataApi';
 
 export const recurringSync: SyncModule<Recurring, RecurringDTO, CreateRecurringInput, UpdateRecurringInput> = {
   domain: 'recurring',

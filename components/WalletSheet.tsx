@@ -1,17 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import {
-  KeyboardAwareScrollView,
-  KeyboardProvider,
-  KeyboardStickyView,
-} from 'react-native-keyboard-controller';
+import { KeyboardAwareScrollView, KeyboardProvider, KeyboardStickyView, } from 'react-native-keyboard-controller';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { AppTextInput } from './AppTextInput';
-import { Icon, type IconName } from './Icon';
-import { ModalBackdrop } from './Glass';
-import { tStr, type Lang } from '../lib/i18n';
-import { actions, type Wallet } from '../lib/store';
-import type { Tokens } from '../lib/tokens';
+import type { Tokens } from '@/lib/tokens';
+import { AppTextInput } from '@/components/AppTextInput';
+import { Icon, type IconName } from '@/components/Icon';
+import { ModalBackdrop } from '@/components/Glass';
+import { actions, type Wallet } from '@/lib/store';
+import { tStr, type Lang } from '@/lib/i18n';
 
 const ICON_OPTIONS: IconName[] = [
   'wallet',
@@ -60,11 +56,16 @@ type Props = {
 export const WalletSheet: React.FC<Props> = ({ t, lang, visible, wallet, onClose }) => {
   const isEdit = wallet !== undefined;
   const insets = useSafeAreaInsets();
+  // Footer height = paddingTop(12) + button(52) + paddingBottom + opened offset(16).
+  // bottomOffset must match so KeyboardAwareScrollView scrolls the focused input
+  // above the sticky footer, not just above the keyboard.
+  const footerPaddingBottom = Math.max(insets.bottom, 16);
+  const stickyFooterOffset = 12 + 52 + footerPaddingBottom + 16;
 
-  const [name, setName] = useState('');
+  const [name, setName] = useState<string>('');
   const [icon, setIcon] = useState<IconName>('wallet');
   const [color, setColor] = useState(COLOR_OPTIONS[0]);
-  const [balance, setBalance] = useState('');
+  const [balance, setBalance] = useState<string>('');
 
   useEffect(() => {
     if (visible) {
@@ -176,7 +177,8 @@ export const WalletSheet: React.FC<Props> = ({ t, lang, visible, wallet, onClose
               </View>
 
               <KeyboardAwareScrollView
-                bottomOffset={80}
+                bottomOffset={24}
+                extraKeyboardSpace={stickyFooterOffset}
                 keyboardShouldPersistTaps="handled"
                 showsVerticalScrollIndicator={false}
                 contentContainerStyle={{ paddingBottom: 8 }}
@@ -264,7 +266,7 @@ export const WalletSheet: React.FC<Props> = ({ t, lang, visible, wallet, onClose
                 offset={{ opened: 16 }}
                 style={{
                   paddingTop: 12,
-                  paddingBottom: Math.max(insets.bottom, 16),
+                  paddingBottom: footerPaddingBottom,
                   borderTopWidth: StyleSheet.hairlineWidth,
                   borderTopColor: t.border,
                   backgroundColor: t.sheetBg,

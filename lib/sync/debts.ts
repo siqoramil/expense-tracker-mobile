@@ -1,6 +1,6 @@
-import { debtsApi, type DebtDTO, type CreateDebtInput, type UpdateDebtInput, type DebtPaymentInput } from '../dataApi';
-import type { Debt } from '../store';
-import type { SyncModule } from './types';
+import type { Debt } from '@/lib/store';
+import type { SyncModule } from '@/lib/sync/types';
+import { debtsApi, type CreateDebtInput, type DebtDTO, type DebtPaymentInput, type UpdateDebtInput } from '@/lib/dataApi';
 
 type DebtsSync = SyncModule<Debt, DebtDTO, CreateDebtInput, UpdateDebtInput> & {
   addPayment(serverId: string, body: { amount: number; date?: string }): Promise<DebtDTO>;

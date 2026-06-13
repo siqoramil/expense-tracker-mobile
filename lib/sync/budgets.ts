@@ -1,6 +1,6 @@
-import { budgetsApi, type BudgetDTO, type CreateBudgetInput, type UpdateBudgetInput } from '../dataApi';
-import type { Budget } from '../store';
-import type { SyncModule } from './types';
+import type { Budget } from '@/lib/store';
+import type { SyncModule } from '@/lib/sync/types';
+import { budgetsApi, type BudgetDTO, type CreateBudgetInput, type UpdateBudgetInput } from '@/lib/dataApi';
 
 export const budgetsSync: SyncModule<Budget, BudgetDTO, CreateBudgetInput, UpdateBudgetInput> = {
   domain: 'budgets',

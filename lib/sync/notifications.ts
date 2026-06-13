@@ -1,5 +1,5 @@
-import { notificationsApi, type NotificationDTO } from '../dataApi';
-import type { Notif } from '../store';
+import type { Notif } from '@/lib/store';
+import { notificationsApi, type NotificationDTO } from '@/lib/dataApi';
 
 function toLocal(dto: NotificationDTO): Notif {
   return {

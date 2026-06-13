@@ -1,12 +1,12 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 
-import de from './locales/de.json';
-import en from './locales/en.json';
-import es from './locales/es.json';
-import fr from './locales/fr.json';
-import ru from './locales/ru.json';
-import uz from './locales/uz.json';
+import de from '@/lib/locales/de.json';
+import en from '@/lib/locales/en.json';
+import es from '@/lib/locales/es.json';
+import fr from '@/lib/locales/fr.json';
+import ru from '@/lib/locales/ru.json';
+import uz from '@/lib/locales/uz.json';
 
 // 'uz' remains in the Lang union because bilingual data (categories/wallets) and
 // the server contract still carry an `uz` field, but Uzbek is no longer a

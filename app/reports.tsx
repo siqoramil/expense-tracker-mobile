@@ -1,8 +1,8 @@
 import { Stack } from 'expo-router';
-import { ReportsScreen } from '../components/screens/ReportsScreen';
-import { tStr } from '../lib/i18n';
-import { useStore } from '../lib/store';
-import { makeTokens } from '../lib/tokens';
+import { ReportsScreen } from '@/components/screens';
+import { makeTokens } from '@/lib/tokens';
+import { tStr } from '@/lib/i18n';
+import { useStore } from '@/lib/store';
 
 export default function ReportsRoute() {
   const s = useStore();

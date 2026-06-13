@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { fmtMoney, unitOf, type Currency } from '../../lib/format';
-import { tStr } from '../../lib/i18n';
-import { actions, useStore, walletName, type Wallet } from '../../lib/store';
-import type { Tokens } from '../../lib/tokens';
-import { Icon, type IconName } from '../Icon';
-import { WalletSheet } from '../WalletSheet';
+import type { Tokens } from '@/lib/tokens';
+import { Icon, type IconName } from '@/components/Icon';
+import { WalletSheet } from '@/components/WalletSheet';
+import { actions, type Wallet, useStore, walletName } from '@/lib/store';
+import { fmtMoney, type Currency, unitOf } from '@/lib/format';
+import { tStr } from '@/lib/i18n';
 
 const ActiveCard: React.FC<{
   w: Wallet;
@@ -149,25 +149,25 @@ export const WalletsScreen: React.FC<{ t: Tokens }> = ({ t }) => {
   const hidden = s.wallets.filter((w) => w.hidden);
   const total = active.reduce((a, w) => a + w.balance, 0);
 
-  const [sheetVisible, setSheetVisible] = useState(false);
+  const [sheetVisible, setSheetVisible] = useState<boolean>(false);
   const [editingWallet, setEditingWallet] = useState<Wallet | undefined>(undefined);
 
-  const openAdd = () => {
+  const openAdd = (): void => {
     setEditingWallet(undefined);
     setSheetVisible(true);
   };
 
-  const openEdit = (w: Wallet) => {
+  const openEdit = (w: Wallet): void => {
     setEditingWallet(w);
     setSheetVisible(true);
   };
 
-  const closeSheet = () => {
+  const closeSheet = (): void => {
     setSheetVisible(false);
     setEditingWallet(undefined);
   };
 
-  const confirmDelete = (w: Wallet) => {
+  const confirmDelete = (w: Wallet): void => {
     const name = walletName(w, lang);
     Alert.alert(
       tStr(lang, 'deleteWallet'),

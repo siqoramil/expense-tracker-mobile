@@ -1,35 +1,11 @@
 import React, { useEffect, useRef } from 'react';
-import {
-  Animated as RNAnimated,
-  PanResponder,
-  Pressable,
-  StyleProp,
-  StyleSheet,
-  Text,
-  TextStyle,
-  View,
-  ViewStyle,
-} from 'react-native';
-import Animated, {
-  Easing,
-  interpolateColor,
-  useAnimatedStyle,
-  useSharedValue,
-  withRepeat,
-  withSpring,
-  withTiming,
-} from 'react-native-reanimated';
-import { fmtDate, fmtMoney, unitOf } from '../lib/format';
-import {
-  catLabel,
-  useStoreSelector,
-  type Category,
-  type Transaction,
-  type TxKind,
-} from '../lib/store';
-import type { ToastType } from '../lib/toast';
-import type { Tokens } from '../lib/tokens';
-import { Icon, type IconName } from './Icon';
+import { Animated as RNAnimated, PanResponder, Pressable, StyleProp, StyleSheet, Text, TextStyle, View, ViewStyle, } from 'react-native';
+import Animated, { Easing, interpolateColor, useAnimatedStyle, useSharedValue, withRepeat, withSpring, withTiming, } from 'react-native-reanimated';
+import type { ToastType } from '@/lib/toast';
+import type { Tokens } from '@/lib/tokens';
+import { Icon, type IconName } from '@/components/Icon';
+import { catLabel, type Category, type Transaction, type TxKind, useStoreSelector } from '@/lib/store';
+import { fmtDate, fmtMoney, unitOf } from '@/lib/format';
 
 export const Card: React.FC<{
   children?: React.ReactNode;

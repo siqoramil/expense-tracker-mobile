@@ -1,4 +1,4 @@
-import { tStr, type Lang } from './i18n';
+import { tStr, type Lang } from '@/lib/i18n';
 
 export type Currency = 'UZS' | 'USD' | 'EUR' | 'GBP' | 'RUB';
 

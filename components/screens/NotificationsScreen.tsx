@@ -1,11 +1,11 @@
 import React from 'react';
 import { FlatList, Text, View } from 'react-native';
-import { fmtDate } from '../../lib/format';
-import { tStr } from '../../lib/i18n';
-import { actions, useStore, type Notif, type NotifKind } from '../../lib/store';
-import type { Tokens } from '../../lib/tokens';
-import { Icon, type IconName } from '../Icon';
-import { Card, EmptyState } from '../ui';
+import type { Tokens } from '@/lib/tokens';
+import { Card, EmptyState } from '@/components/ui';
+import { Icon, type IconName } from '@/components/Icon';
+import { actions, type Notif, type NotifKind, useStore } from '@/lib/store';
+import { fmtDate } from '@/lib/format';
+import { tStr } from '@/lib/i18n';
 
 export const NotificationsScreen: React.FC<{ t: Tokens }> = ({ t }) => {
   const s = useStore();

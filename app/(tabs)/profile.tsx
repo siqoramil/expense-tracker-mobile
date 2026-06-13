@@ -1,11 +1,11 @@
 import { router, type Href } from 'expo-router';
 import { useMemo } from 'react';
-import { ProfileScreen } from '../../components/screens/ProfileScreen';
-import { TabHeader } from '../../components/TabHeader';
-import { TabSafeArea } from '../../components/TabSafeArea';
-import { tStr } from '../../lib/i18n';
-import { actions, useStoreSelector } from '../../lib/store';
-import { makeTokens } from '../../lib/tokens';
+import { ProfileScreen } from '@/components/screens';
+import { TabHeader } from '@/components/TabHeader';
+import { TabSafeArea } from '@/components/TabSafeArea';
+import { actions, useStoreSelector } from '@/lib/store';
+import { makeTokens } from '@/lib/tokens';
+import { tStr } from '@/lib/i18n';
 
 export default function ProfileRoute() {
   const dark = useStoreSelector((s) => s.prefs.dark);

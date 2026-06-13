@@ -1,12 +1,12 @@
 import React, { useMemo } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
-import { fmtMoney, last6Months, type Currency } from '../../lib/format';
-import { tStr } from '../../lib/i18n';
-import { selectMonth, useStore } from '../../lib/store';
-import { toast } from '../../lib/toast';
-import type { Tokens } from '../../lib/tokens';
-import { Icon } from '../Icon';
-import { Card } from '../ui';
+import type { Tokens } from '@/lib/tokens';
+import { Card } from '@/components/ui';
+import { Icon } from '@/components/Icon';
+import { fmtMoney, last6Months, type Currency } from '@/lib/format';
+import { selectMonth, useStore } from '@/lib/store';
+import { tStr } from '@/lib/i18n';
+import { toast } from '@/lib/toast';
 
 export const ReportsScreen: React.FC<{ t: Tokens }> = ({ t }) => {
   const s = useStore();

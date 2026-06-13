@@ -1,4 +1,4 @@
-import { apiRequest } from './api';
+import { apiRequest } from '@/lib/api';
 
 export type BilingualString = { en: string; uz: string };
 

@@ -1,11 +1,6 @@
-import {
-  categoriesApi,
-  type CategoryDTO,
-  type CreateCategoryInput,
-  type UpdateCategoryInput,
-} from '../dataApi';
-import type { Category } from '../store';
-import type { SyncModule } from './types';
+import type { Category } from '@/lib/store';
+import type { SyncModule } from '@/lib/sync/types';
+import { categoriesApi, type CategoryDTO, type CreateCategoryInput, type UpdateCategoryInput } from '@/lib/dataApi';
 
 export const categoriesSync: SyncModule<
   Category,

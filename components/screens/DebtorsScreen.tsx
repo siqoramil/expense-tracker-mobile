@@ -1,12 +1,12 @@
 import React, { useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { AppTextInput } from '../AppTextInput';
-import { fmtDate, fmtMoney, today, unitOf, type Currency } from '../../lib/format';
-import { tStr, type Lang } from '../../lib/i18n';
-import { useStore, type Debt } from '../../lib/store';
-import type { Tokens } from '../../lib/tokens';
-import { Icon } from '../Icon';
-import { Card, EmptyState } from '../ui';
+import type { Tokens } from '@/lib/tokens';
+import { AppTextInput } from '@/components/AppTextInput';
+import { Card, EmptyState } from '@/components/ui';
+import { Icon } from '@/components/Icon';
+import { fmtDate, fmtMoney, today, type Currency, unitOf } from '@/lib/format';
+import { tStr, type Lang } from '@/lib/i18n';
+import { type Debt, useStore } from '@/lib/store';
 
 type Props = {
   t: Tokens;
@@ -18,7 +18,7 @@ type Filter = 'all' | 'owe_me' | 'i_owe' | 'overdue' | 'due';
 export const DebtorsScreen: React.FC<Props> = ({ t, onOpen }) => {
   const s = useStore();
   const lang = s.prefs.lang;
-  const [q, setQ] = useState('');
+  const [q, setQ] = useState<string>('');
   const [filter, setFilter] = useState<Filter>('all');
 
   const tdyMs = useMemo(() => today().getTime(), []);

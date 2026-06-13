@@ -65,5 +65,13 @@
     "ws": ">=8.20.1",
     "uuid": ">=11.1.1"
   },
-  "private": true
+  "private": true,
+  "expo": {
+    "install": {
+      "exclude": [
+        "react-native-keyboard-controller",
+        "eslint-config-expo"
+      ]
+    }
+  }
 }

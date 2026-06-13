@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import type { IdMap } from './types';
+import type { IdMap } from '@/lib/sync/types';
 
 const STORAGE_KEY = 'extracker:idmap';
 

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
-import type { Tokens } from '../lib/tokens';
-import { ModalBackdrop } from './Glass';
+import type { Tokens } from '@/lib/tokens';
+import { ModalBackdrop } from '@/components/Glass';
 
 export type ActionSheetOption = {
   label: string;

@@ -1,34 +1,26 @@
 import React, { useState } from 'react';
-import {
-  ActivityIndicator,
-  Image,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import { ActivityIndicator, Image, Pressable, StyleSheet, Text, View, } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import Svg, { Path } from 'react-native-svg';
-import { AppTextInput } from './AppTextInput';
-import { authApi, NetworkError } from '../lib/api';
-import { errorMessage } from '../lib/errors';
-import { isGoogleAuthAvailable, signInWithGoogle } from '../lib/googleAuth';
-import { tStr } from '../lib/i18n';
-import { actions, store } from '../lib/store';
-import type { Tokens } from '../lib/tokens';
-import { ForgotPasswordSheet } from './AccountSheets';
-import { Icon } from './Icon';
-import { KeyboardSpacer } from './KeyboardAvoider';
-import { Card } from './ui';
+import type { Tokens } from '@/lib/tokens';
+import { AppTextInput } from '@/components/AppTextInput';
+import { Card } from '@/components/ui';
+import { ForgotPasswordSheet } from '@/components/AccountSheets';
+import { Icon } from '@/components/Icon';
+import { NetworkError, authApi } from '@/lib/api';
+import { actions, store } from '@/lib/store';
+import { errorMessage } from '@/lib/errors';
+import { isGoogleAuthAvailable, signInWithGoogle } from '@/lib/googleAuth';
+import { tStr } from '@/lib/i18n';
 
 export const LoginScreen: React.FC<{ t: Tokens; onDone: () => void }> = ({ t, onDone }) => {
   const [mode, setMode] = useState<'signin' | 'signup'>('signin');
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [pw, setPw] = useState('');
-  const [showPw, setShowPw] = useState(false);
-  const [forgot, setForgot] = useState(false);
-  const [busy, setBusy] = useState(false);
+  const [name, setName] = useState<string>('');
+  const [email, setEmail] = useState<string>('');
+  const [pw, setPw] = useState<string>('');
+  const [showPw, setShowPw] = useState<boolean>(false);
+  const [forgot, setForgot] = useState<boolean>(false);
+  const [busy, setBusy] = useState<boolean>(false);
   const [err, setErr] = useState<string | null>(null);
   const [fieldErr, setFieldErr] = useState<{ name?: string; email?: string; password?: string }>(
     {},
@@ -158,7 +150,8 @@ export const LoginScreen: React.FC<{ t: Tokens; onDone: () => void }> = ({ t, on
     ) : null;
 
   return (
-    <ScrollView
+    <KeyboardAwareScrollView
+      bottomOffset={20}
       contentContainerStyle={{
         flexGrow: 1,
         backgroundColor: t.bg,
@@ -425,7 +418,6 @@ export const LoginScreen: React.FC<{ t: Tokens; onDone: () => void }> = ({ t, on
       </View>
 
       <ForgotPasswordSheet t={t} visible={forgot} onClose={() => setForgot(false)} />
-      <KeyboardSpacer />
-    </ScrollView>
+    </KeyboardAwareScrollView>
   );
 };

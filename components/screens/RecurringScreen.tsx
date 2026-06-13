@@ -1,9 +1,9 @@
 import React from 'react';
 import { FlatList, Text, View } from 'react-native';
-import { today } from '../../lib/format';
-import { actions, catLabel, useStore, type Recurring } from '../../lib/store';
-import type { Tokens } from '../../lib/tokens';
-import { Card, CatIcon, MoneyText, Switch } from '../ui';
+import type { Tokens } from '@/lib/tokens';
+import { Card, CatIcon, MoneyText, Switch } from '@/components/ui';
+import { actions, catLabel, type Recurring, useStore } from '@/lib/store';
+import { today } from '@/lib/format';
 
 export const RecurringScreen: React.FC<{ t: Tokens }> = ({ t }) => {
   const s = useStore();

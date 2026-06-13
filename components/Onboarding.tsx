@@ -1,17 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Dimensions, Easing, Pressable, StyleSheet, Text, View } from 'react-native';
-import Svg, {
-  Circle,
-  Defs,
-  LinearGradient as SvgLinearGradient,
-  Path,
-  RadialGradient,
-  Rect,
-  Stop,
-} from 'react-native-svg';
-import { tStr } from '../lib/i18n';
-import { store } from '../lib/store';
-import type { Tokens } from '../lib/tokens';
+import Svg, { Circle, Defs, LinearGradient as SvgLinearGradient, Path, RadialGradient, Rect, Stop, } from 'react-native-svg';
+import type { Tokens } from '@/lib/tokens';
+import { store } from '@/lib/store';
+import { tStr } from '@/lib/i18n';
 
 const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get('window');
 

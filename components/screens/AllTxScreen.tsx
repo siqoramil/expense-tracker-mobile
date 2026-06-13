@@ -1,12 +1,12 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import { SectionList, StyleSheet, Text, View } from 'react-native';
-import { AppTextInput } from '../AppTextInput';
-import { fmtDate } from '../../lib/format';
-import { tStr } from '../../lib/i18n';
-import { catLabel, useStore, type Transaction } from '../../lib/store';
-import type { Tokens } from '../../lib/tokens';
-import { Icon } from '../Icon';
-import { Card, EmptyState, SegmentedControl, TxRow } from '../ui';
+import type { Tokens } from '@/lib/tokens';
+import { AppTextInput } from '@/components/AppTextInput';
+import { Card, EmptyState, SegmentedControl, TxRow } from '@/components/ui';
+import { Icon } from '@/components/Icon';
+import { catLabel, type Transaction, useStore } from '@/lib/store';
+import { fmtDate } from '@/lib/format';
+import { tStr } from '@/lib/i18n';
 
 type Filter = 'all' | 'income' | 'expense';
 

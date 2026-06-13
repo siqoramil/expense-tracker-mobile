@@ -1,8 +1,8 @@
 import { Stack, useRouter } from 'expo-router';
-import { CalendarScreen } from '../components/screens/CalendarScreen';
-import { tStr } from '../lib/i18n';
-import { useStore } from '../lib/store';
-import { makeTokens } from '../lib/tokens';
+import { CalendarScreen } from '@/components/screens';
+import { makeTokens } from '@/lib/tokens';
+import { tStr } from '@/lib/i18n';
+import { useStore } from '@/lib/store';
 
 export default function CalendarRoute() {
   const s = useStore();

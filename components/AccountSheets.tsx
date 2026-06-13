@@ -1,20 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
-import {
-  KeyboardAwareScrollView,
-  KeyboardProvider,
-  KeyboardStickyView,
-} from 'react-native-keyboard-controller';
+import { KeyboardAwareScrollView, KeyboardProvider, KeyboardStickyView, } from 'react-native-keyboard-controller';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { AppTextInput } from './AppTextInput';
-import { errorMessage } from '../lib/errors';
-import { isGoogleAuthAvailable, signInWithGoogle } from '../lib/googleAuth';
-import { tStr, type Lang } from '../lib/i18n';
-import { actions, useStore } from '../lib/store';
-import { toast } from '../lib/toast';
-import type { Tokens } from '../lib/tokens';
-import { ModalBackdrop } from './Glass';
-import { Icon } from './Icon';
+import type { Tokens } from '@/lib/tokens';
+import { AppTextInput } from '@/components/AppTextInput';
+import { Icon } from '@/components/Icon';
+import { ModalBackdrop } from '@/components/Glass';
+import { actions, useStore } from '@/lib/store';
+import { errorMessage } from '@/lib/errors';
+import { isGoogleAuthAvailable, signInWithGoogle } from '@/lib/googleAuth';
+import { tStr, type Lang } from '@/lib/i18n';
+import { toast } from '@/lib/toast';
 
 type SheetProps = { t: Tokens; visible: boolean; onClose: () => void };
 
@@ -27,6 +23,11 @@ const SheetContainer: React.FC<{
   footer?: React.ReactNode;
 }> = ({ t, visible, onClose, title, children, footer }) => {
   const insets = useSafeAreaInsets();
+  // Footer height = paddingTop(12) + button(52) + paddingBottom + opened offset(16).
+  // bottomOffset must match so KeyboardAwareScrollView scrolls the focused input
+  // above the sticky footer, not just above the keyboard.
+  const footerPaddingBottom = Math.max(insets.bottom, 16);
+  const stickyFooterOffset = footer ? 12 + 52 + footerPaddingBottom + 16 : 0;
   return (
     <Modal
       visible={visible}
@@ -87,7 +88,8 @@ const SheetContainer: React.FC<{
                 </Pressable>
               </View>
               <KeyboardAwareScrollView
-                bottomOffset={80}
+                bottomOffset={24}
+                extraKeyboardSpace={stickyFooterOffset}
                 keyboardShouldPersistTaps="handled"
                 showsVerticalScrollIndicator={false}
                 contentContainerStyle={{ paddingBottom: 8 }}
@@ -99,7 +101,7 @@ const SheetContainer: React.FC<{
                   offset={{ opened: 16 }}
                   style={{
                     paddingTop: 12,
-                    paddingBottom: Math.max(insets.bottom, 16),
+                    paddingBottom: footerPaddingBottom,
                     borderTopWidth: StyleSheet.hairlineWidth,
                     borderTopColor: t.divider,
                     backgroundColor: t.sheetBg,
@@ -108,7 +110,7 @@ const SheetContainer: React.FC<{
                   {footer}
                 </KeyboardStickyView>
               ) : (
-                <View style={{ height: Math.max(insets.bottom, 16) }} />
+                <View style={{ height: footerPaddingBottom }} />
               )}
             </Pressable>
           </Pressable>
@@ -181,8 +183,8 @@ const extractError = (e: unknown, lang: Lang): string => errorMessage(lang, e);
 export const EditNameSheet: React.FC<SheetProps> = ({ t, visible, onClose }) => {
   const s = useStore();
   const lang = s.prefs.lang;
-  const [name, setName] = useState(s.profile.name);
-  const [busy, setBusy] = useState(false);
+  const [name, setName] = useState<string>(s.profile.name);
+  const [busy, setBusy] = useState<boolean>(false);
   const [err, setErr] = useState<string | null>(null);
 
   useEffect(() => {
@@ -234,9 +236,9 @@ export const EditEmailSheet: React.FC<SheetProps> = ({ t, visible, onClose }) =>
   const s = useStore();
   const lang = s.prefs.lang;
   const [step, setStep] = useState<1 | 2>(1);
-  const [newEmail, setNewEmail] = useState('');
-  const [code, setCode] = useState('');
-  const [busy, setBusy] = useState(false);
+  const [newEmail, setNewEmail] = useState<string>('');
+  const [code, setCode] = useState<string>('');
+  const [busy, setBusy] = useState<boolean>(false);
   const [err, setErr] = useState<string | null>(null);
 
   useEffect(() => {
@@ -362,12 +364,12 @@ export const ForgotPasswordSheet: React.FC<SheetProps> = ({ t, visible, onClose 
   const s = useStore();
   const lang = s.prefs.lang;
   const [step, setStep] = useState<1 | 2 | 3>(1);
-  const [email, setEmail] = useState('');
-  const [code, setCode] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [verifiedToken, setVerifiedToken] = useState('');
-  const [busy, setBusy] = useState(false);
+  const [email, setEmail] = useState<string>('');
+  const [code, setCode] = useState<string>('');
+  const [newPassword, setNewPassword] = useState<string>('');
+  const [confirmPassword, setConfirmPassword] = useState<string>('');
+  const [verifiedToken, setVerifiedToken] = useState<string>('');
+  const [busy, setBusy] = useState<boolean>(false);
   const [err, setErr] = useState<string | null>(null);
 
   useEffect(() => {
@@ -594,9 +596,9 @@ export const DeleteAccountSheet: React.FC<SheetProps & { onDeleted: () => void }
   // so we don't accidentally require Google re-auth where it isn't possible.
   const isGoogleOnly = s.profile.hasGoogle && !s.profile.hasPassword;
   const [step, setStep] = useState<1 | 2>(1);
-  const [code, setCode] = useState('');
-  const [password, setPassword] = useState('');
-  const [busy, setBusy] = useState(false);
+  const [code, setCode] = useState<string>('');
+  const [password, setPassword] = useState<string>('');
+  const [busy, setBusy] = useState<boolean>(false);
   const [err, setErr] = useState<string | null>(null);
 
   // Native Google re-auth is only offered for Google-only accounts.

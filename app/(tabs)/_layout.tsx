@@ -1,10 +1,10 @@
 import { router, Tabs, usePathname } from 'expo-router';
 import { Icon as NativeTabIcon, Label, NativeTabs } from 'expo-router/unstable-native-tabs';
 import { Platform } from 'react-native';
-import { TabBar, type TabKey } from '../../components/TabBar';
-import { tStr } from '../../lib/i18n';
-import { useStore } from '../../lib/store';
-import { makeTokens } from '../../lib/tokens';
+import { TabBar, type TabKey } from '@/components/TabBar';
+import { makeTokens } from '@/lib/tokens';
+import { tStr } from '@/lib/i18n';
+import { useStore } from '@/lib/store';
 
 export default function TabsLayout() {
   const s = useStore();

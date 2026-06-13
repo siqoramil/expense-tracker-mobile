@@ -1,12 +1,12 @@
 import React, { memo, useMemo, useState } from 'react';
 import { Platform, Pressable, ScrollView, Text, View } from 'react-native';
-import { fmtMoney, isoDate, last6Months, today, unitOf, type Currency } from '../../lib/format';
-import { tStr, type Lang } from '../../lib/i18n';
-import { actions, selectMonth, useStore, walletName, type Transaction, type Wallet } from '../../lib/store';
-import type { Tokens } from '../../lib/tokens';
-import { Icon, type IconName } from '../Icon';
-import { Sparkline } from '../Sparkline';
-import { Card, CatIcon, EmptyState, IconButton, MoneyText, SectionHeader, TxRow } from '../ui';
+import type { Tokens } from '@/lib/tokens';
+import { Card, CatIcon, EmptyState, IconButton, MoneyText, SectionHeader, TxRow } from '@/components/ui';
+import { Icon, type IconName } from '@/components/Icon';
+import { Sparkline } from '@/components/Sparkline';
+import { actions, selectMonth, type Transaction, type Wallet, useStore, walletName } from '@/lib/store';
+import { fmtMoney, isoDate, last6Months, today, type Currency, unitOf } from '@/lib/format';
+import { tStr, type Lang } from '@/lib/i18n';
 
 type Nav = (screen: string, data?: unknown) => void;
 

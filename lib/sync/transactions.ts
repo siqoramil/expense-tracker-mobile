@@ -1,11 +1,6 @@
-import {
-  transactionsApi,
-  type TransactionDTO,
-  type CreateTransactionInput,
-  type UpdateTransactionInput,
-} from '../dataApi';
-import type { Transaction } from '../store';
-import type { SyncModule } from './types';
+import type { SyncModule } from '@/lib/sync/types';
+import type { Transaction } from '@/lib/store';
+import { transactionsApi, type CreateTransactionInput, type TransactionDTO, type UpdateTransactionInput } from '@/lib/dataApi';
 
 export const transactionsSync: SyncModule<
   Transaction,
