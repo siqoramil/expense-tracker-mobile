@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Pressable, StatusBar, StyleSheet, Text, View } from 'react-native';
+import { StatusBar, StyleSheet, Text, View } from 'react-native';
 import type { Tokens } from '@/lib/tokens';
 import { Icon } from '@/components/Icon';
+import { Button } from '@/components/ui';
 import { authApi, getServerStatus, subscribeServerStatus } from '@/lib/api';
 import { tStr, type Lang } from '@/lib/i18n';
 
@@ -38,23 +39,14 @@ export const ServerUnreachable: React.FC<Props> = ({ t, lang }) => {
       </View>
       <Text style={[styles.title, { color: t.text }]}>{tStr(lang, 'serverDown_title')}</Text>
       <Text style={[styles.sub, { color: t.textSec }]}>{tStr(lang, 'serverDown_sub')}</Text>
-      <Pressable
+      <Button
+        t={t}
+        label={tStr(lang, 'serverDown_retry')}
         onPress={onRetry}
-        disabled={checking}
-        style={({ pressed }) => [
-          styles.button,
-          {
-            backgroundColor: t.accent,
-            opacity: pressed || checking ? 0.7 : 1,
-          },
-        ]}
-      >
-        {checking ? (
-          <ActivityIndicator color="#fff" />
-        ) : (
-          <Text style={styles.buttonText}>{tStr(lang, 'serverDown_retry')}</Text>
-        )}
-      </Pressable>
+        loading={checking}
+        fullWidth={false}
+        style={styles.button}
+      />
     </View>
   );
 };
@@ -94,17 +86,6 @@ const styles = StyleSheet.create({
     marginBottom: 32,
   },
   button: {
-    paddingHorizontal: 32,
-    paddingVertical: 14,
-    borderRadius: 14,
     minWidth: 180,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  buttonText: {
-    color: '#fff',
-    fontSize: 15,
-    fontWeight: '700',
-    letterSpacing: 0.2,
   },
 });

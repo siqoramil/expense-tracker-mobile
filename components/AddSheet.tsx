@@ -1,12 +1,12 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { Tokens } from '@/lib/tokens';
 import { AppTextInput } from '@/components/AppTextInput';
 import { CURRENCIES, daysFromNow, isoDate, today } from '@/lib/format';
 import { Icon, type IconName } from '@/components/Icon';
 import { ModalBackdrop } from '@/components/Glass';
-import { SegmentedControl } from '@/components/ui';
+import { Button, Field, Input, SegmentedControl } from '@/components/ui';
 import { actions, catLabel, type Debt, type Transaction, useStore, walletName } from '@/lib/store';
 import { tStr, type Lang } from '@/lib/i18n';
 import { toast } from '@/lib/toast';
@@ -328,7 +328,7 @@ export const AddSheet: React.FC<Props> = ({ t, mode, editTx, editDebt, onClose }
             </View>
           </Field>
 
-          <Field t={t} label={tStr(lang, 'note')} mt={10}>
+          <Field t={t} label={tStr(lang, 'note')} style={{ marginTop: 10 }}>
             <Input
               t={t}
               value={note}
@@ -337,7 +337,7 @@ export const AddSheet: React.FC<Props> = ({ t, mode, editTx, editDebt, onClose }
             />
           </Field>
 
-          <Field t={t} label={tStr(lang, 'date')} mt={10}>
+          <Field t={t} label={tStr(lang, 'date')} style={{ marginTop: 10 }}>
             <DateTimeField
               t={t}
               date={date}
@@ -369,29 +369,13 @@ export const AddSheet: React.FC<Props> = ({ t, mode, editTx, editDebt, onClose }
           <Icon name="close" size={20} color={t.expense} stroke={2.5} />
         </Pressable>
       ) : null}
-      <Pressable
+      <Button
+        t={t}
+        label={tStr(lang, 'save')}
         onPress={submit}
-        style={({ pressed }) => [
-          {
-            flex: 1,
-            height: 54,
-            borderRadius: 16,
-            backgroundColor: t.accent,
-            alignItems: 'center',
-            justifyContent: 'center',
-            shadowColor: t.accent,
-            shadowOpacity: 0.35,
-            shadowRadius: 16,
-            shadowOffset: { width: 0, height: 6 },
-            elevation: 6,
-          },
-          pressed && { transform: [{ scale: 0.98 }], shadowOpacity: 0.2 },
-        ]}
-      >
-        <Text style={{ color: '#fff', fontSize: 16, fontWeight: '700', letterSpacing: 0.2 }}>
-          {tStr(lang, 'save')}
-        </Text>
-      </Pressable>
+        size="lg"
+        style={{ borderRadius: 16 }}
+      />
     </>
   );
 
@@ -458,52 +442,6 @@ export const AddSheet: React.FC<Props> = ({ t, mode, editTx, editDebt, onClose }
     </View>
   );
 };
-
-const Field: React.FC<{ t: Tokens; label: string; children: React.ReactNode; mt?: number }> = ({
-  t,
-  label,
-  children,
-  mt,
-}) => (
-  <View style={{ marginTop: mt }}>
-    <Text
-      style={{
-        fontSize: 11,
-        fontWeight: '700',
-        color: t.textSec,
-        marginBottom: 7,
-        letterSpacing: 0.6,
-      }}
-    >
-      {label.toUpperCase()}
-    </Text>
-    {children}
-  </View>
-);
-
-const Input: React.FC<{
-  t: Tokens;
-  value: string;
-  onChangeText: (v: string) => void;
-  placeholder?: string;
-}> = ({ t, value, onChangeText, placeholder }) => (
-  <AppTextInput
-    value={value}
-    onChangeText={onChangeText}
-    placeholder={placeholder}
-    placeholderTextColor={t.textTer}
-    style={{
-      paddingVertical: 14,
-      paddingHorizontal: 16,
-      borderRadius: 14,
-      backgroundColor: t.surfaceAlt,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: t.border,
-      color: t.text,
-      fontSize: 15,
-    }}
-  />
-);
 
 const parseIsoDate = (iso: string): Date => {
   const [y, m, d] = iso.split('-').map(Number);
@@ -842,71 +780,59 @@ const DateTimeField: React.FC<{
         <Icon name="calendar" size={18} color={t.textSec} stroke={1.8} />
       </Pressable>
 
-      <Modal visible={show} transparent animationType="fade" onRequestClose={() => setShow(false)}>
-        <ModalBackdrop>
-          <Pressable
-            onPress={() => setShow(false)}
-            style={{
-              flex: 1,
-              justifyContent: 'center',
-              alignItems: 'center',
-              padding: 20,
-            }}
-          >
+      <ModalBackdrop visible={show} onClose={() => setShow(false)} center>
+        <Pressable
+          onPress={() => {}}
+          style={{
+            backgroundColor: t.sheetBg,
+            borderRadius: 24,
+            padding: 18,
+            width: '100%',
+            maxWidth: 360,
+            shadowColor: '#000',
+            shadowOpacity: 0.25,
+            shadowRadius: 30,
+            shadowOffset: { width: 0, height: 12 },
+            elevation: 20,
+          }}
+        >
+          <Calendar t={t} value={draftDate} onSelect={setDraftDate} />
+
+          <TimePicker t={t} value={draftTime} onChange={setDraftTime} />
+
+          <View style={{ flexDirection: 'row', gap: 10, marginTop: 16 }}>
             <Pressable
-              onPress={() => {}}
+              onPress={setNow}
               style={{
-                backgroundColor: t.sheetBg,
-                borderRadius: 24,
-                padding: 18,
-                width: '100%',
-                maxWidth: 360,
-                shadowColor: '#000',
-                shadowOpacity: 0.25,
-                shadowRadius: 30,
-                shadowOffset: { width: 0, height: 12 },
-                elevation: 20,
+                flex: 1,
+                paddingVertical: 13,
+                borderRadius: 12,
+                backgroundColor: t.surfaceAlt,
+                alignItems: 'center',
               }}
             >
-              <Calendar t={t} value={draftDate} onSelect={setDraftDate} />
-
-              <TimePicker t={t} value={draftTime} onChange={setDraftTime} />
-
-              <View style={{ flexDirection: 'row', gap: 10, marginTop: 16 }}>
-                <Pressable
-                  onPress={setNow}
-                  style={{
-                    flex: 1,
-                    paddingVertical: 13,
-                    borderRadius: 12,
-                    backgroundColor: t.surfaceAlt,
-                    alignItems: 'center',
-                  }}
-                >
-                  <Text style={{ color: t.text, fontSize: 14, fontWeight: '600' }}>Now</Text>
-                </Pressable>
-                <Pressable
-                  onPress={confirm}
-                  style={{
-                    flex: 1,
-                    paddingVertical: 13,
-                    borderRadius: 12,
-                    backgroundColor: t.accent,
-                    alignItems: 'center',
-                    shadowColor: t.accent,
-                    shadowOpacity: 0.3,
-                    shadowRadius: 12,
-                    shadowOffset: { width: 0, height: 4 },
-                    elevation: 4,
-                  }}
-                >
-                  <Text style={{ color: '#fff', fontSize: 14, fontWeight: '700' }}>Done</Text>
-                </Pressable>
-              </View>
+              <Text style={{ color: t.text, fontSize: 14, fontWeight: '600' }}>Now</Text>
             </Pressable>
-          </Pressable>
-        </ModalBackdrop>
-      </Modal>
+            <Pressable
+              onPress={confirm}
+              style={{
+                flex: 1,
+                paddingVertical: 13,
+                borderRadius: 12,
+                backgroundColor: t.accent,
+                alignItems: 'center',
+                shadowColor: t.accent,
+                shadowOpacity: 0.3,
+                shadowRadius: 12,
+                shadowOffset: { width: 0, height: 4 },
+                elevation: 4,
+              }}
+            >
+              <Text style={{ color: '#fff', fontSize: 14, fontWeight: '700' }}>Done</Text>
+            </Pressable>
+          </View>
+        </Pressable>
+      </ModalBackdrop>
     </>
   );
 };

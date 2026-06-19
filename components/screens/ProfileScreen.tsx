@@ -4,6 +4,7 @@ import type { Tokens } from '@/lib/tokens';
 import { ActionSheet, type ActionSheetConfig } from '@/components/ActionSheet';
 import { Card, SectionHeader, Switch } from '@/components/ui';
 import { DeleteAccountSheet } from '@/components/AccountSheets';
+import { CurrencySheet, LanguageSheet } from '@/components/screens/SettingsSubs';
 import { Icon, type IconName } from '@/components/Icon';
 import { LANGUAGES, tStr } from '@/lib/i18n';
 import { actions, isImageAvatar, useStore } from '@/lib/store';
@@ -24,14 +25,17 @@ const loadImagePicker = (): ImagePickerModule | null => {
 
 type Nav = (screen: string, data?: unknown) => void;
 
-export const ProfileScreen: React.FC<{ t: Tokens; onNav: Nav; onLogout: () => void }> = ({
+export const ProfileScreen: React.FC<{ t: Tokens; onNav: Nav; onLogout: () => void; contentTopPad?: number }> = ({
   t,
   onNav,
   onLogout,
+  contentTopPad = 0,
 }) => {
   const s = useStore();
   const lang = s.prefs.lang;
   const [deleteAccountOpen, setDeleteAccountOpen] = useState<boolean>(false);
+  const [languageOpen, setLanguageOpen] = useState<boolean>(false);
+  const [currencyOpen, setCurrencyOpen] = useState<boolean>(false);
   const [sheetConfig, setSheetConfig] = useState<ActionSheetConfig | null>(null);
 
   const hasImage = isImageAvatar(s.profile.avatar);
@@ -137,7 +141,7 @@ export const ProfileScreen: React.FC<{ t: Tokens; onNav: Nav; onLogout: () => vo
   };
 
   return (
-    <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 160 }}>
+    <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 160, paddingTop: contentTopPad }}>
       <View style={{ paddingHorizontal: 20, paddingBottom: 18 }}>
         <Card t={t} style={{ padding: 18 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
@@ -229,6 +233,8 @@ export const ProfileScreen: React.FC<{ t: Tokens; onNav: Nav; onLogout: () => vo
         onClose={() => setDeleteAccountOpen(false)}
         onDeleted={onLogout}
       />
+      <LanguageSheet t={t} visible={languageOpen} onClose={() => setLanguageOpen(false)} />
+      <CurrencySheet t={t} visible={currencyOpen} onClose={() => setCurrencyOpen(false)} />
       <ActionSheet
         t={t}
         config={sheetConfig}
@@ -266,7 +272,7 @@ export const ProfileScreen: React.FC<{ t: Tokens; onNav: Nav; onLogout: () => vo
             color="#06B6D4"
             label={tStr(lang, 'language')}
             detail={LANGUAGES.find(l => l.code === lang)?.native ?? lang}
-            onPress={() => onNav('language')}
+            onPress={() => setLanguageOpen(true)}
           />
           <NavRow
             t={t}
@@ -274,7 +280,7 @@ export const ProfileScreen: React.FC<{ t: Tokens; onNav: Nav; onLogout: () => vo
             color="#10B981"
             label={tStr(lang, 'currency')}
             detail={s.prefs.currency}
-            onPress={() => onNav('currency')}
+            onPress={() => setCurrencyOpen(true)}
           />
           <NavRow
             t={t}

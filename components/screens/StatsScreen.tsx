@@ -7,7 +7,7 @@ import { catLabel, selectMonth, useStore } from '@/lib/store';
 import { fmtMoney, last6Months } from '@/lib/format';
 import { tStr } from '@/lib/i18n';
 
-export const StatsScreen: React.FC<{ t: Tokens }> = ({ t }) => {
+export const StatsScreen: React.FC<{ t: Tokens; contentTopPad?: number }> = ({ t, contentTopPad = 0 }) => {
   const s = useStore();
   const lang = s.prefs.lang;
   const months = useMemo(() => last6Months(), []);
@@ -40,7 +40,7 @@ export const StatsScreen: React.FC<{ t: Tokens }> = ({ t }) => {
   }, [s.tx, months]);
 
   return (
-    <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 160 }}>
+    <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 160, paddingTop: contentTopPad }}>
       <View style={{ paddingHorizontal: 20, paddingBottom: 14, flexDirection: 'row', gap: 10 }}>
         <SumCard
           t={t}

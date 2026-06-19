@@ -1,5 +1,5 @@
 import React from 'react';
-import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import type { Tokens } from '@/lib/tokens';
 import { ModalBackdrop } from '@/components/Glass';
 
@@ -22,82 +22,72 @@ export const ActionSheet: React.FC<{
   cancelLabel: string;
   onClose: () => void;
 }> = ({ t, config, cancelLabel, onClose }) => (
-  <Modal
-    visible={!!config}
-    transparent
-    animationType="slide"
-    statusBarTranslucent
-    onRequestClose={onClose}
-  >
-    <ModalBackdrop>
-      <Pressable onPress={onClose} style={{ flex: 1, justifyContent: 'flex-end' }}>
-        <Pressable onPress={() => {}} style={{ padding: 14, paddingBottom: 34 }}>
+  <ModalBackdrop visible={!!config} onClose={onClose}>
+    <Pressable onPress={() => {}} style={{ padding: 14, paddingBottom: 34 }}>
+      <View
+        style={{
+          backgroundColor: t.sheetBg,
+          borderRadius: 20,
+          overflow: 'hidden',
+          marginBottom: 10,
+        }}
+      >
+        {config?.title ? (
           <View
             style={{
-              backgroundColor: t.sheetBg,
-              borderRadius: 20,
-              overflow: 'hidden',
-              marginBottom: 10,
+              paddingVertical: 14,
+              paddingHorizontal: 18,
+              borderBottomWidth: StyleSheet.hairlineWidth,
+              borderBottomColor: t.divider,
             }}
           >
-            {config?.title ? (
-              <View
-                style={{
-                  paddingVertical: 14,
-                  paddingHorizontal: 18,
-                  borderBottomWidth: StyleSheet.hairlineWidth,
-                  borderBottomColor: t.divider,
-                }}
-              >
-                <Text
-                  style={{ fontSize: 13, color: t.textSec, fontWeight: '600', textAlign: 'center' }}
-                >
-                  {config.title}
-                </Text>
-              </View>
-            ) : null}
-            {config?.options.map((o, i) => (
-              <Pressable
-                key={i}
-                onPress={() => {
-                  onClose();
-                  o.onPress();
-                }}
-                style={({ pressed }) => ({
-                  paddingVertical: 16,
-                  paddingHorizontal: 18,
-                  borderTopWidth: i === 0 && !config?.title ? 0 : StyleSheet.hairlineWidth,
-                  borderTopColor: t.divider,
-                  backgroundColor: pressed ? t.surfaceAlt : 'transparent',
-                })}
-              >
-                <Text
-                  style={{
-                    fontSize: 16,
-                    fontWeight: '600',
-                    color: o.destructive ? t.expense : t.text,
-                    textAlign: 'center',
-                  }}
-                >
-                  {o.label}
-                </Text>
-              </Pressable>
-            ))}
+            <Text
+              style={{ fontSize: 13, color: t.textSec, fontWeight: '600', textAlign: 'center' }}
+            >
+              {config.title}
+            </Text>
           </View>
+        ) : null}
+        {config?.options.map((o, i) => (
           <Pressable
-            onPress={onClose}
+            key={i}
+            onPress={() => {
+              onClose();
+              o.onPress();
+            }}
             style={({ pressed }) => ({
-              backgroundColor: t.sheetBg,
-              borderRadius: 20,
               paddingVertical: 16,
-              alignItems: 'center',
-              opacity: pressed ? 0.7 : 1,
+              paddingHorizontal: 18,
+              borderTopWidth: i === 0 && !config?.title ? 0 : StyleSheet.hairlineWidth,
+              borderTopColor: t.divider,
+              backgroundColor: pressed ? t.surfaceAlt : 'transparent',
             })}
           >
-            <Text style={{ fontSize: 16, fontWeight: '700', color: t.text }}>{cancelLabel}</Text>
+            <Text
+              style={{
+                fontSize: 16,
+                fontWeight: '600',
+                color: o.destructive ? t.expense : t.text,
+                textAlign: 'center',
+              }}
+            >
+              {o.label}
+            </Text>
           </Pressable>
-        </Pressable>
+        ))}
+      </View>
+      <Pressable
+        onPress={onClose}
+        style={({ pressed }) => ({
+          backgroundColor: t.sheetBg,
+          borderRadius: 20,
+          paddingVertical: 16,
+          alignItems: 'center',
+          opacity: pressed ? 0.7 : 1,
+        })}
+      >
+        <Text style={{ fontSize: 16, fontWeight: '700', color: t.text }}>{cancelLabel}</Text>
       </Pressable>
-    </ModalBackdrop>
-  </Modal>
+    </Pressable>
+  </ModalBackdrop>
 );

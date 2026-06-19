@@ -1,11 +1,33 @@
-import React, { useEffect, useRef } from 'react';
-import { Animated as RNAnimated, PanResponder, Pressable, StyleProp, StyleSheet, Text, TextStyle, View, ViewStyle, } from 'react-native';
+import React, { forwardRef, useEffect, useRef } from 'react';
+import { ActivityIndicator, Animated as RNAnimated, PanResponder, Pressable, StyleProp, StyleSheet, Text, TextInput, TextInputProps, TextStyle, View, ViewStyle, } from 'react-native';
 import Animated, { Easing, interpolateColor, useAnimatedStyle, useSharedValue, withRepeat, withSpring, withTiming, } from 'react-native-reanimated';
 import type { ToastType } from '@/lib/toast';
 import type { Tokens } from '@/lib/tokens';
 import { Icon, type IconName } from '@/components/Icon';
 import { catLabel, type Category, type Transaction, type TxKind, useStoreSelector } from '@/lib/store';
 import { fmtDate, fmtMoney, unitOf } from '@/lib/format';
+import { AppTextInput } from '@/components/AppTextInput';
+
+// Liquid Glass (iOS 26+) for the active SegmentedControl pill — optional, probed
+// lazily so a missing native module or older OS never throws. Falls back to a
+// solid surface pill everywhere else (Android, older iOS).
+type SegGlass = {
+  GlassView: React.ComponentType<{
+    glassEffectStyle?: 'clear' | 'regular' | 'none';
+    tintColor?: string;
+    colorScheme?: 'auto' | 'light' | 'dark';
+    style?: StyleProp<ViewStyle>;
+  }>;
+  isLiquidGlassAvailable?: () => boolean;
+};
+let segGlass: SegGlass | null = null;
+try {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  segGlass = require('expo-glass-effect') as SegGlass;
+} catch {
+  segGlass = null;
+}
+const HAS_SEG_GLASS = Boolean(segGlass?.GlassView && segGlass.isLiquidGlassAvailable?.());
 
 export const Card: React.FC<{
   children?: React.ReactNode;
@@ -247,10 +269,19 @@ export const SegmentedControl = <K extends string>({
             paddingVertical: 8,
             paddingHorizontal: 12,
             borderRadius: 9,
-            backgroundColor: on ? t.surface : 'transparent',
+            overflow: 'hidden',
+            backgroundColor: on && !HAS_SEG_GLASS ? t.surface : 'transparent',
             alignItems: 'center',
+            justifyContent: 'center',
           }}
         >
+          {on && HAS_SEG_GLASS && segGlass ? (
+            <segGlass.GlassView
+              style={[StyleSheet.absoluteFill, { borderRadius: 9 }]}
+              glassEffectStyle="regular"
+              colorScheme={t.dark ? 'dark' : 'light'}
+            />
+          ) : null}
           <Text
             style={{
               color: on ? t.text : t.textSec,
@@ -693,6 +724,97 @@ export const IconButton: React.FC<{
   </Pressable>
 );
 
+type ButtonVariant = 'primary' | 'danger' | 'secondary' | 'ghost';
+type ButtonSize = 'md' | 'lg';
+
+type ButtonProps = {
+  label: string;
+  onPress: () => void;
+  t: Tokens;
+  variant?: ButtonVariant;
+  size?: ButtonSize;
+  loading?: boolean;
+  disabled?: boolean;
+  icon?: IconName;
+  fullWidth?: boolean;
+  style?: StyleProp<ViewStyle>;
+};
+
+export const Button: React.FC<ButtonProps> = ({
+  label,
+  onPress,
+  t,
+  variant = 'primary',
+  size = 'md',
+  loading = false,
+  disabled = false,
+  icon,
+  fullWidth = true,
+  style,
+}) => {
+  const inactive = disabled || loading;
+
+  const inlineVariantStyle: ViewStyle =
+    variant === 'primary'
+      ? {
+          shadowColor: t.accent,
+          shadowOpacity: 0.3,
+          shadowRadius: 14,
+          shadowOffset: { width: 0, height: 4 },
+          elevation: 4,
+        }
+      : variant === 'secondary'
+        ? { borderWidth: StyleSheet.hairlineWidth, borderColor: t.border }
+        : {};
+
+  // Colors for Icon and ActivityIndicator — these are runtime values.
+  const indicatorColor = variant === 'primary' || variant === 'danger' ? '#fff' : t.accent;
+  const textColor =
+    variant === 'primary' || variant === 'danger' ? '#fff' : variant === 'ghost' ? t.accent : t.text;
+
+  const bgColor =
+    variant === 'primary'
+      ? t.accent
+      : variant === 'danger'
+        ? t.expense
+        : variant === 'secondary'
+          ? t.surfaceAlt
+          : 'transparent';
+
+  return (
+    <Pressable
+      onPress={inactive ? undefined : onPress}
+      style={({ pressed }) => [
+        {
+          height: size === 'lg' ? 54 : 52,
+          backgroundColor: bgColor,
+          borderRadius: 14,
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 8,
+          opacity: inactive ? 0.5 : 1,
+          ...(fullWidth ? { flex: 1 } : null),
+        },
+        inlineVariantStyle,
+        !inactive && pressed && { transform: [{ scale: 0.98 }], opacity: 0.92 },
+        style,
+      ]}
+    >
+      {loading ? (
+        <ActivityIndicator color={indicatorColor} />
+      ) : (
+        <>
+          {icon ? <Icon name={icon} size={18} color={textColor} stroke={2} /> : null}
+          <Text style={{ color: textColor, fontSize: 16, fontWeight: '700', letterSpacing: 0.2 }}>
+            {label}
+          </Text>
+        </>
+      )}
+    </Pressable>
+  );
+};
+
 export const DetailRow: React.FC<{ t: Tokens; label: string; value: string; last?: boolean }> = ({
   t,
   label,
@@ -710,5 +832,68 @@ export const DetailRow: React.FC<{ t: Tokens; label: string; value: string; last
   >
     <Text style={{ fontSize: 13.5, color: t.textSec, flex: 1 }}>{label}</Text>
     <Text style={{ fontSize: 14, fontWeight: '500', color: t.text }}>{value}</Text>
+  </View>
+);
+
+export type InputProps = { t: Tokens; error?: boolean } & TextInputProps;
+
+export const Input = forwardRef<TextInput, InputProps>(function Input(
+  { t, error = false, style, placeholderTextColor, ...rest },
+  ref,
+) {
+  const borderColor = error ? t.expense : t.border;
+  return (
+    <AppTextInput
+      placeholderTextColor={placeholderTextColor ?? t.textTer}
+      {...rest}
+      ref={ref}
+      style={[
+        {
+          paddingVertical: 14,
+          paddingHorizontal: 16,
+          borderRadius: 14,
+          backgroundColor: t.surfaceAlt,
+          fontSize: 15,
+          borderWidth: StyleSheet.hairlineWidth,
+          borderColor,
+          color: t.text,
+        },
+        style,
+      ]}
+    />
+  );
+});
+
+export const Field: React.FC<{
+  t: Tokens;
+  label?: string;
+  error?: string | null;
+  helper?: string;
+  children: React.ReactNode;
+  style?: StyleProp<ViewStyle>;
+}> = ({ t, label, error, helper, children, style }) => (
+  <View style={style}>
+    {label ? (
+      <Text
+        style={{
+          fontSize: 11,
+          fontWeight: '700',
+          color: t.textSec,
+          marginBottom: 7,
+          letterSpacing: 0.6,
+          textTransform: 'uppercase',
+        }}
+      >
+        {label}
+      </Text>
+    ) : null}
+    {children}
+    {error ? (
+      <Text style={{ color: t.expense, fontSize: 13, marginTop: 10, fontWeight: '500' }}>
+        {error}
+      </Text>
+    ) : helper ? (
+      <Text style={{ color: t.textSec, fontSize: 12, marginTop: 8 }}>{helper}</Text>
+    ) : null}
   </View>
 );

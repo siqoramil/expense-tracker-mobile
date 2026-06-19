@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { KeyboardAwareScrollView, KeyboardProvider, KeyboardStickyView, } from 'react-native-keyboard-controller';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { KeyboardAwareScrollView, KeyboardStickyView } from 'react-native-keyboard-controller';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { Tokens } from '@/lib/tokens';
-import { AppTextInput } from '@/components/AppTextInput';
 import { Icon, type IconName } from '@/components/Icon';
 import { ModalBackdrop } from '@/components/Glass';
+import { Button, Field, Input } from '@/components/ui';
 import { actions, type Wallet } from '@/lib/store';
 import { tStr, type Lang } from '@/lib/i18n';
 
@@ -30,20 +30,6 @@ const COLOR_OPTIONS: string[] = [
   '#8B5CF6',
   '#06B6D4',
 ];
-
-const fieldLabel = (t: Tokens, label: string) => (
-  <Text
-    style={{
-      fontSize: 11,
-      fontWeight: '700',
-      color: t.textSec,
-      marginBottom: 7,
-      letterSpacing: 0.6,
-    }}
-  >
-    {label.toUpperCase()}
-  </Text>
-);
 
 type Props = {
   t: Tokens;
@@ -105,39 +91,19 @@ export const WalletSheet: React.FC<Props> = ({ t, lang, visible, wallet, onClose
     onClose();
   };
 
-  const inputStyle = {
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    borderRadius: 14,
-    backgroundColor: t.surfaceAlt,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: t.border,
-    color: t.text,
-    fontSize: 15,
-  };
-
   return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType="slide"
-      statusBarTranslucent
-      onRequestClose={onClose}
-    >
-      <KeyboardProvider statusBarTranslucent navigationBarTranslucent>
-        <ModalBackdrop>
-          <Pressable onPress={onClose} style={{ flex: 1, justifyContent: 'flex-end' }}>
-            <Pressable
-              onPress={() => {}}
-              style={{
-                backgroundColor: t.sheetBg,
-                borderTopLeftRadius: 28,
-                borderTopRightRadius: 28,
-                paddingHorizontal: 22,
-                paddingTop: 12,
-                maxHeight: '90%',
-              }}
-            >
+    <ModalBackdrop visible={visible} onClose={onClose}>
+      <Pressable
+        onPress={() => {}}
+        style={{
+          backgroundColor: t.sheetBg,
+          borderTopLeftRadius: 28,
+          borderTopRightRadius: 28,
+          paddingHorizontal: 22,
+          paddingTop: 12,
+          maxHeight: '90%',
+        }}
+      >
               <View
                 style={{
                   width: 40,
@@ -183,46 +149,45 @@ export const WalletSheet: React.FC<Props> = ({ t, lang, visible, wallet, onClose
                 showsVerticalScrollIndicator={false}
                 contentContainerStyle={{ paddingBottom: 8 }}
               >
-                {fieldLabel(t, tStr(lang, 'name'))}
-                <AppTextInput
-                  value={name}
-                  onChangeText={setName}
-                  autoFocus={!isEdit}
-                  placeholder={tStr(lang, 'wallet')}
-                  placeholderTextColor={t.textTer}
-                  maxLength={60}
-                  style={inputStyle}
-                />
+                <Field t={t} label={tStr(lang, 'name')}>
+                  <Input
+                    t={t}
+                    value={name}
+                    onChangeText={setName}
+                    autoFocus={!isEdit}
+                    placeholder={tStr(lang, 'wallet')}
+                    maxLength={60}
+                  />
+                </Field>
 
-                <View style={{ height: 18 }} />
-                {fieldLabel(t, tStr(lang, 'icon'))}
-                <ScrollView
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                  contentContainerStyle={{ gap: 10, paddingVertical: 4 }}
-                >
-                  {ICON_OPTIONS.map((ic) => (
-                    <Pressable
-                      key={ic}
-                      onPress={() => setIcon(ic)}
-                      style={{
-                        width: 48,
-                        height: 48,
-                        borderRadius: 14,
-                        backgroundColor: icon === ic ? color + '33' : t.surfaceAlt,
-                        borderWidth: icon === ic ? 2 : StyleSheet.hairlineWidth,
-                        borderColor: icon === ic ? color : t.border,
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                      }}
-                    >
-                      <Icon name={ic} size={22} color={icon === ic ? color : t.textSec} />
-                    </Pressable>
-                  ))}
-                </ScrollView>
+                <Field t={t} label={tStr(lang, 'icon')} style={{ marginTop: 18 }}>
+                  <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={{ gap: 10, paddingVertical: 4 }}
+                  >
+                    {ICON_OPTIONS.map((ic) => (
+                      <Pressable
+                        key={ic}
+                        onPress={() => setIcon(ic)}
+                        style={{
+                          width: 48,
+                          height: 48,
+                          borderRadius: 14,
+                          backgroundColor: icon === ic ? color + '33' : t.surfaceAlt,
+                          borderWidth: icon === ic ? 2 : StyleSheet.hairlineWidth,
+                          borderColor: icon === ic ? color : t.border,
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
+                      >
+                        <Icon name={ic} size={22} color={icon === ic ? color : t.textSec} />
+                      </Pressable>
+                    ))}
+                  </ScrollView>
+                </Field>
 
-                <View style={{ height: 18 }} />
-                {fieldLabel(t, tStr(lang, 'color'))}
+                <Field t={t} label={tStr(lang, 'color')} style={{ marginTop: 18 }}>
                 <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
                   {COLOR_OPTIONS.map((c) => (
                     <Pressable
@@ -245,21 +210,19 @@ export const WalletSheet: React.FC<Props> = ({ t, lang, visible, wallet, onClose
                     </Pressable>
                   ))}
                 </View>
+                </Field>
 
                 {!isEdit ? (
-                  <>
-                    <View style={{ height: 18 }} />
-                    {fieldLabel(t, tStr(lang, 'startingBalance'))}
-                    <AppTextInput
+                  <Field t={t} label={tStr(lang, 'startingBalance')} style={{ marginTop: 18 }}>
+                    <Input
+                      t={t}
                       value={balance}
                       onChangeText={setBalance}
                       keyboardType="decimal-pad"
                       placeholder="0"
-                      placeholderTextColor={t.textTer}
                       maxLength={16}
-                      style={inputStyle}
                     />
-                  </>
+                  </Field>
                 ) : null}
               </KeyboardAwareScrollView>
               <KeyboardStickyView
@@ -272,32 +235,9 @@ export const WalletSheet: React.FC<Props> = ({ t, lang, visible, wallet, onClose
                   backgroundColor: t.sheetBg,
                 }}
               >
-                <Pressable
-                  onPress={handleSave}
-                  style={{
-                    height: 52,
-                    borderRadius: 14,
-                    backgroundColor: t.accent,
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    shadowColor: t.accent,
-                    shadowOpacity: 0.3,
-                    shadowRadius: 14,
-                    shadowOffset: { width: 0, height: 4 },
-                    elevation: 4,
-                  }}
-                >
-                  <Text
-                    style={{ color: '#fff', fontSize: 16, fontWeight: '700', letterSpacing: 0.2 }}
-                  >
-                    {tStr(lang, 'save')}
-                  </Text>
-                </Pressable>
+                <Button t={t} label={tStr(lang, 'save')} onPress={handleSave} />
               </KeyboardStickyView>
-            </Pressable>
-          </Pressable>
-        </ModalBackdrop>
-      </KeyboardProvider>
-    </Modal>
+      </Pressable>
+    </ModalBackdrop>
   );
 };

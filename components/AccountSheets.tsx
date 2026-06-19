@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
-import { KeyboardAwareScrollView, KeyboardProvider, KeyboardStickyView, } from 'react-native-keyboard-controller';
+import { Dimensions, Pressable, ScrollView, Text, View } from 'react-native';
+import { KeyboardStickyView } from 'react-native-keyboard-controller';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { Tokens } from '@/lib/tokens';
-import { AppTextInput } from '@/components/AppTextInput';
 import { Icon } from '@/components/Icon';
 import { ModalBackdrop } from '@/components/Glass';
+import { Button, Field, Input } from '@/components/ui';
 import { actions, useStore } from '@/lib/store';
 import { errorMessage } from '@/lib/errors';
 import { isGoogleAuthAvailable, signInWithGoogle } from '@/lib/googleAuth';
@@ -23,160 +23,81 @@ const SheetContainer: React.FC<{
   footer?: React.ReactNode;
 }> = ({ t, visible, onClose, title, children, footer }) => {
   const insets = useSafeAreaInsets();
-  // Footer height = paddingTop(12) + button(52) + paddingBottom + opened offset(16).
-  // bottomOffset must match so KeyboardAwareScrollView scrolls the focused input
-  // above the sticky footer, not just above the keyboard.
-  const footerPaddingBottom = Math.max(insets.bottom, 16);
-  const stickyFooterOffset = footer ? 12 + 52 + footerPaddingBottom + 16 : 0;
+  const sheetPaddingBottom = Math.max(insets.bottom, 16);
+  // Numeric cap, not '90%': the sheet is wrapped in KeyboardStickyView (auto height),
+  // so a percentage maxHeight has no basis to resolve against and collapses the
+  // content. A concrete value lets short forms size to content and tall ones scroll.
+  const maxSheetHeight = Dimensions.get('window').height * 0.9;
   return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType="slide"
-      statusBarTranslucent
-      onRequestClose={onClose}
-    >
-      <KeyboardProvider statusBarTranslucent navigationBarTranslucent>
-        <ModalBackdrop>
-          <Pressable onPress={onClose} style={{ flex: 1, justifyContent: 'flex-end' }}>
+    <ModalBackdrop visible={visible} onClose={onClose}>
+      {/* The whole sheet rides the keyboard as one compact unit, so the CTA
+          stays directly under the content instead of leaving a big gap. */}
+      <KeyboardStickyView offset={{ closed: 0, opened: sheetPaddingBottom }}>
+        <Pressable
+          onPress={() => {}}
+          style={{
+            backgroundColor: t.sheetBg,
+            borderTopLeftRadius: 28,
+            borderTopRightRadius: 28,
+            paddingHorizontal: 22,
+            paddingTop: 12,
+            paddingBottom: sheetPaddingBottom,
+            maxHeight: maxSheetHeight,
+          }}
+        >
+          <View
+            style={{
+              width: 40,
+              height: 4,
+              borderRadius: 2,
+              backgroundColor: t.borderStrong,
+              alignSelf: 'center',
+              marginBottom: 14,
+            }}
+          />
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              marginBottom: 18,
+            }}
+          >
+            <Text
+              style={{ fontSize: 20, fontWeight: '700', color: t.text, letterSpacing: -0.4 }}
+            >
+              {title}
+            </Text>
             <Pressable
-              onPress={() => {}}
+              onPress={onClose}
               style={{
-                backgroundColor: t.sheetBg,
-                borderTopLeftRadius: 28,
-                borderTopRightRadius: 28,
-                paddingHorizontal: 22,
-                paddingTop: 12,
-                maxHeight: '90%',
+                width: 34,
+                height: 34,
+                borderRadius: 17,
+                backgroundColor: t.surfaceAlt,
+                alignItems: 'center',
+                justifyContent: 'center',
               }}
             >
-              <View
-                style={{
-                  width: 40,
-                  height: 4,
-                  borderRadius: 2,
-                  backgroundColor: t.borderStrong,
-                  alignSelf: 'center',
-                  marginBottom: 14,
-                }}
-              />
-              <View
-                style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  marginBottom: 18,
-                }}
-              >
-                <Text
-                  style={{ fontSize: 20, fontWeight: '700', color: t.text, letterSpacing: -0.4 }}
-                >
-                  {title}
-                </Text>
-                <Pressable
-                  onPress={onClose}
-                  style={{
-                    width: 34,
-                    height: 34,
-                    borderRadius: 17,
-                    backgroundColor: t.surfaceAlt,
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                >
-                  <Icon name="close" size={16} color={t.textSec} stroke={2.2} />
-                </Pressable>
-              </View>
-              <KeyboardAwareScrollView
-                bottomOffset={24}
-                extraKeyboardSpace={stickyFooterOffset}
-                keyboardShouldPersistTaps="handled"
-                showsVerticalScrollIndicator={false}
-                contentContainerStyle={{ paddingBottom: 8 }}
-              >
-                {children}
-              </KeyboardAwareScrollView>
-              {footer ? (
-                <KeyboardStickyView
-                  offset={{ opened: 16 }}
-                  style={{
-                    paddingTop: 12,
-                    paddingBottom: footerPaddingBottom,
-                    borderTopWidth: StyleSheet.hairlineWidth,
-                    borderTopColor: t.divider,
-                    backgroundColor: t.sheetBg,
-                  }}
-                >
-                  {footer}
-                </KeyboardStickyView>
-              ) : (
-                <View style={{ height: footerPaddingBottom }} />
-              )}
+              <Icon name="close" size={16} color={t.textSec} stroke={2.2} />
             </Pressable>
-          </Pressable>
-        </ModalBackdrop>
-      </KeyboardProvider>
-    </Modal>
+          </View>
+          {/* flexShrink lets the content scroll only if it would overflow the
+              sheet's maxHeight; otherwise the sheet hugs its content. */}
+          <ScrollView
+            bounces={false}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+            style={{ flexGrow: 0, flexShrink: 1 }}
+          >
+            {children}
+          </ScrollView>
+          {footer ? <View style={{ marginTop: 20 }}>{footer}</View> : null}
+        </Pressable>
+      </KeyboardStickyView>
+    </ModalBackdrop>
   );
 };
-
-const fieldLabel = (t: Tokens, label: string) => (
-  <Text
-    style={{
-      fontSize: 11,
-      fontWeight: '700',
-      color: t.textSec,
-      marginBottom: 7,
-      letterSpacing: 0.6,
-    }}
-  >
-    {label.toUpperCase()}
-  </Text>
-);
-
-const inputStyle = (t: Tokens) => ({
-  paddingVertical: 14,
-  paddingHorizontal: 16,
-  borderRadius: 14,
-  backgroundColor: t.surfaceAlt,
-  borderWidth: StyleSheet.hairlineWidth,
-  borderColor: t.border,
-  color: t.text,
-  fontSize: 15,
-});
-
-const primaryBtn = (t: Tokens, label: string, onPress: () => void, busy = false, mt = 0) => (
-  <Pressable
-    onPress={busy ? undefined : onPress}
-    style={{
-      height: 52,
-      borderRadius: 14,
-      backgroundColor: t.accent,
-      alignItems: 'center',
-      justifyContent: 'center',
-      marginTop: mt,
-      opacity: busy ? 0.7 : 1,
-      shadowColor: t.accent,
-      shadowOpacity: 0.3,
-      shadowRadius: 14,
-      shadowOffset: { width: 0, height: 4 },
-      elevation: 4,
-    }}
-  >
-    {busy ? (
-      <ActivityIndicator color="#fff" />
-    ) : (
-      <Text style={{ color: '#fff', fontSize: 16, fontWeight: '700', letterSpacing: 0.2 }}>
-        {label}
-      </Text>
-    )}
-  </Pressable>
-);
-
-const errorText = (t: Tokens, msg: string | null) =>
-  msg ? (
-    <Text style={{ color: t.expense, fontSize: 13, marginTop: 10, fontWeight: '500' }}>{msg}</Text>
-  ) : null;
 
 const extractError = (e: unknown, lang: Lang): string => errorMessage(lang, e);
 
@@ -215,19 +136,18 @@ export const EditNameSheet: React.FC<SheetProps> = ({ t, visible, onClose }) => 
       visible={visible}
       onClose={onClose}
       title={tStr(lang, 'editName')}
-      footer={primaryBtn(t, tStr(lang, 'save'), submit, busy)}
+      footer={<Button t={t} label={tStr(lang, 'save')} onPress={submit} loading={busy} />}
     >
-      {fieldLabel(t, tStr(lang, 'name'))}
-      <AppTextInput
-        value={name}
-        onChangeText={setName}
-        autoFocus
-        placeholder="Your name"
-        placeholderTextColor={t.textTer}
-        maxLength={80}
-        style={inputStyle(t)}
-      />
-      {errorText(t, err)}
+      <Field t={t} label={tStr(lang, 'name')} error={err}>
+        <Input
+          t={t}
+          value={name}
+          onChangeText={setName}
+          autoFocus
+          placeholder="Your name"
+          maxLength={80}
+        />
+      </Field>
     </SheetContainer>
   );
 };
@@ -281,10 +201,10 @@ export const EditEmailSheet: React.FC<SheetProps> = ({ t, visible, onClose }) =>
 
   const emailFooter =
     step === 1 ? (
-      primaryBtn(t, tStr(lang, 'sendCode'), requestCode, busy)
+      <Button t={t} label={tStr(lang, 'sendCode')} onPress={requestCode} loading={busy} />
     ) : (
       <View>
-        {primaryBtn(t, tStr(lang, 'verify'), verify, busy)}
+        <Button t={t} label={tStr(lang, 'verify')} onPress={verify} loading={busy} />
         <Pressable onPress={() => setStep(1)} style={{ alignItems: 'center', marginTop: 12 }}>
           <Text style={{ color: t.accent, fontSize: 14, fontWeight: '600' }}>
             {tStr(lang, 'useDifferentEmail')}
@@ -313,19 +233,18 @@ export const EditEmailSheet: React.FC<SheetProps> = ({ t, visible, onClose }) =>
           >
             {tStr(lang, 'emailCodeHint')}
           </Text>
-          {fieldLabel(t, tStr(lang, 'newEmail'))}
-          <AppTextInput
-            value={newEmail}
-            onChangeText={setNewEmail}
-            autoFocus
-            autoCapitalize="none"
-            keyboardType="email-address"
-            placeholder="you@example.com"
-            placeholderTextColor={t.textTer}
-            maxLength={200}
-            style={inputStyle(t)}
-          />
-          {errorText(t, err)}
+          <Field t={t} label={tStr(lang, 'newEmail')} error={err}>
+            <Input
+              t={t}
+              value={newEmail}
+              onChangeText={setNewEmail}
+              autoFocus
+              autoCapitalize="none"
+              keyboardType="email-address"
+              placeholder="you@example.com"
+              maxLength={200}
+            />
+          </Field>
         </>
       ) : (
         <>
@@ -339,21 +258,18 @@ export const EditEmailSheet: React.FC<SheetProps> = ({ t, visible, onClose }) =>
           >
             {tStr(lang, 'codeEmailHint', { email: newEmail })}
           </Text>
-          {fieldLabel(t, tStr(lang, 'verificationCode'))}
-          <AppTextInput
-            value={code}
-            onChangeText={(v) => setCode(v.replace(/\D/g, '').slice(0, 6))}
-            autoFocus
-            keyboardType="number-pad"
-            placeholder="000000"
-            placeholderTextColor={t.textTer}
-            maxLength={6}
-            style={[
-              inputStyle(t),
-              { fontSize: 22, textAlign: 'center', letterSpacing: 8, fontWeight: '700' },
-            ]}
-          />
-          {errorText(t, err)}
+          <Field t={t} label={tStr(lang, 'verificationCode')} error={err}>
+            <Input
+              t={t}
+              value={code}
+              onChangeText={(v) => setCode(v.replace(/\D/g, '').slice(0, 6))}
+              autoFocus
+              keyboardType="number-pad"
+              placeholder="000000"
+              maxLength={6}
+              style={{ fontSize: 22, textAlign: 'center', letterSpacing: 8, fontWeight: '700' }}
+            />
+          </Field>
         </>
       )}
     </SheetContainer>
@@ -455,10 +371,10 @@ export const ForgotPasswordSheet: React.FC<SheetProps> = ({ t, visible, onClose 
 
   const forgotFooter =
     step === 1 ? (
-      primaryBtn(t, tStr(lang, 'sendCode'), sendCode, busy)
+      <Button t={t} label={tStr(lang, 'sendCode')} onPress={sendCode} loading={busy} />
     ) : step === 2 ? (
       <View>
-        {primaryBtn(t, tStr(lang, 'verify'), verifyCode, busy)}
+        <Button t={t} label={tStr(lang, 'verify')} onPress={verifyCode} loading={busy} />
         <Pressable
           onPress={() => !busy && setStep(1)}
           style={{ alignItems: 'center', marginTop: 12 }}
@@ -469,7 +385,7 @@ export const ForgotPasswordSheet: React.FC<SheetProps> = ({ t, visible, onClose 
         </Pressable>
       </View>
     ) : (
-      primaryBtn(t, tStr(lang, 'savePassword'), reset, busy)
+      <Button t={t} label={tStr(lang, 'savePassword')} onPress={reset} loading={busy} />
     );
 
   return (
@@ -494,20 +410,19 @@ export const ForgotPasswordSheet: React.FC<SheetProps> = ({ t, visible, onClose 
           >
             {tStr(lang, 'resetPasswordHint')}
           </Text>
-          {fieldLabel(t, tStr(lang, 'email'))}
-          <AppTextInput
-            value={email}
-            onChangeText={setEmail}
-            autoFocus
-            autoCapitalize="none"
-            autoCorrect={false}
-            keyboardType="email-address"
-            placeholder="you@example.com"
-            placeholderTextColor={t.textTer}
-            maxLength={200}
-            style={inputStyle(t)}
-          />
-          {errorText(t, err)}
+          <Field t={t} label={tStr(lang, 'email')} error={err}>
+            <Input
+              t={t}
+              value={email}
+              onChangeText={setEmail}
+              autoFocus
+              autoCapitalize="none"
+              autoCorrect={false}
+              keyboardType="email-address"
+              placeholder="you@example.com"
+              maxLength={200}
+            />
+          </Field>
         </>
       ) : step === 2 ? (
         <>
@@ -521,21 +436,18 @@ export const ForgotPasswordSheet: React.FC<SheetProps> = ({ t, visible, onClose 
           >
             {tStr(lang, 'codeEmailHint', { email })}
           </Text>
-          {fieldLabel(t, tStr(lang, 'verificationCode'))}
-          <AppTextInput
-            value={code}
-            onChangeText={(v) => setCode(v.replace(/\D/g, '').slice(0, 6))}
-            autoFocus
-            keyboardType="number-pad"
-            placeholder="000000"
-            placeholderTextColor={t.textTer}
-            maxLength={6}
-            style={[
-              inputStyle(t),
-              { fontSize: 22, textAlign: 'center', letterSpacing: 8, fontWeight: '700' },
-            ]}
-          />
-          {errorText(t, err)}
+          <Field t={t} label={tStr(lang, 'verificationCode')} error={err}>
+            <Input
+              t={t}
+              value={code}
+              onChangeText={(v) => setCode(v.replace(/\D/g, '').slice(0, 6))}
+              autoFocus
+              keyboardType="number-pad"
+              placeholder="000000"
+              maxLength={6}
+              style={{ fontSize: 22, textAlign: 'center', letterSpacing: 8, fontWeight: '700' }}
+            />
+          </Field>
         </>
       ) : (
         <>
@@ -549,33 +461,31 @@ export const ForgotPasswordSheet: React.FC<SheetProps> = ({ t, visible, onClose 
           >
             {tStr(lang, 'newPasswordHint')}
           </Text>
-          {fieldLabel(t, tStr(lang, 'newPassword'))}
-          <AppTextInput
-            value={newPassword}
-            onChangeText={setNewPassword}
-            autoFocus
-            secureTextEntry
-            autoCapitalize="none"
-            autoCorrect={false}
-            placeholder="••••••••"
-            placeholderTextColor={t.textTer}
-            maxLength={128}
-            style={inputStyle(t)}
-          />
-          <View style={{ height: 14 }} />
-          {fieldLabel(t, tStr(lang, 'confirmPassword'))}
-          <AppTextInput
-            value={confirmPassword}
-            onChangeText={setConfirmPassword}
-            secureTextEntry
-            autoCapitalize="none"
-            autoCorrect={false}
-            placeholder="••••••••"
-            placeholderTextColor={t.textTer}
-            maxLength={128}
-            style={inputStyle(t)}
-          />
-          {errorText(t, err)}
+          <Field t={t} label={tStr(lang, 'newPassword')}>
+            <Input
+              t={t}
+              value={newPassword}
+              onChangeText={setNewPassword}
+              autoFocus
+              secureTextEntry
+              autoCapitalize="none"
+              autoCorrect={false}
+              placeholder="••••••••"
+              maxLength={128}
+            />
+          </Field>
+          <Field t={t} label={tStr(lang, 'confirmPassword')} error={err} style={{ marginTop: 14 }}>
+            <Input
+              t={t}
+              value={confirmPassword}
+              onChangeText={setConfirmPassword}
+              secureTextEntry
+              autoCapitalize="none"
+              autoCorrect={false}
+              placeholder="••••••••"
+              maxLength={128}
+            />
+          </Field>
         </>
       )}
     </SheetContainer>
@@ -674,32 +584,12 @@ export const DeleteAccountSheet: React.FC<SheetProps & { onDeleted: () => void }
     await finishConfirm({ password });
   };
 
-  const dangerBtn = (label: string, onPress: () => void, busyState: boolean) => (
-    <Pressable
-      onPress={busyState ? undefined : onPress}
-      style={{
-        height: 52,
-        borderRadius: 14,
-        backgroundColor: t.expense,
-        alignItems: 'center',
-        justifyContent: 'center',
-        opacity: busyState ? 0.7 : 1,
-      }}
-    >
-      {busyState ? (
-        <ActivityIndicator color="#fff" />
-      ) : (
-        <Text style={{ color: '#fff', fontSize: 16, fontWeight: '700', letterSpacing: 0.2 }}>
-          {label}
-        </Text>
-      )}
-    </Pressable>
-  );
-
   const deleteFooter =
-    step === 1
-      ? dangerBtn(tStr(lang, 'sendCode'), requestCode, busy)
-      : dangerBtn(tStr(lang, 'deleteAccount'), confirm, busy);
+    step === 1 ? (
+      <Button t={t} variant="danger" label={tStr(lang, 'sendCode')} onPress={requestCode} loading={busy} />
+    ) : (
+      <Button t={t} variant="danger" label={tStr(lang, 'deleteAccount')} onPress={confirm} loading={busy} />
+    );
 
   return (
     <SheetContainer
@@ -731,7 +621,11 @@ export const DeleteAccountSheet: React.FC<SheetProps & { onDeleted: () => void }
           >
             {tStr(lang, 'deleteCodeHint', { email })}
           </Text>
-          {errorText(t, err)}
+          {err ? (
+            <Text style={{ color: t.expense, fontSize: 13, marginTop: 10, fontWeight: '500' }}>
+              {err}
+            </Text>
+          ) : null}
         </>
       ) : (
         <>
@@ -745,48 +639,41 @@ export const DeleteAccountSheet: React.FC<SheetProps & { onDeleted: () => void }
           >
             {tStr(lang, 'deleteConfirmHint', { email })}
           </Text>
-          {fieldLabel(t, tStr(lang, 'verificationCode'))}
-          <AppTextInput
-            value={code}
-            onChangeText={(v) => setCode(v.replace(/\D/g, '').slice(0, 6))}
-            autoFocus
-            keyboardType="number-pad"
-            placeholder="000000"
-            placeholderTextColor={t.textTer}
-            maxLength={6}
-            style={[
-              inputStyle(t),
-              { fontSize: 22, textAlign: 'center', letterSpacing: 8, fontWeight: '700' },
-            ]}
-          />
+          <Field t={t} label={tStr(lang, 'verificationCode')}>
+            <Input
+              t={t}
+              value={code}
+              onChangeText={(v) => setCode(v.replace(/\D/g, '').slice(0, 6))}
+              autoFocus
+              keyboardType="number-pad"
+              placeholder="000000"
+              maxLength={6}
+              style={{ fontSize: 22, textAlign: 'center', letterSpacing: 8, fontWeight: '700' }}
+            />
+          </Field>
           {isGoogleOnly ? (
-            <Text
-              style={{
-                fontSize: 12,
-                color: t.textSec,
-                marginTop: 10,
-                lineHeight: 17,
-              }}
-            >
+            <Text style={{ fontSize: 12, color: t.textSec, marginTop: 10, lineHeight: 17 }}>
               {tStr(lang, 'googleReauthHint')}
             </Text>
           ) : (
-            <View style={{ marginTop: 14 }}>
-              {fieldLabel(t, tStr(lang, 'currentPassword'))}
-              <AppTextInput
+            <Field t={t} label={tStr(lang, 'currentPassword')} style={{ marginTop: 14 }}>
+              <Input
+                t={t}
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry
                 autoCapitalize="none"
                 autoCorrect={false}
                 placeholder="••••••••"
-                placeholderTextColor={t.textTer}
                 maxLength={128}
-                style={inputStyle(t)}
               />
-            </View>
+            </Field>
           )}
-          {errorText(t, err)}
+          {err ? (
+            <Text style={{ color: t.expense, fontSize: 13, marginTop: 10, fontWeight: '500' }}>
+              {err}
+            </Text>
+          ) : null}
         </>
       )}
     </SheetContainer>

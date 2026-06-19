@@ -15,7 +15,7 @@ type Props = {
 
 type Filter = 'all' | 'owe_me' | 'i_owe' | 'overdue' | 'due';
 
-export const DebtorsScreen: React.FC<Props> = ({ t, onOpen }) => {
+export const DebtorsScreen: React.FC<Props & { contentTopPad?: number }> = ({ t, onOpen, contentTopPad = 0 }) => {
   const s = useStore();
   const lang = s.prefs.lang;
   const [q, setQ] = useState<string>('');
@@ -73,7 +73,7 @@ export const DebtorsScreen: React.FC<Props> = ({ t, onOpen }) => {
   ];
 
   return (
-    <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 160 }}>
+    <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 160, paddingTop: contentTopPad }}>
       <View style={{ paddingHorizontal: 20, paddingBottom: 16 }}>
         <Card t={t} style={{ padding: 0, overflow: 'hidden' }}>
           <View style={{ flexDirection: 'row' }}>
