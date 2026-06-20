@@ -5,7 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { Tokens } from '@/lib/tokens';
 import { Icon } from '@/components/Icon';
 import { ModalBackdrop } from '@/components/Glass';
-import { Button, Field, Input } from '@/components/ui';
+import { Button, CodeInput, Field, Input } from '@/components/ui';
 import { actions, useStore } from '@/lib/store';
 import { errorMessage } from '@/lib/errors';
 import { isGoogleAuthAvailable, signInWithGoogle } from '@/lib/googleAuth';
@@ -84,15 +84,20 @@ const SheetContainer: React.FC<{
           </View>
           {/* flexShrink lets the content scroll only if it would overflow the
               sheet's maxHeight; otherwise the sheet hugs its content. */}
+          {/* footer lives INSIDE the ScrollView so its CTA is a child of the
+              keyboardShouldPersistTaps="handled" tree — tapping Save while the
+              keyboard is open fires on the first tap (it neither dismisses the
+              keyboard nor lets the sticky view shift the button out from under
+              the finger). */}
           <ScrollView
             bounces={false}
-            keyboardShouldPersistTaps="handled"
+            keyboardShouldPersistTaps="always"
             showsVerticalScrollIndicator={false}
             style={{ flexGrow: 0, flexShrink: 1 }}
           >
             {children}
+            {footer ? <View style={{ marginTop: 20 }}>{footer}</View> : null}
           </ScrollView>
-          {footer ? <View style={{ marginTop: 20 }}>{footer}</View> : null}
         </Pressable>
       </KeyboardStickyView>
     </ModalBackdrop>
@@ -259,16 +264,7 @@ export const EditEmailSheet: React.FC<SheetProps> = ({ t, visible, onClose }) =>
             {tStr(lang, 'codeEmailHint', { email: newEmail })}
           </Text>
           <Field t={t} label={tStr(lang, 'verificationCode')} error={err}>
-            <Input
-              t={t}
-              value={code}
-              onChangeText={(v) => setCode(v.replace(/\D/g, '').slice(0, 6))}
-              autoFocus
-              keyboardType="number-pad"
-              placeholder="000000"
-              maxLength={6}
-              style={{ fontSize: 22, textAlign: 'center', letterSpacing: 8, fontWeight: '700' }}
-            />
+            <CodeInput t={t} value={code} onChangeText={setCode} error={!!err} autoFocus />
           </Field>
         </>
       )}
@@ -437,16 +433,7 @@ export const ForgotPasswordSheet: React.FC<SheetProps> = ({ t, visible, onClose 
             {tStr(lang, 'codeEmailHint', { email })}
           </Text>
           <Field t={t} label={tStr(lang, 'verificationCode')} error={err}>
-            <Input
-              t={t}
-              value={code}
-              onChangeText={(v) => setCode(v.replace(/\D/g, '').slice(0, 6))}
-              autoFocus
-              keyboardType="number-pad"
-              placeholder="000000"
-              maxLength={6}
-              style={{ fontSize: 22, textAlign: 'center', letterSpacing: 8, fontWeight: '700' }}
-            />
+            <CodeInput t={t} value={code} onChangeText={setCode} error={!!err} autoFocus />
           </Field>
         </>
       ) : (
@@ -640,16 +627,7 @@ export const DeleteAccountSheet: React.FC<SheetProps & { onDeleted: () => void }
             {tStr(lang, 'deleteConfirmHint', { email })}
           </Text>
           <Field t={t} label={tStr(lang, 'verificationCode')}>
-            <Input
-              t={t}
-              value={code}
-              onChangeText={(v) => setCode(v.replace(/\D/g, '').slice(0, 6))}
-              autoFocus
-              keyboardType="number-pad"
-              placeholder="000000"
-              maxLength={6}
-              style={{ fontSize: 22, textAlign: 'center', letterSpacing: 8, fontWeight: '700' }}
-            />
+            <CodeInput t={t} value={code} onChangeText={setCode} error={!!err} autoFocus />
           </Field>
           {isGoogleOnly ? (
             <Text style={{ fontSize: 12, color: t.textSec, marginTop: 10, lineHeight: 17 }}>

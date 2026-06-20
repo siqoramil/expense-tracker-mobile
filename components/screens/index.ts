@@ -7,6 +7,7 @@ export * from './DebtorDetail';
 export * from './DebtorsScreen';
 export * from './HomeScreen';
 export * from './NotificationsScreen';
+export * from './PaywallScreen';
 export * from './ProfileScreen';
 export * from './RecurringScreen';
 export * from './ReportsScreen';

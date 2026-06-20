@@ -255,6 +255,19 @@ export const ProfileScreen: React.FC<{ t: Tokens; onNav: Nav; onLogout: () => vo
         </Card>
       </View>
 
+      <View style={{ paddingHorizontal: 20, paddingBottom: 16 }}>
+        <Card t={t}>
+          <NavRow
+            t={t}
+            icon="gift"
+            color="#059669"
+            label={tStr(lang, 'goPremium')}
+            onPress={() => onNav('premium')}
+            last
+          />
+        </Card>
+      </View>
+
       <SectionHeader t={t} title={tStr(lang, 'preferences')} />
       <View style={{ paddingHorizontal: 20, paddingBottom: 16 }}>
         <Card t={t}>

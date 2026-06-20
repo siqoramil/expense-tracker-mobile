@@ -11,6 +11,7 @@ import { Onboarding } from '@/components/Onboarding';
 import { ServerUnreachable } from '@/components/ServerUnreachable';
 import { Toast } from '@/components/ui';
 import { actions, hydrate, useStore, useStoreSelector } from '@/lib/store';
+import { configurePurchases } from '@/lib/purchases';
 import { bootstrapSync } from '@/lib/sync';
 import { makeTokens } from '@/lib/tokens';
 import { setToastFn, type ToastType } from '@/lib/toast';
@@ -27,6 +28,12 @@ export default function RootLayout() {
       setReady(true);
       SplashScreen.hideAsync().catch(() => {});
     });
+  }, []);
+
+  // Initialise RevenueCat once. No-op until the SDK keys are set and the app is
+  // rebuilt with the native module, so it is safe to call unconditionally here.
+  useEffect(() => {
+    configurePurchases();
   }, []);
 
   useEffect(() => {

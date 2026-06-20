@@ -1,5 +1,10 @@
 import { forwardRef, useEffect, useRef } from 'react';
-import { TextInput, type TextInputProps } from 'react-native';
+import { Platform, TextInput, type TextInputProps } from 'react-native';
+
+// One plain font for every input + placeholder across the app, regardless of the
+// device's font skin. iOS → San Francisco, Android → Roboto. Set as the base of
+// the style array so per-input styles can still override it when needed.
+const INPUT_FONT_FAMILY = Platform.select({ ios: 'System', android: 'sans-serif' });
 
 // Delay (ms) before an auto-focused input grabs focus. Native `autoFocus` fires
 // the instant the input mounts, which raises the keyboard BEFORE a sheet/modal
@@ -11,7 +16,7 @@ const AUTO_FOCUS_DELAY = 250;
 // the keyboard accessory bar never covers or interrupts typing. Per-input props
 // still override these defaults through the spread.
 export const AppTextInput = forwardRef<TextInput, TextInputProps>(
-  function AppTextInput({ autoFocus, ...props }, ref) {
+  function AppTextInput({ autoFocus, style, ...props }, ref) {
     const innerRef = useRef<TextInput | null>(null);
 
     useEffect(() => {
@@ -32,6 +37,7 @@ export const AppTextInput = forwardRef<TextInput, TextInputProps>(
         importantForAutofill="no"
         textContentType="none"
         {...props}
+        style={[{ fontFamily: INPUT_FONT_FAMILY }, style]}
         ref={setRef}
       />
     );
