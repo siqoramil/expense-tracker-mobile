@@ -87,5 +87,6 @@ const styles = StyleSheet.create({
   },
   button: {
     minWidth: 180,
+    alignSelf: 'center',
   },
 });

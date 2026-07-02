@@ -178,7 +178,7 @@ export const LoginScreen: React.FC<{ t: Tokens; onDone: () => void }> = ({ t, on
           }}
         >
           <Image
-            source={require('../assets/images/icon.png')}
+            source={require('../../assets/images/icon.png')}
             style={{ width: 136, height: 136 }}
             resizeMode="cover"
           />

@@ -61,7 +61,7 @@
     },
     "extra": {
       "router": {},
-      "apiUrl": "https://api.siqoramil.uz",
+      "API_URL": "https://api.siqoramil.uz",
       "revenueCatIosKey": "REPLACE_WITH_REVENUECAT_IOS_PUBLIC_SDK_KEY",
       "revenueCatAndroidKey": "REPLACE_WITH_REVENUECAT_ANDROID_PUBLIC_SDK_KEY",
       "googleWebClientId": "117558488241-6ic41go20uck8983jqe9k77i2oeqqkph.apps.googleusercontent.com",

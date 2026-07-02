@@ -3,7 +3,7 @@ import Constants from 'expo-constants';
 const DEFAULT_API_URL = 'https://api.siqoramil.uz';
 const REQUEST_TIMEOUT_MS = 12_000;
 
-const configuredApiUrl = (Constants.expoConfig?.extra as { apiUrl?: string } | undefined)?.apiUrl;
+const configuredApiUrl = (Constants.expoConfig?.extra as { API_URL?: string } | undefined)?.API_URL;
 const BASE_URL = (configuredApiUrl ?? DEFAULT_API_URL).replace(/\/+$/, '');
 
 let authToken: string | null = null;

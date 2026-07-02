@@ -153,7 +153,7 @@ const SumCard: React.FC<{
   label: string;
   amount: number;
   kind: 'income' | 'expense';
-  currency: import('../../lib/format').Currency;
+  currency: import('@/lib/format').Currency;
   t: Tokens;
 }> = ({ label, amount, kind, currency, t }) => {
   const up = kind === 'income';
