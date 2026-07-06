@@ -666,10 +666,10 @@ const HeroCard = memo(function HeroCard({
       {/* Main hero card — accent bg with decorative circles for depth */}
       <View
         style={{
-          borderRadius: 24,
+          borderRadius: 22,
           backgroundColor: t.accent,
           overflow: 'hidden',
-          padding: 24,
+          padding: 18,
           shadowColor: t.accent,
           shadowOpacity: t.dark ? 0.4 : 0.3,
           shadowRadius: 20,
@@ -681,25 +681,13 @@ const HeroCard = memo(function HeroCard({
         <View
           style={{
             position: 'absolute',
-            top: -50,
-            right: -50,
-            width: 180,
-            height: 180,
-            borderRadius: 90,
+            top: -40,
+            right: -40,
+            width: 130,
+            height: 130,
+            borderRadius: 65,
             backgroundColor: accentDark,
-            opacity: 0.45,
-          }}
-        />
-        <View
-          style={{
-            position: 'absolute',
-            bottom: -30,
-            left: -30,
-            width: 120,
-            height: 120,
-            borderRadius: 60,
-            backgroundColor: accentDark,
-            opacity: 0.25,
+            opacity: 0.4,
           }}
         />
 
@@ -709,15 +697,15 @@ const HeroCard = memo(function HeroCard({
             flexDirection: 'row',
             alignItems: 'center',
             justifyContent: 'space-between',
-            marginBottom: 12,
+            marginBottom: 6,
           }}
         >
           <Text
             style={{
-              fontSize: 12,
+              fontSize: 11,
               fontWeight: '600',
               color: 'rgba(255,255,255,0.75)',
-              letterSpacing: 0.8,
+              letterSpacing: 0.7,
               textTransform: 'uppercase',
             }}
           >
@@ -731,36 +719,36 @@ const HeroCard = memo(function HeroCard({
               flexDirection: 'row',
               alignItems: 'center',
               gap: 4,
-              paddingVertical: 5,
-              paddingHorizontal: 11,
+              paddingVertical: 4,
+              paddingHorizontal: 10,
               borderRadius: 100,
               backgroundColor: 'rgba(255,255,255,0.18)',
               opacity: pressed ? 0.7 : 1,
             })}
           >
-            <Text style={{ fontSize: 13, fontWeight: '600', color: '#fff' }}>{month.label}</Text>
-            <Icon name="chevron-down" size={13} color="#fff" stroke={2.5} />
+            <Text style={{ fontSize: 12, fontWeight: '600', color: '#fff' }}>{month.label}</Text>
+            <Icon name="chevron-down" size={12} color="#fff" stroke={2.5} />
           </Pressable>
         </View>
 
-        {/* Balance amount */}
-        <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 6, marginBottom: 4 }}>
+        {/* Balance amount + net on one line */}
+        <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 5, marginBottom: 3 }}>
           <BlurMoney
             value={fmtMoney(totalBalance, currency)}
             hidden={hideBalance}
             color="#fff"
-            size={38}
+            size={30}
           />
           {!hideBalance && unitOf(currency) ? (
-            <Text style={{ fontSize: 15, color: 'rgba(255,255,255,0.65)', fontWeight: '500' }}>
+            <Text style={{ fontSize: 13, color: 'rgba(255,255,255,0.65)', fontWeight: '500' }}>
               {unitOf(currency)}
             </Text>
           ) : null}
         </View>
 
         {/* Net sub-stat */}
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 18 }}>
-          <Text style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)' }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 12 }}>
+          <Text style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)' }}>
             {tStr(lang, 'netThisMonth')}
           </Text>
           <View
@@ -768,8 +756,8 @@ const HeroCard = memo(function HeroCard({
               flexDirection: 'row',
               alignItems: 'center',
               gap: 3,
-              paddingVertical: 2,
-              paddingHorizontal: 7,
+              paddingVertical: 1,
+              paddingHorizontal: 6,
               borderRadius: 6,
               backgroundColor: net >= 0 ? 'rgba(255,255,255,0.2)' : 'rgba(239,68,68,0.35)',
             }}
@@ -777,7 +765,7 @@ const HeroCard = memo(function HeroCard({
             {pctSaved > 0 ? (
               <Icon name="arrow-up" size={10} color="#fff" stroke={2.5} />
             ) : null}
-            <Text style={{ fontSize: 12, fontWeight: '700', color: '#fff' }}>
+            <Text style={{ fontSize: 11, fontWeight: '700', color: '#fff' }}>
               {hideBalance ? '*****' : fmtMoney(net, currency)}
             </Text>
           </View>
@@ -787,8 +775,7 @@ const HeroCard = memo(function HeroCard({
         <View
           style={{
             flexDirection: 'row',
-            gap: 10,
-            marginBottom: 18,
+            gap: 8,
           }}
         >
           <HeroMiniStat
@@ -806,8 +793,8 @@ const HeroCard = memo(function HeroCard({
         </View>
 
         {/* Sparkline embedded in hero — 14-day expense trend */}
-        <View style={{ opacity: 0.6 }}>
-          <Sparkline data={spark} color="#fff" height={36} />
+        <View style={{ opacity: 0.6, marginTop: 14 }}>
+          <Sparkline data={spark} color="#fff" height={26} />
         </View>
 
         {/* Income/expense ratio bar */}
@@ -817,7 +804,7 @@ const HeroCard = memo(function HeroCard({
             borderRadius: 2,
             backgroundColor: 'rgba(255,255,255,0.2)',
             overflow: 'hidden',
-            marginTop: 10,
+            marginTop: 8,
           }}
         >
           <View
@@ -899,19 +886,20 @@ const HeroMiniStat: React.FC<{
     style={{
       flex: 1,
       backgroundColor: 'rgba(255,255,255,0.14)',
-      borderRadius: 14,
-      padding: 12,
+      borderRadius: 12,
+      paddingVertical: 9,
+      paddingHorizontal: 11,
     }}
   >
-    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 5 }}>
-      <Icon name={icon} size={13} color="rgba(255,255,255,0.8)" stroke={2.2} />
-      <Text style={{ fontSize: 11, color: 'rgba(255,255,255,0.7)', fontWeight: '600' }}>
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 3 }}>
+      <Icon name={icon} size={12} color="rgba(255,255,255,0.8)" stroke={2.2} />
+      <Text style={{ fontSize: 10.5, color: 'rgba(255,255,255,0.7)', fontWeight: '600' }}>
         {label}
       </Text>
     </View>
     <Text
       style={{
-        fontSize: 15,
+        fontSize: 14,
         fontWeight: '700',
         color: '#fff',
         letterSpacing: -0.3,
