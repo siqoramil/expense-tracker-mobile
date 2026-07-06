@@ -7,6 +7,10 @@ import { Icon } from '@/components/Icon';
 // Height of the title row itself (below the status-bar/notch inset).
 const HEADER_TITLE_H = 56;
 
+// Breathing room between the status-bar/notch inset and the title row so the
+// large title doesn't tuck right against the clock.
+const HEADER_TOP_GAP = 10;
+
 // Probe expo-glass-effect lazily so a missing native module never throws.
 type GlassMod = {
   GlassView: React.ComponentType<{
@@ -48,7 +52,7 @@ try {
 export const useTabHeaderHeight = () => {
   const insets = useSafeAreaInsets();
   if (Platform.OS !== 'ios') return 0;
-  return insets.top + HEADER_TITLE_H;
+  return insets.top + HEADER_TOP_GAP + HEADER_TITLE_H;
 };
 
 // Large-title header for tab screens. No navigator draws a header for tabs on
@@ -86,7 +90,7 @@ export const TabHeader: React.FC<{ t: Tokens; title: string; onAdd?: () => void 
   }
 
   // iOS: floating bar spanning from screen top through title row.
-  const barHeight = insets.top + HEADER_TITLE_H;
+  const barHeight = insets.top + HEADER_TOP_GAP + HEADER_TITLE_H;
 
   const titleRow = (
     <View
@@ -143,7 +147,7 @@ export const TabHeader: React.FC<{ t: Tokens; title: string; onAdd?: () => void 
           glassEffectStyle="regular"
           colorScheme={t.dark ? 'dark' : 'light'}
         />
-        <View style={{ height: insets.top }} />
+        <View style={{ height: insets.top + HEADER_TOP_GAP }} />
         {titleRow}
       </View>
     );
@@ -161,7 +165,7 @@ export const TabHeader: React.FC<{ t: Tokens; title: string; onAdd?: () => void 
           intensity={85}
           style={StyleSheet.absoluteFill}
         />
-        <View style={{ height: insets.top }} />
+        <View style={{ height: insets.top + HEADER_TOP_GAP }} />
         {titleRow}
       </View>
     );
@@ -173,7 +177,7 @@ export const TabHeader: React.FC<{ t: Tokens; title: string; onAdd?: () => void 
       style={[floatBase, { backgroundColor: t.bg, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: t.divider }]}
       pointerEvents="box-none"
     >
-      <View style={{ height: insets.top }} />
+      <View style={{ height: insets.top + HEADER_TOP_GAP }} />
       {titleRow}
     </View>
   );
