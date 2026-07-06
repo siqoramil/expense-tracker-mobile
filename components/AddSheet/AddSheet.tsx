@@ -374,7 +374,7 @@ export const AddSheet: React.FC<Props> = ({ t, mode, editTx, editDebt, onClose }
         label={tStr(lang, 'save')}
         onPress={submit}
         size="lg"
-        style={{ borderRadius: 16 }}
+        style={{ borderRadius: 16, flex: 1 }}
       />
     </>
   );
