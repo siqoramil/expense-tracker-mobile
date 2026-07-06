@@ -11,6 +11,10 @@ const HEADER_TITLE_H = 56;
 // large title doesn't tuck right against the clock.
 const HEADER_TOP_GAP = 10;
 
+// Gap below the floating bar so scroll content doesn't tuck against the title.
+// Applied to content padding only — the bar's own height stays unchanged.
+const HEADER_CONTENT_GAP = 12;
+
 // Probe expo-glass-effect lazily so a missing native module never throws.
 type GlassMod = {
   GlassView: React.ComponentType<{
@@ -47,12 +51,12 @@ try {
   blurMod = null;
 }
 
-// Returns the total floating header height (safe-area top + title row).
-// Use this to pad ScrollView content so it starts below the floating bar.
+// Padding a ScrollView needs so its content starts just below the floating bar,
+// plus a small gap so the first item doesn't tuck against the large title.
 export const useTabHeaderHeight = () => {
   const insets = useSafeAreaInsets();
   if (Platform.OS !== 'ios') return 0;
-  return insets.top + HEADER_TOP_GAP + HEADER_TITLE_H;
+  return insets.top + HEADER_TOP_GAP + HEADER_TITLE_H + HEADER_CONTENT_GAP;
 };
 
 // Large-title header for tab screens. No navigator draws a header for tabs on
