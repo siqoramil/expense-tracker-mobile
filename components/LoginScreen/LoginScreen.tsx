@@ -19,6 +19,7 @@ export const LoginScreen: React.FC<{ t: Tokens; onDone: () => void }> = ({ t, on
   const [email, setEmail] = useState<string>('');
   const [pw, setPw] = useState<string>('');
   const [showPw, setShowPw] = useState<boolean>(false);
+  const [focused, setFocused] = useState<'name' | 'email' | 'password' | null>(null);
   const [forgot, setForgot] = useState<boolean>(false);
   const [busy, setBusy] = useState<boolean>(false);
   const [err, setErr] = useState<string | null>(null);
@@ -131,12 +132,21 @@ export const LoginScreen: React.FC<{ t: Tokens; onDone: () => void }> = ({ t, on
     margin: 0,
   };
 
-  const cardStyle = (hasError: boolean) => ({
-    borderRadius: 8,
+  const cardStyle = (hasError: boolean, isFocused: boolean) => ({
+    borderRadius: 14,
     paddingHorizontal: 16,
     paddingVertical: 14,
-    borderWidth: 1,
-    borderColor: hasError ? t.expense : 'transparent',
+    borderWidth: 1.5,
+    borderColor: hasError ? t.expense : isFocused ? t.accent : t.border,
+    ...(isFocused && !hasError
+      ? {
+          shadowColor: t.accent,
+          shadowOpacity: 0.18,
+          shadowRadius: 10,
+          shadowOffset: { width: 0, height: 4 },
+          elevation: 3,
+        }
+      : null),
   });
 
   const FieldError: React.FC<{ msg?: string }> = ({ msg }) =>
@@ -154,8 +164,9 @@ export const LoginScreen: React.FC<{ t: Tokens; onDone: () => void }> = ({ t, on
       bottomOffset={20}
       contentContainerStyle={{
         flexGrow: 1,
+        justifyContent: 'center',
         backgroundColor: t.bg,
-        paddingTop: 48,
+        paddingTop: 40,
         paddingHorizontal: 20,
         paddingBottom: 40,
       }}
@@ -211,63 +222,83 @@ export const LoginScreen: React.FC<{ t: Tokens; onDone: () => void }> = ({ t, on
       {mode === 'signup' ? (
         <View style={{ marginBottom: 14 }}>
           <Label>{tStr(lang, 'name').toUpperCase()}</Label>
-          <Card t={t} style={cardStyle(!!fieldErr.name)}>
-            <AppTextInput
-              value={name}
-              onChangeText={(v) => {
-                setName(v);
-                clearFieldAndErr('name');
-              }}
-              autoCapitalize="words"
-              autoComplete="off"
-              importantForAutofill="no"
-              textContentType="none"
-              placeholder="John Doe"
-              maxLength={80}
-              style={inputStyle}
-              placeholderTextColor={t.textTer}
-            />
+          <Card t={t} style={cardStyle(!!fieldErr.name, focused === 'name')}>
+            <View style={styles.fieldRow}>
+              <Icon
+                name="user"
+                size={18}
+                color={focused === 'name' ? t.accent : t.textTer}
+              />
+              <AppTextInput
+                value={name}
+                onChangeText={(v) => {
+                  setName(v);
+                  clearFieldAndErr('name');
+                }}
+                onFocus={() => setFocused('name')}
+                onBlur={() => setFocused(null)}
+                autoCapitalize="words"
+                autoComplete="off"
+                importantForAutofill="no"
+                textContentType="none"
+                placeholder="John Doe"
+                maxLength={80}
+                style={[inputStyle, { flex: 1 }]}
+                placeholderTextColor={t.textTer}
+              />
+            </View>
           </Card>
           <FieldError msg={fieldErr.name} />
         </View>
       ) : null}
       <View style={{ marginBottom: 14 }}>
         <Label>{tStr(lang, 'email').toUpperCase()}</Label>
-        <Card t={t} style={cardStyle(!!fieldErr.email)}>
-          <AppTextInput
-            value={email}
-            onChangeText={(v) => {
-              setEmail(v);
-              clearFieldAndErr('email');
-            }}
-            autoCapitalize="none"
-            autoComplete="off"
-            importantForAutofill="no"
-            textContentType="none"
-            keyboardType="email-address"
-            placeholder="email@gmail.com"
-            maxLength={200}
-            style={inputStyle}
-            placeholderTextColor={t.textTer}
-          />
+        <Card t={t} style={cardStyle(!!fieldErr.email, focused === 'email')}>
+          <View style={styles.fieldRow}>
+            <Icon
+              name="mail"
+              size={18}
+              color={focused === 'email' ? t.accent : t.textTer}
+            />
+            <AppTextInput
+              value={email}
+              onChangeText={(v) => {
+                setEmail(v);
+                clearFieldAndErr('email');
+              }}
+              onFocus={() => setFocused('email')}
+              onBlur={() => setFocused(null)}
+              autoCapitalize="none"
+              autoComplete="off"
+              importantForAutofill="no"
+              textContentType="none"
+              keyboardType="email-address"
+              placeholder="email@gmail.com"
+              maxLength={200}
+              style={[inputStyle, { flex: 1 }]}
+              placeholderTextColor={t.textTer}
+            />
+          </View>
         </Card>
         <FieldError msg={fieldErr.email} />
       </View>
       <View style={{ marginBottom: 14 }}>
         <Label>{tStr(lang, 'password').toUpperCase()}</Label>
-        <Card t={t} style={cardStyle(!!fieldErr.password)}>
-          <View
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-            }}
-          >
+        <Card t={t} style={cardStyle(!!fieldErr.password, focused === 'password')}>
+          <View style={styles.fieldRow}>
+            <Icon
+              name="lock"
+              size={18}
+              color={focused === 'password' ? t.accent : t.textTer}
+            />
             <AppTextInput
               value={pw}
               onChangeText={(v) => {
                 setPw(v);
                 clearFieldAndErr('password');
               }}
+              onFocus={() => setFocused('password')}
+              onBlur={() => setFocused(null)}
               secureTextEntry={!showPw}
               autoCapitalize="none"
               autoCorrect={false}
@@ -303,7 +334,7 @@ export const LoginScreen: React.FC<{ t: Tokens; onDone: () => void }> = ({ t, on
         <View
           style={{
             backgroundColor: t.expenseSoft,
-            borderRadius: 12,
+            borderRadius: 14,
             paddingHorizontal: 14,
             paddingVertical: 10,
             marginBottom: 14,
@@ -322,7 +353,7 @@ export const LoginScreen: React.FC<{ t: Tokens; onDone: () => void }> = ({ t, on
         style={({ pressed }) => [
           {
             height: 54,
-            borderRadius: 8,
+            borderRadius: 14,
             backgroundColor: t.accent,
             alignItems: 'center',
             justifyContent: 'center',
@@ -359,7 +390,7 @@ export const LoginScreen: React.FC<{ t: Tokens; onDone: () => void }> = ({ t, on
         style={({ pressed }) => [
           {
             height: 54,
-            borderRadius: 8,
+            borderRadius: 14,
             backgroundColor: t.surface,
             borderWidth: StyleSheet.hairlineWidth,
             borderColor: t.border,
@@ -421,3 +452,11 @@ export const LoginScreen: React.FC<{ t: Tokens; onDone: () => void }> = ({ t, on
     </KeyboardAwareScrollView>
   );
 };
+
+const styles = StyleSheet.create({
+  fieldRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+});
