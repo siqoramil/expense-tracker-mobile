@@ -7,7 +7,7 @@ import { AppTextInput } from '@/components/AppTextInput';
 import { Card } from '@/components/ui';
 import { ForgotPasswordSheet } from '@/components/AccountSheets';
 import { Icon } from '@/components/Icon';
-import { NetworkError, authApi } from '@/lib/api';
+import { authApi } from '@/lib/api';
 import { actions, store } from '@/lib/store';
 import { errorMessage } from '@/lib/errors';
 import { isGoogleAuthAvailable, signInWithGoogle } from '@/lib/googleAuth';
@@ -56,7 +56,7 @@ export const LoginScreen: React.FC<{ t: Tokens; onDone: () => void }> = ({ t, on
       await actions.setAuth(token, user);
       onDone();
     } catch (e) {
-      if (!(e instanceof NetworkError)) setErr(errorMessage(lang, e));
+      setErr(errorMessage(lang, e));
     } finally {
       setBusy(false);
     }
@@ -102,7 +102,7 @@ export const LoginScreen: React.FC<{ t: Tokens; onDone: () => void }> = ({ t, on
       await actions.setAuth(token, user);
       onDone();
     } catch (e) {
-      if (!(e instanceof NetworkError)) setErr(errorMessage(lang, e));
+      setErr(errorMessage(lang, e));
     } finally {
       setBusy(false);
     }
