@@ -6,7 +6,7 @@ import { catLabel, type Budget, useStore } from '@/lib/store';
 import { fmtMoney, last6Months } from '@/lib/format';
 import { tStr } from '@/lib/i18n';
 
-export const BudgetsScreen: React.FC<{ t: Tokens }> = ({ t }) => {
+export const BudgetsScreen = ({ t }: { t: Tokens }) => {
   const s = useStore();
   const lang = s.prefs.lang;
   const curMo = useMemo(() => last6Months().slice(-1)[0].key, []);

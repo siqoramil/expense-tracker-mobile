@@ -16,7 +16,7 @@ const ILLU = 200;
 // Three signal rings that keep expanding and fading outward — the app "reaching
 // out" for a server that never answers back. Rings are evenly offset by a third
 // of the period so there is always a wave in flight.
-const SignalRings: React.FC<{ color: string }> = ({ color }) => {
+const SignalRings = ({ color }: { color: string }) => {
   const waves = useRef([0, 1, 2].map(() => new Animated.Value(0))).current;
 
   useEffect(() => {
@@ -76,7 +76,7 @@ const useBob = () => {
   return bob.interpolate({ inputRange: [0, 1], outputRange: [0, -10] });
 };
 
-const OfflineCloud: React.FC<{ t: Tokens }> = ({ t }) => {
+const OfflineCloud = ({ t }: { t: Tokens }) => {
   const translateY = useBob();
 
   return (
@@ -116,7 +116,7 @@ const OfflineCloud: React.FC<{ t: Tokens }> = ({ t }) => {
   );
 };
 
-export const ServerUnreachable: React.FC<Props> = ({ t, lang }) => {
+export const ServerUnreachable = ({ t, lang }: Props) => {
   const [visible, setVisible] = useState(getServerStatus() === 'unreachable');
   const [checking, setChecking] = useState<boolean>(false);
 

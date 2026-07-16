@@ -1,10 +1,37 @@
 import React, { forwardRef, useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Animated as RNAnimated, PanResponder, Pressable, StyleProp, StyleSheet, Text, TextInput, TextInputProps, TextStyle, View, ViewStyle, } from 'react-native';
-import Animated, { Easing, interpolateColor, useAnimatedStyle, useSharedValue, withRepeat, withSpring, withTiming, } from 'react-native-reanimated';
+import {
+  ActivityIndicator,
+  Animated as RNAnimated,
+  PanResponder,
+  Pressable,
+  StyleProp,
+  StyleSheet,
+  Text,
+  TextInput,
+  TextInputProps,
+  TextStyle,
+  View,
+  ViewStyle,
+} from 'react-native';
+import Animated, {
+  Easing,
+  interpolateColor,
+  useAnimatedStyle,
+  useSharedValue,
+  withRepeat,
+  withSpring,
+  withTiming,
+} from 'react-native-reanimated';
 import type { ToastType } from '@/lib/toast';
 import type { Tokens } from '@/lib/tokens';
 import { Icon, type IconName } from '@/components/Icon';
-import { catLabel, type Category, type Transaction, type TxKind, useStoreSelector } from '@/lib/store';
+import {
+  catLabel,
+  type Category,
+  type Transaction,
+  type TxKind,
+  useStoreSelector,
+} from '@/lib/store';
 import { fmtDate, fmtMoney, unitOf } from '@/lib/format';
 import { AppTextInput } from '@/components/AppTextInput';
 
@@ -29,12 +56,12 @@ try {
 }
 const HAS_SEG_GLASS = Boolean(segGlass?.GlassView && segGlass.isLiquidGlassAvailable?.());
 
-export const Card: React.FC<{
-  children?: React.ReactNode;
-  style?: StyleProp<ViewStyle>;
-  t: Tokens;
-  onPress?: () => void;
-}> = ({ children, style, t, onPress }) => {
+export const Card = ({
+  children,
+  style,
+  t,
+  onPress,
+}: React.PropsWithChildren<{ style?: StyleProp<ViewStyle>; t: Tokens; onPress?: () => void }>) => {
   const s: StyleProp<ViewStyle> = [
     {
       backgroundColor: t.surface,
@@ -54,12 +81,17 @@ export const Card: React.FC<{
   return <View style={s}>{children}</View>;
 };
 
-export const SectionHeader: React.FC<{
+export const SectionHeader = ({
+  title,
+  action,
+  onAction,
+  t,
+}: {
   title: string;
   action?: string;
   onAction?: () => void;
   t: Tokens;
-}> = ({ title, action, onAction, t }) => (
+}) => (
   <View
     style={{
       flexDirection: 'row',
@@ -88,7 +120,7 @@ export const SectionHeader: React.FC<{
   </View>
 );
 
-export const CatIcon: React.FC<{ cat: string; size?: number }> = ({ cat, size = 40 }) => {
+export const CatIcon = ({ cat, size = 40 }: { cat: string; size?: number }) => {
   const c = useStoreSelector<Category | undefined>(
     (s) => s.categories.find((x) => x.id === cat),
     (a, b) => a?.id === b?.id && a?.color === b?.color && a?.icon === b?.icon,
@@ -110,13 +142,19 @@ export const CatIcon: React.FC<{ cat: string; size?: number }> = ({ cat, size = 
   );
 };
 
-export const MoneyText: React.FC<{
+export const MoneyText = ({
+  amount,
+  kind,
+  t,
+  size = 15,
+  mono = true,
+}: {
   amount: number;
   kind?: TxKind;
   t: Tokens;
   size?: number;
   mono?: boolean;
-}> = ({ amount, kind, t, size = 15, mono = true }) => {
+}) => {
   const currency = useStoreSelector((s) => s.prefs.currency);
   const up = kind === 'income';
   const color = kind == null ? t.text : up ? t.income : t.expense;
@@ -138,12 +176,17 @@ export const MoneyText: React.FC<{
   );
 };
 
-export const TxRow: React.FC<{
+export const TxRow = ({
+  tx,
+  t,
+  last,
+  onPress,
+}: {
   tx: Transaction;
   t: Tokens;
   last?: boolean;
   onPress?: (tx: Transaction) => void;
-}> = ({ tx, t, last, onPress }) => {
+}) => {
   const lang = useStoreSelector((s) => s.prefs.lang);
   const cat = useStoreSelector<Category | undefined>(
     (s) => s.categories.find((c) => c.id === tx.cat),
@@ -175,13 +218,19 @@ export const TxRow: React.FC<{
   );
 };
 
-export const ScreenHeader: React.FC<{
+export const ScreenHeader = ({
+  title,
+  subtitle,
+  trailing,
+  t,
+  onBack,
+}: {
   title: string;
   subtitle?: string;
   trailing?: React.ReactNode;
   t: Tokens;
   onBack?: () => void;
-}> = ({ title, subtitle, trailing, t, onBack }) => (
+}) => (
   <View
     style={{
       paddingTop: onBack ? 8 : 20,
@@ -297,11 +346,11 @@ export const SegmentedControl = <K extends string>({
   </View>
 );
 
-export const Press: React.FC<{
-  onPress?: () => void;
-  children?: React.ReactNode;
-  style?: StyleProp<ViewStyle>;
-}> = ({ onPress, children, style }) => (
+export const Press = ({
+  onPress,
+  children,
+  style,
+}: React.PropsWithChildren<{ onPress?: () => void; style?: StyleProp<ViewStyle> }>) => (
   <Pressable
     onPress={onPress}
     style={({ pressed }) => [style, pressed && { transform: [{ scale: 0.96 }] }]}
@@ -310,12 +359,17 @@ export const Press: React.FC<{
   </Pressable>
 );
 
-export const EmptyState: React.FC<{
+export const EmptyState = ({
+  icon = 'wallet',
+  title,
+  subtitle,
+  t,
+}: {
   icon?: IconName;
   title: string;
   subtitle?: string;
   t: Tokens;
-}> = ({ icon = 'wallet', title, subtitle, t }) => {
+}) => {
   // Gentle, continuous float + tiny wiggle so the illustration feels alive.
   const float = useSharedValue(0);
   const twinkle = useSharedValue(0);
@@ -490,11 +544,15 @@ export const EmptyState: React.FC<{
   );
 };
 
-export const Toast: React.FC<{
+export const Toast = ({
+  toast,
+  t,
+  onDismiss,
+}: {
   toast: { msg: string; type: ToastType } | null;
   t: Tokens;
   onDismiss: () => void;
-}> = ({ toast, t, onDismiss }) => {
+}) => {
   const pan = useRef(new RNAnimated.ValueXY()).current;
   const appear = useRef(new RNAnimated.Value(0)).current;
   const dismissRef = useRef(onDismiss);
@@ -615,10 +673,14 @@ export const Toast: React.FC<{
   );
 };
 
-export const Switch: React.FC<{ on: boolean; onChange: (v: boolean) => void; t: Tokens }> = ({
+export const Switch = ({
   on,
   onChange,
   t,
+}: {
+  on: boolean;
+  onChange: (v: boolean) => void;
+  t: Tokens;
 }) => {
   const progress = useSharedValue(on ? 1 : 0);
 
@@ -681,12 +743,17 @@ export const Switch: React.FC<{ on: boolean; onChange: (v: boolean) => void; t: 
   );
 };
 
-export const IconButton: React.FC<{
+export const IconButton = ({
+  icon,
+  onPress,
+  t,
+  badge,
+}: {
   icon: IconName;
   onPress?: () => void;
   t: Tokens;
   badge?: number;
-}> = ({ icon, onPress, t, badge }) => (
+}) => (
   <Pressable
     onPress={onPress}
     style={{
@@ -740,7 +807,7 @@ type ButtonProps = {
   style?: StyleProp<ViewStyle>;
 };
 
-export const Button: React.FC<ButtonProps> = ({
+export const Button = ({
   label,
   onPress,
   t,
@@ -751,7 +818,7 @@ export const Button: React.FC<ButtonProps> = ({
   icon,
   fullWidth = true,
   style,
-}) => {
+}: ButtonProps) => {
   const inactive = disabled || loading;
 
   const inlineVariantStyle: ViewStyle =
@@ -770,7 +837,11 @@ export const Button: React.FC<ButtonProps> = ({
   // Colors for Icon and ActivityIndicator — these are runtime values.
   const indicatorColor = variant === 'primary' || variant === 'danger' ? '#fff' : t.accent;
   const textColor =
-    variant === 'primary' || variant === 'danger' ? '#fff' : variant === 'ghost' ? t.accent : t.text;
+    variant === 'primary' || variant === 'danger'
+      ? '#fff'
+      : variant === 'ghost'
+        ? t.accent
+        : t.text;
 
   const bgColor =
     variant === 'primary'
@@ -815,11 +886,16 @@ export const Button: React.FC<ButtonProps> = ({
   );
 };
 
-export const DetailRow: React.FC<{ t: Tokens; label: string; value: string; last?: boolean }> = ({
+export const DetailRow = ({
   t,
   label,
   value,
   last,
+}: {
+  t: Tokens;
+  label: string;
+  value: string;
+  last?: boolean;
 }) => (
   <View
     style={{
@@ -864,14 +940,20 @@ export const Input = forwardRef<TextInput, InputProps>(function Input(
   );
 });
 
-export const Field: React.FC<{
+export const Field = ({
+  t,
+  label,
+  error,
+  helper,
+  children,
+  style,
+}: React.PropsWithChildren<{
   t: Tokens;
   label?: string;
   error?: string | null;
   helper?: string;
-  children: React.ReactNode;
   style?: StyleProp<ViewStyle>;
-}> = ({ t, label, error, helper, children, style }) => (
+}>) => (
   <View style={style}>
     {label ? (
       <Text
@@ -932,10 +1014,7 @@ export const CodeInput = forwardRef<
   };
 
   return (
-    <Pressable
-      onPress={() => inputRef.current?.focus()}
-      style={{ flexDirection: 'row', gap: 8 }}
-    >
+    <Pressable onPress={() => inputRef.current?.focus()} style={{ flexDirection: 'row', gap: 8 }}>
       {Array.from({ length }).map((_, i) => {
         const char = value[i] ?? '';
         const isActive =

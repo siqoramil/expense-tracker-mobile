@@ -25,12 +25,12 @@ const loadImagePicker = (): ImagePickerModule | null => {
 
 type Nav = (screen: string, data?: unknown) => void;
 
-export const ProfileScreen: React.FC<{ t: Tokens; onNav: Nav; onLogout: () => void; contentTopPad?: number }> = ({
+export const ProfileScreen = ({
   t,
   onNav,
   onLogout,
   contentTopPad = 0,
-}) => {
+}: { t: Tokens; onNav: Nav; onLogout: () => void; contentTopPad?: number }) => {
   const s = useStore();
   const lang = s.prefs.lang;
   const [deleteAccountOpen, setDeleteAccountOpen] = useState<boolean>(false);
@@ -440,15 +440,7 @@ export const ProfileScreen: React.FC<{ t: Tokens; onNav: Nav; onLogout: () => vo
   );
 };
 
-export const ToggleRow: React.FC<{
-  t: Tokens;
-  icon: IconName;
-  color: string;
-  label: string;
-  on: boolean;
-  onChange: (v: boolean) => void;
-  last?: boolean;
-}> = ({ t, icon, color, label, on, onChange, last }) => (
+export const ToggleRow = ({ t, icon, color, label, on, onChange, last }: { t: Tokens; icon: IconName; color: string; label: string; on: boolean; onChange: (v: boolean) => void; last?: boolean }) => (
   <View
     style={{
       flexDirection: 'row',
@@ -477,7 +469,7 @@ export const ToggleRow: React.FC<{
   </View>
 );
 
-export const GoogleGlyph: React.FC<{ size?: number }> = ({ size = 17 }) => (
+export const GoogleGlyph = ({ size = 17 }: { size?: number }) => (
   <Svg width={size} height={size} viewBox="0 0 18 18">
     <Path
       d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.49h4.84a4.13 4.13 0 0 1-1.79 2.71v2.26h2.9c1.7-1.56 2.69-3.87 2.69-6.62z"
@@ -498,16 +490,7 @@ export const GoogleGlyph: React.FC<{ size?: number }> = ({ size = 17 }) => (
   </Svg>
 );
 
-export const NavRow: React.FC<{
-  t: Tokens;
-  icon?: IconName;
-  iconNode?: React.ReactNode;
-  color: string;
-  label: string;
-  detail?: string;
-  onPress: () => void;
-  last?: boolean;
-}> = ({ t, icon, iconNode, color, label, detail, onPress, last }) => (
+export const NavRow = ({ t, icon, iconNode, color, label, detail, onPress, last }: { t: Tokens; icon?: IconName; iconNode?: React.ReactNode; color: string; label: string; detail?: string; onPress: () => void; last?: boolean }) => (
   <Pressable
     onPress={onPress}
     style={{

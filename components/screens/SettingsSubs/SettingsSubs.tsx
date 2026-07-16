@@ -9,7 +9,7 @@ import { ModalBackdrop } from '@/components/Glass';
 import { LANGUAGES, tStr } from '@/lib/i18n';
 import { actions, useStore } from '@/lib/store';
 
-export const LanguageScreen: React.FC<{ t: Tokens }> = ({ t }) => {
+export const LanguageScreen = ({ t }: { t: Tokens }) => {
   const s = useStore();
   const lang = s.prefs.lang;
   return (
@@ -42,11 +42,11 @@ export const LanguageScreen: React.FC<{ t: Tokens }> = ({ t }) => {
   );
 };
 
-export const LanguageSheet: React.FC<{ t: Tokens; visible: boolean; onClose: () => void }> = ({
+export const LanguageSheet = ({
   t,
   visible,
   onClose,
-}) => {
+}: { t: Tokens; visible: boolean; onClose: () => void }) => {
   const s = useStore();
   const lang = s.prefs.lang;
   const insets = useSafeAreaInsets();
@@ -131,11 +131,11 @@ export const LanguageSheet: React.FC<{ t: Tokens; visible: boolean; onClose: () 
   );
 };
 
-export const CurrencySheet: React.FC<{ t: Tokens; visible: boolean; onClose: () => void }> = ({
+export const CurrencySheet = ({
   t,
   visible,
   onClose,
-}) => {
+}: { t: Tokens; visible: boolean; onClose: () => void }) => {
   const s = useStore();
   const lang = s.prefs.lang;
   const insets = useSafeAreaInsets();
@@ -223,7 +223,7 @@ export const CurrencySheet: React.FC<{ t: Tokens; visible: boolean; onClose: () 
   );
 };
 
-export const CurrencyScreen: React.FC<{ t: Tokens }> = ({ t }) => {
+export const CurrencyScreen = ({ t }: { t: Tokens }) => {
   const s = useStore();
   return (
     <ScrollView contentContainerStyle={{ paddingBottom: 120 }}>

@@ -55,7 +55,7 @@ type Props = {
   stroke?: number;
 };
 
-export const Icon: React.FC<Props> = ({ name, size = 22, color = '#000', stroke = 2 }) => {
+export const Icon = ({ name, size = 22, color = '#000', stroke = 2 }: Props) => {
   const common = {
     fill: 'none',
     stroke: color,

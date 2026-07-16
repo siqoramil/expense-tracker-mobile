@@ -7,7 +7,7 @@ import { catLabel, selectMonth, useStore } from '@/lib/store';
 import { fmtMoney, last6Months } from '@/lib/format';
 import { tStr } from '@/lib/i18n';
 
-export const StatsScreen: React.FC<{ t: Tokens; contentTopPad?: number }> = ({ t, contentTopPad = 0 }) => {
+export const StatsScreen = ({ t, contentTopPad = 0 }: { t: Tokens; contentTopPad?: number }) => {
   const s = useStore();
   const lang = s.prefs.lang;
   const months = useMemo(() => last6Months(), []);
@@ -138,24 +138,18 @@ export const StatsScreen: React.FC<{ t: Tokens; contentTopPad?: number }> = ({ t
   );
 };
 
-const LegendDot: React.FC<{ color: string; label: string; color2: string }> = ({
+const LegendDot = ({
   color,
   label,
   color2,
-}) => (
+}: { color: string; label: string; color2: string }) => (
   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
     <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: color }} />
     <Text style={{ fontSize: 11, color: color2, fontWeight: '500' }}>{label}</Text>
   </View>
 );
 
-const SumCard: React.FC<{
-  label: string;
-  amount: number;
-  kind: 'income' | 'expense';
-  currency: import('@/lib/format').Currency;
-  t: Tokens;
-}> = ({ label, amount, kind, currency, t }) => {
+const SumCard = ({ label, amount, kind, currency, t }: { label: string; amount: number; kind: 'income' | 'expense'; currency: import('@/lib/format').Currency; t: Tokens }) => {
   const up = kind === 'income';
   const color = up ? t.income : t.expense;
   return (
@@ -197,11 +191,7 @@ const SumCard: React.FC<{
   );
 };
 
-const BarChart: React.FC<{
-  data: { m: string; income: number; expense: number }[];
-  max: number;
-  t: Tokens;
-}> = ({ data, max, t }) => {
+const BarChart = ({ data, max, t }: { data: { m: string; income: number; expense: number }[]; max: number; t: Tokens }) => {
   const H = 150;
   const barW = 11;
   return (

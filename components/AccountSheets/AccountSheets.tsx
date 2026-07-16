@@ -14,14 +14,20 @@ import { toast } from '@/lib/toast';
 
 type SheetProps = { t: Tokens; visible: boolean; onClose: () => void };
 
-const SheetContainer: React.FC<{
+const SheetContainer = ({
+  t,
+  visible,
+  onClose,
+  title,
+  children,
+  footer,
+}: React.PropsWithChildren<{
   t: Tokens;
   visible: boolean;
   onClose: () => void;
   title: string;
-  children: React.ReactNode;
   footer?: React.ReactNode;
-}> = ({ t, visible, onClose, title, children, footer }) => {
+}>) => {
   const insets = useSafeAreaInsets();
   const sheetPaddingBottom = Math.max(insets.bottom, 16);
   // Numeric cap, not '90%': the sheet is wrapped in KeyboardStickyView (auto height),
@@ -63,9 +69,7 @@ const SheetContainer: React.FC<{
               marginBottom: 18,
             }}
           >
-            <Text
-              style={{ fontSize: 20, fontWeight: '700', color: t.text, letterSpacing: -0.4 }}
-            >
+            <Text style={{ fontSize: 20, fontWeight: '700', color: t.text, letterSpacing: -0.4 }}>
               {title}
             </Text>
             <Pressable
@@ -106,7 +110,7 @@ const SheetContainer: React.FC<{
 
 const extractError = (e: unknown, lang: Lang): string => errorMessage(lang, e);
 
-export const EditNameSheet: React.FC<SheetProps> = ({ t, visible, onClose }) => {
+export const EditNameSheet = ({ t, visible, onClose }: SheetProps) => {
   const s = useStore();
   const lang = s.prefs.lang;
   const [name, setName] = useState<string>(s.profile.name);
@@ -157,7 +161,7 @@ export const EditNameSheet: React.FC<SheetProps> = ({ t, visible, onClose }) => 
   );
 };
 
-export const EditEmailSheet: React.FC<SheetProps> = ({ t, visible, onClose }) => {
+export const EditEmailSheet = ({ t, visible, onClose }: SheetProps) => {
   const s = useStore();
   const lang = s.prefs.lang;
   const [step, setStep] = useState<1 | 2>(1);
@@ -272,7 +276,7 @@ export const EditEmailSheet: React.FC<SheetProps> = ({ t, visible, onClose }) =>
   );
 };
 
-export const ForgotPasswordSheet: React.FC<SheetProps> = ({ t, visible, onClose }) => {
+export const ForgotPasswordSheet = ({ t, visible, onClose }: SheetProps) => {
   const s = useStore();
   const lang = s.prefs.lang;
   const [step, setStep] = useState<1 | 2 | 3>(1);
@@ -479,12 +483,12 @@ export const ForgotPasswordSheet: React.FC<SheetProps> = ({ t, visible, onClose 
   );
 };
 
-export const DeleteAccountSheet: React.FC<SheetProps & { onDeleted: () => void }> = ({
+export const DeleteAccountSheet = ({
   t,
   visible,
   onClose,
   onDeleted,
-}) => {
+}: SheetProps & { onDeleted: () => void }) => {
   const s = useStore();
   const lang = s.prefs.lang;
   const email = s.profile.email;
@@ -573,9 +577,21 @@ export const DeleteAccountSheet: React.FC<SheetProps & { onDeleted: () => void }
 
   const deleteFooter =
     step === 1 ? (
-      <Button t={t} variant="danger" label={tStr(lang, 'sendCode')} onPress={requestCode} loading={busy} />
+      <Button
+        t={t}
+        variant="danger"
+        label={tStr(lang, 'sendCode')}
+        onPress={requestCode}
+        loading={busy}
+      />
     ) : (
-      <Button t={t} variant="danger" label={tStr(lang, 'deleteAccount')} onPress={confirm} loading={busy} />
+      <Button
+        t={t}
+        variant="danger"
+        label={tStr(lang, 'deleteAccount')}
+        onPress={confirm}
+        loading={busy}
+      />
     );
 
   return (
@@ -658,7 +674,7 @@ export const DeleteAccountSheet: React.FC<SheetProps & { onDeleted: () => void }
   );
 };
 
-const StepIndicator: React.FC<{ t: Tokens; step: 1 | 2 | 3 }> = ({ t, step }) => (
+const StepIndicator = ({ t, step }: { t: Tokens; step: 1 | 2 | 3 }) => (
   <View style={{ flexDirection: 'row', gap: 6, marginBottom: 18 }}>
     {[1, 2, 3].map((n) => (
       <View

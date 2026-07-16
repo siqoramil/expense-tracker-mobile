@@ -7,7 +7,7 @@ import { NavRow } from '@/components/screens/ProfileScreen';
 import { tStr } from '@/lib/i18n';
 import { useStore } from '@/lib/store';
 
-export const AccountScreen: React.FC<{ t: Tokens }> = ({ t }) => {
+export const AccountScreen = ({ t }: { t: Tokens }) => {
   const s = useStore();
   const lang = s.prefs.lang;
   const [editName, setEditName] = useState<boolean>(false);

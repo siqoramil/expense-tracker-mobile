@@ -39,7 +39,7 @@ type Props = {
   onClose: () => void;
 };
 
-export const WalletSheet: React.FC<Props> = ({ t, lang, visible, wallet, onClose }) => {
+export const WalletSheet = ({ t, lang, visible, wallet, onClose }: Props) => {
   const isEdit = wallet !== undefined;
   const insets = useSafeAreaInsets();
   // Footer height = paddingTop(12) + button(52) + paddingBottom + opened offset(16).

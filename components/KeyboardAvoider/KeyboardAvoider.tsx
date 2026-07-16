@@ -8,7 +8,11 @@ type AvoiderProps = {
   extra?: number;
 };
 
-export const KeyboardAvoider: React.FC<AvoiderProps> = ({ children, style, extra = 0 }) => {
+export const KeyboardAvoider = ({
+  children,
+  style,
+  extra = 0,
+}: React.PropsWithChildren<AvoiderProps>) => {
   const keyboard = useAnimatedKeyboard();
   const animatedStyle = useAnimatedStyle(() => {
     const h = keyboard.height.value;
@@ -17,7 +21,7 @@ export const KeyboardAvoider: React.FC<AvoiderProps> = ({ children, style, extra
   return <Animated.View style={[styles.fill, style, animatedStyle]}>{children}</Animated.View>;
 };
 
-export const KeyboardSpacer: React.FC<{ extra?: number }> = ({ extra = 0 }) => {
+export const KeyboardSpacer = ({ extra = 0 }: { extra?: number }) => {
   const keyboard = useAnimatedKeyboard();
   const animatedStyle = useAnimatedStyle(() => {
     const h = keyboard.height.value;

@@ -22,7 +22,7 @@ type Props = {
   onOpenTx: (tx: Transaction) => void;
 };
 
-export const HomeScreen: React.FC<Props> = ({ t, onNav, onAdd, onOpenTx }) => {
+export const HomeScreen = ({ t, onNav, onAdd, onOpenTx }: Props) => {
   const s = useStore();
   const lang = s.prefs.lang;
   const months = last6Months();
@@ -876,12 +876,7 @@ const HeroCard = memo(function HeroCard({
 
 // ─── Hero mini stat (inside colored card) ────────────────────────────────────
 
-const HeroMiniStat: React.FC<{
-  icon: IconName;
-  label: string;
-  value: string;
-  hidden: boolean;
-}> = ({ icon, label, value, hidden }) => (
+const HeroMiniStat = ({ icon, label, value, hidden }: { icon: IconName; label: string; value: string; hidden: boolean }) => (
   <View
     style={{
       flex: 1,
@@ -914,12 +909,7 @@ const HeroMiniStat: React.FC<{
 
 const HIDDEN_MASK = '*****';
 
-const BlurMoney: React.FC<{
-  value: string;
-  hidden: boolean;
-  color: string;
-  size?: number;
-}> = ({ value, hidden, color, size = 38 }) => {
+const BlurMoney = ({ value, hidden, color, size = 38 }: { value: string; hidden: boolean; color: string; size?: number }) => {
   const base = {
     fontSize: size,
     fontWeight: '700' as const,
@@ -991,14 +981,7 @@ const WalletCard = memo(function WalletCard({
 
 // ─── Quick-action button ──────────────────────────────────────────────────────
 
-const QuickAction: React.FC<{
-  icon: IconName;
-  label: string;
-  color: string;
-  bg: string;
-  t: Tokens;
-  onPress: () => void;
-}> = ({ icon, label, color, bg, t, onPress }) => (
+const QuickAction = ({ icon, label, color, bg, t, onPress }: { icon: IconName; label: string; color: string; bg: string; t: Tokens; onPress: () => void }) => (
   <Pressable
     onPress={onPress}
     style={({ pressed }) => [

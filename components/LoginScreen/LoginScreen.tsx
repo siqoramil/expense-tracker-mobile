@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ActivityIndicator, Image, Pressable, StyleSheet, Text, View, } from 'react-native';
+import { ActivityIndicator, Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import Svg, { Path } from 'react-native-svg';
 import type { Tokens } from '@/lib/tokens';
@@ -13,7 +13,7 @@ import { errorMessage } from '@/lib/errors';
 import { isGoogleAuthAvailable, signInWithGoogle } from '@/lib/googleAuth';
 import { tStr } from '@/lib/i18n';
 
-export const LoginScreen: React.FC<{ t: Tokens; onDone: () => void }> = ({ t, onDone }) => {
+export const LoginScreen = ({ t, onDone }: { t: Tokens; onDone: () => void }) => {
   const [mode, setMode] = useState<'signin' | 'signup'>('signin');
   const [name, setName] = useState<string>('');
   const [email, setEmail] = useState<string>('');
@@ -108,7 +108,7 @@ export const LoginScreen: React.FC<{ t: Tokens; onDone: () => void }> = ({ t, on
     }
   };
 
-  const Label: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+  const Label = ({ children }: React.PropsWithChildren<Record<never, never>>) => (
     <Text
       style={{
         fontSize: 11,
@@ -149,7 +149,7 @@ export const LoginScreen: React.FC<{ t: Tokens; onDone: () => void }> = ({ t, on
       : null),
   });
 
-  const FieldError: React.FC<{ msg?: string }> = ({ msg }) =>
+  const FieldError = ({ msg }: { msg?: string }) =>
     msg ? (
       <Text
         accessibilityLiveRegion="polite"
@@ -224,11 +224,7 @@ export const LoginScreen: React.FC<{ t: Tokens; onDone: () => void }> = ({ t, on
           <Label>{tStr(lang, 'name').toUpperCase()}</Label>
           <Card t={t} style={cardStyle(!!fieldErr.name, focused === 'name')}>
             <View style={styles.fieldRow}>
-              <Icon
-                name="user"
-                size={18}
-                color={focused === 'name' ? t.accent : t.textTer}
-              />
+              <Icon name="user" size={18} color={focused === 'name' ? t.accent : t.textTer} />
               <AppTextInput
                 value={name}
                 onChangeText={(v) => {
@@ -255,11 +251,7 @@ export const LoginScreen: React.FC<{ t: Tokens; onDone: () => void }> = ({ t, on
         <Label>{tStr(lang, 'email').toUpperCase()}</Label>
         <Card t={t} style={cardStyle(!!fieldErr.email, focused === 'email')}>
           <View style={styles.fieldRow}>
-            <Icon
-              name="mail"
-              size={18}
-              color={focused === 'email' ? t.accent : t.textTer}
-            />
+            <Icon name="mail" size={18} color={focused === 'email' ? t.accent : t.textTer} />
             <AppTextInput
               value={email}
               onChangeText={(v) => {
@@ -286,11 +278,7 @@ export const LoginScreen: React.FC<{ t: Tokens; onDone: () => void }> = ({ t, on
         <Label>{tStr(lang, 'password').toUpperCase()}</Label>
         <Card t={t} style={cardStyle(!!fieldErr.password, focused === 'password')}>
           <View style={styles.fieldRow}>
-            <Icon
-              name="lock"
-              size={18}
-              color={focused === 'password' ? t.accent : t.textTer}
-            />
+            <Icon name="lock" size={18} color={focused === 'password' ? t.accent : t.textTer} />
             <AppTextInput
               value={pw}
               onChangeText={(v) => {

@@ -8,7 +8,7 @@ import { selectMonth, useStore } from '@/lib/store';
 import { tStr } from '@/lib/i18n';
 import { toast } from '@/lib/toast';
 
-export const ReportsScreen: React.FC<{ t: Tokens }> = ({ t }) => {
+export const ReportsScreen = ({ t }: { t: Tokens }) => {
   const s = useStore();
   const lang = s.prefs.lang;
   const months = useMemo(() => last6Months(), []);
@@ -74,13 +74,7 @@ export const ReportsScreen: React.FC<{ t: Tokens }> = ({ t }) => {
   );
 };
 
-const SumCard: React.FC<{
-  label: string;
-  amount: number;
-  kind: 'income' | 'expense';
-  currency: Currency;
-  t: Tokens;
-}> = ({ label, amount, kind, currency, t }) => {
+const SumCard = ({ label, amount, kind, currency, t }: { label: string; amount: number; kind: 'income' | 'expense'; currency: Currency; t: Tokens }) => {
   const up = kind === 'income';
   const color = up ? t.income : t.expense;
   return (

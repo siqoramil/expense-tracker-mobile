@@ -74,7 +74,7 @@ const slidesFor = (lang: string): SlideMeta[] =>
         },
       ];
 
-export const Onboarding: React.FC<{ t: Tokens; onDone: () => void }> = ({ t, onDone }) => {
+export const Onboarding = ({ t, onDone }: { t: Tokens; onDone: () => void }) => {
   const [i, setI] = useState(0);
   const lang = store.get().prefs.lang;
   const slides = slidesFor(lang);
@@ -186,7 +186,7 @@ export const Onboarding: React.FC<{ t: Tokens; onDone: () => void }> = ({ t, onD
 
 // ─── Mesh gradient background ──────────────────────────────────────────────
 
-const MeshBackground: React.FC<{ t: Tokens; hueA: string; hueB: string }> = ({ t, hueA, hueB }) => {
+const MeshBackground = ({ t, hueA, hueB }: { t: Tokens; hueA: string; hueB: string }) => {
   const isDark = t.bg.startsWith('#0') || t.bg === '#0B0B0F';
   const baseOp = isDark ? 0.55 : 0.32;
   return (
@@ -219,7 +219,7 @@ const MeshBackground: React.FC<{ t: Tokens; hueA: string; hueB: string }> = ({ t
 
 // ─── Floating orbs ─────────────────────────────────────────────────────────
 
-const FloatingOrbs: React.FC<{ hueA: string; hueB: string }> = ({ hueA, hueB }) => {
+const FloatingOrbs = ({ hueA, hueB }: { hueA: string; hueB: string }) => {
   const orb1 = useRef(new Animated.Value(0)).current;
   const orb2 = useRef(new Animated.Value(0)).current;
 
@@ -298,7 +298,7 @@ const FloatingOrbs: React.FC<{ hueA: string; hueB: string }> = ({ hueA, hueB }) 
 
 // ─── Slide hero (glass card with content) ──────────────────────────────────
 
-const SlideHero: React.FC<{ slide: SlideMeta; t: Tokens }> = ({ slide, t }) => {
+const SlideHero = ({ slide, t }: { slide: SlideMeta; t: Tokens }) => {
   const isDark = t.bg.startsWith('#0') || t.bg === '#0B0B0F';
   const glassFill = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.55)';
   const glassBorder = isDark ? 'rgba(255,255,255,0.14)' : 'rgba(255,255,255,0.85)';
@@ -353,12 +353,7 @@ const SlideHero: React.FC<{ slide: SlideMeta; t: Tokens }> = ({ slide, t }) => {
 };
 
 // Preview: transaction list
-const TrackPreview: React.FC<{
-  hueA: string;
-  hueB: string;
-  text: string;
-  sub: string;
-}> = ({ hueA, hueB, text, sub }) => {
+const TrackPreview = ({ hueA, hueB, text, sub }: { hueA: string; hueB: string; text: string; sub: string }) => {
   const rows = [
     { icon: '🍔', label: 'Food', when: 'Today', amount: '-$24', tone: hueA },
     { icon: '🚕', label: 'Transit', when: 'Yesterday', amount: '-$8', tone: hueB },
@@ -387,12 +382,7 @@ const TrackPreview: React.FC<{
 };
 
 // Preview: debtor card
-const DebtorPreview: React.FC<{
-  hueA: string;
-  hueB: string;
-  text: string;
-  sub: string;
-}> = ({ hueA, hueB, text, sub }) => (
+const DebtorPreview = ({ hueA, hueB, text, sub }: { hueA: string; hueB: string; text: string; sub: string }) => (
   <View style={{ width: '100%' }}>
     <View style={styles.previewHeader}>
       <Text style={[styles.previewTitle, { color: text }]}>Owes you</Text>
@@ -426,12 +416,7 @@ const DebtorPreview: React.FC<{
 );
 
 // Preview: savings + sparkline
-const SavingsPreview: React.FC<{
-  hueA: string;
-  hueB: string;
-  text: string;
-  sub: string;
-}> = ({ hueA, hueB, text, sub }) => {
+const SavingsPreview = ({ hueA, hueB, text, sub }: { hueA: string; hueB: string; text: string; sub: string }) => {
   const points = [40, 35, 48, 44, 60, 58, 72, 68, 84, 90];
   const w = 240;
   const h = 70;
@@ -476,7 +461,7 @@ const SavingsPreview: React.FC<{
 
 // ─── Gradient title word ───────────────────────────────────────────────────
 
-const GradientWord: React.FC<{ text: string; hueA: string; hueB: string }> = ({ text, hueA }) => {
+const GradientWord = ({ text, hueA }: { text: string; hueA: string; hueB: string }) => {
   // Simple, reliable approach: use the first hue as the colored text.
   // (SVG text masking is fragile across RN versions; solid color stays crisp.)
   return <Text style={{ color: hueA, fontWeight: '800' }}>{text}</Text>;
@@ -484,7 +469,7 @@ const GradientWord: React.FC<{ text: string; hueA: string; hueB: string }> = ({ 
 
 // ─── Pagination dot ────────────────────────────────────────────────────────
 
-const Dot: React.FC<{ active: boolean; hue: string; t: Tokens }> = ({ active, hue, t }) => {
+const Dot = ({ active, hue, t }: { active: boolean; hue: string; t: Tokens }) => {
   const w = useRef(new Animated.Value(active ? 26 : 8)).current;
   useEffect(() => {
     Animated.spring(w, {

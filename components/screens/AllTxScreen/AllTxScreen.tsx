@@ -10,10 +10,7 @@ import { tStr } from '@/lib/i18n';
 
 type Filter = 'all' | 'income' | 'expense';
 
-export const AllTxScreen: React.FC<{
-  t: Tokens;
-  onOpenTx: (tx: Transaction) => void;
-}> = ({ t, onOpenTx }) => {
+export const AllTxScreen = ({ t, onOpenTx }: { t: Tokens; onOpenTx: (tx: Transaction) => void }) => {
   const s = useStore();
   const lang = s.prefs.lang;
   const [q, setQ] = useState('');

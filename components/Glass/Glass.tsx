@@ -18,12 +18,12 @@ type ModalBackdropProps = {
   children?: React.ReactNode;
 };
 
-export const ModalBackdrop: React.FC<ModalBackdropProps> = ({
+export const ModalBackdrop = ({
   visible,
   onClose,
   center = false,
   children,
-}) => {
+}: React.PropsWithChildren<ModalBackdropProps>) => {
   const [mounted, setMounted] = useState<boolean>(false);
   const progress = useRef(new Animated.Value(0)).current;
 
@@ -72,13 +72,7 @@ export const ModalBackdrop: React.FC<ModalBackdropProps> = ({
       };
 
   return (
-    <Modal
-      transparent
-      visible
-      animationType="none"
-      statusBarTranslucent
-      onRequestClose={onClose}
-    >
+    <Modal transparent visible animationType="none" statusBarTranslucent onRequestClose={onClose}>
       <KeyboardProvider statusBarTranslucent navigationBarTranslucent>
         {/* Dim sits as a sibling of the content wrapper so it is never inside
             the translated view and therefore never moves with the sheet. */}

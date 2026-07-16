@@ -15,7 +15,7 @@ type Props = {
   onEdit: (tx: Transaction) => void;
 };
 
-export const TxDetail: React.FC<Props> = ({ t, tx, onEdit }) => {
+export const TxDetail = ({ t, tx, onEdit }: Props) => {
   const s = useStore();
   const lang = s.prefs.lang;
   const cat = s.categories.find((c) => c.id === tx.cat);

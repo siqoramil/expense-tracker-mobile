@@ -16,12 +16,7 @@ export type ActionSheetConfig = {
 
 // A clean iOS-style bottom action sheet used on Android in place of the ugly
 // default Alert.alert button stack. iOS keeps the native ActionSheetIOS.
-export const ActionSheet: React.FC<{
-  t: Tokens;
-  config: ActionSheetConfig | null;
-  cancelLabel: string;
-  onClose: () => void;
-}> = ({ t, config, cancelLabel, onClose }) => (
+export const ActionSheet = ({ t, config, cancelLabel, onClose }: { t: Tokens; config: ActionSheetConfig | null; cancelLabel: string; onClose: () => void }) => (
   <ModalBackdrop visible={!!config} onClose={onClose}>
     <Pressable onPress={() => {}} style={{ padding: 14, paddingBottom: 34 }}>
       <View

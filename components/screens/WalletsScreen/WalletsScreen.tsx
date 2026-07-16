@@ -7,13 +7,7 @@ import { actions, type Wallet, useStore, walletName } from '@/lib/store';
 import { fmtMoney, type Currency, unitOf } from '@/lib/format';
 import { tStr } from '@/lib/i18n';
 
-const ActiveCard: React.FC<{
-  w: Wallet;
-  currency: Currency;
-  langName: string;
-  onPress: () => void;
-  onHide: () => void;
-}> = ({ w, currency, langName, onPress, onHide }) => (
+const ActiveCard = ({ w, currency, langName, onPress, onHide }: { w: Wallet; currency: Currency; langName: string; onPress: () => void; onHide: () => void }) => (
   <Pressable
     onPress={onPress}
     style={({ pressed }) => ({ opacity: pressed ? 0.85 : 1 })}
@@ -83,13 +77,7 @@ const ActiveCard: React.FC<{
   </Pressable>
 );
 
-const HiddenRow: React.FC<{
-  t: Tokens;
-  w: Wallet;
-  langName: string;
-  isLast: boolean;
-  onRestore: () => void;
-}> = ({ t, w, langName, isLast, onRestore }) => (
+const HiddenRow = ({ t, w, langName, isLast, onRestore }: { t: Tokens; w: Wallet; langName: string; isLast: boolean; onRestore: () => void }) => (
   <Pressable
     onPress={onRestore}
     style={({ pressed }) => [
@@ -142,7 +130,7 @@ const HiddenRow: React.FC<{
   </Pressable>
 );
 
-export const WalletsScreen: React.FC<{ t: Tokens }> = ({ t }) => {
+export const WalletsScreen = ({ t }: { t: Tokens }) => {
   const s = useStore();
   const lang = s.prefs.lang;
   const active = s.wallets.filter((w) => !w.hidden);

@@ -15,7 +15,7 @@ type Props = {
 
 type Filter = 'all' | 'owe_me' | 'i_owe' | 'overdue' | 'due';
 
-export const DebtorsScreen: React.FC<Props & { contentTopPad?: number }> = ({ t, onOpen, contentTopPad = 0 }) => {
+export const DebtorsScreen = ({ t, onOpen, contentTopPad = 0 }: Props & { contentTopPad?: number }) => {
   const s = useStore();
   const lang = s.prefs.lang;
   const [q, setQ] = useState<string>('');
@@ -262,18 +262,7 @@ export const DebtorsScreen: React.FC<Props & { contentTopPad?: number }> = ({ t,
   );
 };
 
-const BalanceCol: React.FC<{
-  t: Tokens;
-  label: string;
-  amount: number;
-  currency: Currency;
-  tone: 'income' | 'expense';
-  icon: 'arrow-down-left' | 'arrow-up-right';
-  count: number;
-  countLabel: string;
-  onPress: () => void;
-  active: boolean;
-}> = ({ t, label, amount, currency, tone, icon, count, countLabel, onPress, active }) => {
+const BalanceCol = ({ t, label, amount, currency, tone, icon, count, countLabel, onPress, active }: { t: Tokens; label: string; amount: number; currency: Currency; tone: 'income' | 'expense'; icon: 'arrow-down-left' | 'arrow-up-right'; count: number; countLabel: string; onPress: () => void; active: boolean }) => {
   const color = tone === 'income' ? t.income : t.expense;
   const soft = tone === 'income' ? t.incomeSoft : t.expenseSoft;
   return (
@@ -334,13 +323,7 @@ const BalanceCol: React.FC<{
   );
 };
 
-const DebtorCard: React.FC<{
-  debtor: Debt;
-  t: Tokens;
-  currency: Currency;
-  lang: Lang;
-  onPress: () => void;
-}> = ({ debtor, t, currency, lang, onPress }) => {
+const DebtorCard = ({ debtor, t, currency, lang, onPress }: { debtor: Debt; t: Tokens; currency: Currency; lang: Lang; onPress: () => void }) => {
   const overdue = new Date(debtor.due).getTime() < today().getTime() && debtor.paid < debtor.amount;
   const remaining = debtor.amount - debtor.paid;
   const isOweMe = debtor.direction === 'owe_me';

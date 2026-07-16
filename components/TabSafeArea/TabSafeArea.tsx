@@ -11,16 +11,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 //
 // Android: SafeAreaView consumes the top edge so the in-flow header sits
 // below the status bar exactly as before.
-export const TabSafeArea: React.FC<{ bg: string; children: React.ReactNode }> = ({
-  bg,
-  children,
-}) => {
+export const TabSafeArea = ({ bg, children }: React.PropsWithChildren<{ bg: string }>) => {
   if (Platform.OS === 'ios') {
-    return (
-      <View style={{ flex: 1, backgroundColor: bg }}>
-        {children}
-      </View>
-    );
+    return <View style={{ flex: 1, backgroundColor: bg }}>{children}</View>;
   }
   return (
     <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: bg }}>

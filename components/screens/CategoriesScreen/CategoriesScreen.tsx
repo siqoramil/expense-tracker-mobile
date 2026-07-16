@@ -6,14 +6,7 @@ import { Icon } from '@/components/Icon';
 import { actions, catLabel, type Category, type CategoryKind, useStore } from '@/lib/store';
 import { tStr, type Lang } from '@/lib/i18n';
 
-const Row: React.FC<{
-  t: Tokens;
-  cat: Category;
-  isLast: boolean;
-  hidden: boolean;
-  onToggle: () => void;
-  lang: Lang;
-}> = ({ t, cat, isLast, hidden, onToggle, lang }) => (
+const Row = ({ t, cat, isLast, hidden, onToggle, lang }: { t: Tokens; cat: Category; isLast: boolean; hidden: boolean; onToggle: () => void; lang: Lang }) => (
   <Pressable
     onPress={onToggle}
     style={({ pressed }) => [
@@ -54,7 +47,7 @@ const Row: React.FC<{
   </Pressable>
 );
 
-const SectionHeader: React.FC<{ t: Tokens; label: string }> = ({ t, label }) => (
+const SectionHeader = ({ t, label }: { t: Tokens; label: string }) => (
   <Text
     style={{
       fontSize: 12,
@@ -69,7 +62,7 @@ const SectionHeader: React.FC<{ t: Tokens; label: string }> = ({ t, label }) => 
   </Text>
 );
 
-export const CategoriesScreen: React.FC<{ t: Tokens }> = ({ t }) => {
+export const CategoriesScreen = ({ t }: { t: Tokens }) => {
   const s = useStore();
   const lang = s.prefs.lang;
 

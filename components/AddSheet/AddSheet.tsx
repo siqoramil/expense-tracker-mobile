@@ -39,7 +39,7 @@ const formatAmountInput = (raw: string): string => {
   return decPart !== undefined ? `${grouped}.${decPart}` : grouped;
 };
 
-export const AddSheet: React.FC<Props> = ({ t, mode, editTx, editDebt, onClose }) => {
+export const AddSheet = ({ t, mode, editTx, editDebt, onClose }: Props) => {
   const s = useStore();
   const insets = useSafeAreaInsets();
   // Pushed full-screen route (not a formSheet), so the content goes under the
@@ -497,11 +497,7 @@ const sameDay = (a: Date, b: Date) =>
   a.getMonth() === b.getMonth() &&
   a.getDate() === b.getDate();
 
-const Calendar: React.FC<{
-  t: Tokens;
-  value: Date;
-  onSelect: (d: Date) => void;
-}> = ({ t, value, onSelect }) => {
+const Calendar = ({ t, value, onSelect }: { t: Tokens; value: Date; onSelect: (d: Date) => void }) => {
   const todayDate = today();
   const [view, setView] = useState(new Date(value.getFullYear(), value.getMonth(), 1));
 
@@ -647,12 +643,7 @@ const WHEEL_H = WHEEL_ITEM_H * WHEEL_VISIBLE;
 const WHEEL_PAD = WHEEL_ITEM_H * Math.floor(WHEEL_VISIBLE / 2);
 
 // Scrollable wheel column (drag to spin; snaps to the centered value).
-const WheelColumn: React.FC<{
-  t: Tokens;
-  values: number[];
-  value: number;
-  onChange: (v: number) => void;
-}> = ({ t, values, value, onChange }) => {
+const WheelColumn = ({ t, values, value, onChange }: { t: Tokens; values: number[]; value: number; onChange: (v: number) => void }) => {
   const ref = useRef<ScrollView>(null);
   const didInit = useRef(false);
   const idx = Math.max(0, values.indexOf(value));
@@ -745,11 +736,7 @@ const WheelColumn: React.FC<{
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
 const MINUTES = Array.from({ length: 60 }, (_, i) => i);
 
-const TimePicker: React.FC<{
-  t: Tokens;
-  value: string;
-  onChange: (hhmm: string) => void;
-}> = ({ t, value, onChange }) => {
+const TimePicker = ({ t, value, onChange }: { t: Tokens; value: string; onChange: (hhmm: string) => void }) => {
   const { h, m } = parseTime(value);
 
   return (
@@ -799,13 +786,7 @@ const TimePicker: React.FC<{
   );
 };
 
-const DateTimeField: React.FC<{
-  t: Tokens;
-  date: string;
-  time: string;
-  onChangeDate: (iso: string) => void;
-  onChangeTime: (hhmm: string) => void;
-}> = ({ t, date, time, onChangeDate, onChangeTime }) => {
+const DateTimeField = ({ t, date, time, onChangeDate, onChangeTime }: { t: Tokens; date: string; time: string; onChangeDate: (iso: string) => void; onChangeTime: (hhmm: string) => void }) => {
   const [show, setShow] = useState(false);
   const [draftDate, setDraftDate] = useState<Date>(parseIsoDate(date));
   const [draftTime, setDraftTime] = useState<string>(time);

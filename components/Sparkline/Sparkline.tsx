@@ -1,12 +1,7 @@
 import React from 'react';
 import Svg, { Circle, Path } from 'react-native-svg';
 
-export const Sparkline: React.FC<{
-  data: number[];
-  color: string;
-  width?: number;
-  height?: number;
-}> = ({ data, color, width = 320, height = 50 }) => {
+export const Sparkline = ({ data, color, width = 320, height = 50 }: { data: number[]; color: string; width?: number; height?: number }) => {
   const max = Math.max(...data, 1);
   const n = data.length;
   const step = width / Math.max(n - 1, 1);

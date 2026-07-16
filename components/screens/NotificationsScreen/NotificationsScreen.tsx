@@ -7,7 +7,7 @@ import { actions, type Notif, type NotifKind, useStore } from '@/lib/store';
 import { fmtDate } from '@/lib/format';
 import { tStr } from '@/lib/i18n';
 
-export const NotificationsScreen: React.FC<{ t: Tokens }> = ({ t }) => {
+export const NotificationsScreen = ({ t }: { t: Tokens }) => {
   const s = useStore();
   const lang = s.prefs.lang;
   const ICONS: Record<NotifKind, [IconName, string]> = {

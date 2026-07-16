@@ -66,11 +66,11 @@ export const useTabHeaderHeight = () => {
 // On iOS: renders as a fixed floating bar with Liquid Glass (iOS 26+) or
 // BlurView fallback (iOS < 26). Content scrolls under it via useTabHeaderHeight.
 // On Android: in-flow plain View, no positioning change.
-export const TabHeader: React.FC<{ t: Tokens; title: string; onAdd?: () => void }> = ({
+export const TabHeader = ({
   t,
   title,
   onAdd,
-}) => {
+}: { t: Tokens; title: string; onAdd?: () => void }) => {
   const insets = useSafeAreaInsets();
 
   if (Platform.OS !== 'ios') {

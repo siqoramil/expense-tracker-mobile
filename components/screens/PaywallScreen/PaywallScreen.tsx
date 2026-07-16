@@ -17,7 +17,7 @@ const PERKS: { icon: IconName; key: string; descKey: string }[] = [
   { icon: 'gift', key: 'perkSupport', descKey: 'perkSupportDesc' },
 ];
 
-const CrownGlyph: React.FC<{ size?: number; color?: string }> = ({ size = 30, color = '#fff' }) => (
+const CrownGlyph = ({ size = 30, color = '#fff' }: { size?: number; color?: string }) => (
   <Svg width={size} height={size} viewBox="0 0 24 24">
     <Path
       d="M3 8.2l3.9 2.6L11 4.6a1.2 1.2 0 0 1 2 0l4.1 6.2L21 8.2a1 1 0 0 1 1.56 1.02l-1.7 8.05a1.4 1.4 0 0 1-1.37 1.1H4.51a1.4 1.4 0 0 1-1.37-1.1L1.44 9.22A1 1 0 0 1 3 8.2z"
@@ -28,11 +28,11 @@ const CrownGlyph: React.FC<{ size?: number; color?: string }> = ({ size = 30, co
 );
 
 // Small decorative sparkle used to dress the hero.
-const Sparkle: React.FC<{ size?: number; color?: string; opacity?: number }> = ({
+const Sparkle = ({
   size = 14,
   color = '#fff',
   opacity = 1,
-}) => (
+}: { size?: number; color?: string; opacity?: number }) => (
   <Svg width={size} height={size} viewBox="0 0 24 24" opacity={opacity}>
     <Path
       d="M12 2c.4 3.9 1.9 5.4 5.8 5.8v.4C13.9 8.6 12.4 10.1 12 14c-.4-3.9-1.9-5.4-5.8-5.8v-.4C10.1 7.4 11.6 5.9 12 2z"
@@ -49,7 +49,7 @@ const packagesOf = (o: PurchasesOffering | null): PurchasesPackage[] => {
   return ordered.length ? ordered : o.availablePackages;
 };
 
-export const PaywallScreen: React.FC<{ t: Tokens; onDone?: () => void }> = ({ t, onDone }) => {
+export const PaywallScreen = ({ t, onDone }: { t: Tokens; onDone?: () => void }) => {
   const s = useStore();
   const lang = s.prefs.lang;
   const isPremium = usePremium();

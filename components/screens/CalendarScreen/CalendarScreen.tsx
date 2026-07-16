@@ -38,7 +38,7 @@ type CellProps = {
   t: Tokens;
 };
 
-const DayCell: React.FC<CellProps> = ({
+const DayCell = ({
   day,
   iso,
   info,
@@ -48,7 +48,7 @@ const DayCell: React.FC<CellProps> = ({
   intensity,
   onPress,
   t,
-}) => {
+}: CellProps) => {
   const hasExpense = intensity > 0;
   const hasIncome = info ? info.inc > 0 : false;
 
@@ -117,10 +117,7 @@ const DayCell: React.FC<CellProps> = ({
   );
 };
 
-export const CalendarScreen: React.FC<{
-  t: Tokens;
-  onOpenTx?: (tx: Transaction) => void;
-}> = ({ t, onOpenTx }) => {
+export const CalendarScreen = ({ t, onOpenTx }: { t: Tokens; onOpenTx?: (tx: Transaction) => void }) => {
   const s = useStore();
   const lang = s.prefs.lang;
   const currency = useStoreSelector((st) => st.prefs.currency);

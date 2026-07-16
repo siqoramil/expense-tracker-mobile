@@ -5,7 +5,7 @@ import { Card, CatIcon, MoneyText, Switch } from '@/components/ui';
 import { actions, catLabel, type Recurring, useStore } from '@/lib/store';
 import { today } from '@/lib/format';
 
-export const RecurringScreen: React.FC<{ t: Tokens }> = ({ t }) => {
+export const RecurringScreen = ({ t }: { t: Tokens }) => {
   const s = useStore();
   const lang = s.prefs.lang;
   return (

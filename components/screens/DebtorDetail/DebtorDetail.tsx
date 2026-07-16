@@ -14,7 +14,7 @@ import { toast } from '@/lib/toast';
 
 type Props = { t: Tokens; debtor: Debt };
 
-export const DebtorDetail: React.FC<Props> = ({ t, debtor }) => {
+export const DebtorDetail = ({ t, debtor }: Props) => {
   const s = useStore();
   const d = s.debts.find((x) => x.id === debtor.id) || debtor;
   const lang = s.prefs.lang;

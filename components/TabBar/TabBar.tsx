@@ -66,13 +66,7 @@ const buildBarPath = (W: number, H: number) => {
   ].join(' ');
 };
 
-export const TabBar: React.FC<{
-  active: TabKey;
-  onChange: (k: TabKey) => void;
-  onFab: () => void;
-  t: Tokens;
-  lang: Lang;
-}> = ({ active, onChange, onFab, t }) => {
+export const TabBar = ({ active, onChange, onFab, t }: { active: TabKey; onChange: (k: TabKey) => void; onFab: () => void; t: Tokens; lang: Lang }) => {
   const insets = useSafeAreaInsets();
   const { width: SCREEN_W } = useWindowDimensions();
   const BAR_W = SCREEN_W - BAR_MARGIN_H * 2;
@@ -268,7 +262,7 @@ export const TabBar: React.FC<{
   );
 };
 
-const FabButton: React.FC<{ onPress: () => void; t: Tokens }> = ({ onPress, t }) => {
+const FabButton = ({ onPress, t }: { onPress: () => void; t: Tokens }) => {
   // Continuous "water" ripple: rings keep emanating from the FAB, expanding and
   // fading on a slow loop. Three rings, evenly offset by a third of the period,
   // so multiple ripples are always expanding at once — a continuous water wave.
@@ -344,13 +338,7 @@ const FabButton: React.FC<{ onPress: () => void; t: Tokens }> = ({ onPress, t })
   );
 };
 
-const TabItem: React.FC<{
-  tab: { k: TabKey; icon: IconName; iconFill: IconName };
-  active: boolean;
-  onPress: () => void;
-  onLayout: (e: LayoutChangeEvent) => void;
-  t: Tokens;
-}> = ({ tab, active, onPress, onLayout, t }) => (
+const TabItem = ({ tab, active, onPress, onLayout, t }: { tab: { k: TabKey; icon: IconName; iconFill: IconName }; active: boolean; onPress: () => void; onLayout: (e: LayoutChangeEvent) => void; t: Tokens }) => (
   <Pressable
     onPress={onPress}
     onLayout={onLayout}
